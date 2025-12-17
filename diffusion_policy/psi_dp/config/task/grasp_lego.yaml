@@ -1,5 +1,5 @@
 name: grasp_lego
-dataset_path: /home/psibot/psi-lab-v2/outputs/zarr/20251217_015945.zarr
+dataset_path: /home/psibot/chembench/psilab/outputs/zarr_data/20251217_203920.zarr
 # dataset_path:/home/psibot/dp_new/data/outputs/2025.12.17/02.16.35_train_diffusion_transformer_timm_grasp_lego/checkpoints/epoch=4970-train_loss=0.001.ckpt
 # 
 # image_shape: [3, 224, 224]

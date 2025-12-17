@@ -1,0 +1,196 @@
+{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        // ============================================
+        // 通用调试配置
+        // ============================================
+        {
+            "name": "Python 调试程序: 当前文件",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        },
+
+        // ============================================
+        // Diffusion Policy 训练配置
+        // ============================================
+        {
+            "name": "DP:Train",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/diffusion_policy/train.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--config-name",
+                "train_diffusion_transformer_timm_single_demo_workspace",
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "DP:Grasp-Lego-Train",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/diffusion_policy/train.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--config-name",
+                "train_diffusion_transformer_grasp_lego_workspace",
+            ],
+            "justMyCode": false
+        },
+
+        // ============================================
+        // IsaacSim 启动配置
+        // ============================================
+        {
+            "name": "IsaacSim: Run",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "./psilab/issacsim/run.sh"
+        },
+
+        
+        {
+            "name": "TP-Grasp-Param-Finder-v1:DataCollect",
+            "type": "debugpy",
+            "request": "launch",
+            "args": [
+                "--task",
+                "Psi-TP-Grasp-Param-Finder-v1",
+                "--num_envs",
+                "1",
+                "--seed",
+                "17",
+                "--scene",
+                "room_cfg:PSI_DC_Beaker_003_CFG",
+                "--enable_cameras",
+                "--enable_output",
+                "--enable_random",
+                "--enable_eval",
+                "--async_reset",
+                "--sample_step",
+                "4",
+                "--max_episode",
+                "100",
+            ],
+            "program": "${workspaceFolder}/psilab/scripts_psi/workflows/motion_planning/play.py",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+
+        // ============================================
+        // Diffusion Policy 测试配置
+        // ============================================
+        {
+            "name": "IL-Grasp-Beaker-003-v1:Play",
+            "type": "debugpy",
+            "request": "launch",
+            "args": [
+                "--task",
+                "Psi-IL-Grasp-Beaker-003-v1",
+                "--num_envs",
+                "1",
+                "--seed",
+                "17",
+                "--scene",
+                "room_cfg:PSI_DC_Beaker_003_CFG",
+                "--enable_cameras",
+                "--async_reset",
+                "--checkpoint",
+                "/home/psibot/chembench/data/outputs/2025.12.17/20.51.35_train_diffusion_transformer_timm_grasp_lego/epoch=0710-train_loss=0.006.ckpt",
+                "--max_step",
+                "500",
+                "--max_episode",
+                "200",
+                "--enable_eval",
+            ],
+            "program": "${workspaceFolder}/psilab/scripts_psi/workflows/imitation_learning/play.py",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+
+        // ============================================
+        // Motion Planning 数据收集配置
+        // ============================================
+        {
+            "name": "MP-Grasp-Beaker-003-v1:DataCollect",
+            "type": "debugpy",
+            "request": "launch",
+            "args": [
+                "--task",
+                "Psi-MP-Grasp-Beaker-003-v1",
+                "--num_envs",
+                "16",
+                "--seed",
+                "17",
+                "--scene",
+                "room_cfg:PSI_DC_Beaker_003_CFG",
+                "--enable_cameras",
+                "--enable_output",
+                "--enable_random",
+                "--enable_eval",
+                "--async_reset",
+                "--sample_step",
+                "4",
+                "--max_episode",
+                "100",
+            ],
+            "program": "${workspaceFolder}/psilab/scripts_psi/workflows/motion_planning/play.py",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+    
+
+        // ============================================
+        // 数据处理工具
+        // ============================================
+        {
+            "name": "Replay",
+            "type": "debugpy",
+            "request": "launch",
+            "args": [
+                "--enable_cameras",
+                "--hdf5_file_folder",
+                "${workspaceFolder}/psilab/outputs/Mp_grasp/Beaker_003/20251217_161148",
+                "--enable_state"
+            ],
+            "program": "${workspaceFolder}/psilab/scripts_psi/workflows/replay/replay.py",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        
+        {
+            "name": "HDF5 Convert",
+            "type": "debugpy",
+            "request": "launch",
+            "args": [
+                "--source",
+                "${workspaceFolder}/psilab/outputs/source_data",
+                "--destination",
+                "${workspaceFolder}/psilab/outputs/converted_data",
+            ],
+            "program": "${workspaceFolder}/psilab/scripts_psi/tools/hdf5/convert_hdf5.py",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
+            "name": "HDF5 to Zarr",
+            "type": "debugpy",
+            "request": "launch",
+            "args": [
+                "--h5_dir",
+                "${workspaceFolder}/psilab/outputs/Mp_grasp/Beaker_003/20251217_203920",
+                "--zarr_dir",
+                "${workspaceFolder}/psilab/outputs/zarr_data",
+            ],
+            "program": "${workspaceFolder}/psilab/source/psilab/psilab/utils/zarr_utils.py",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        }
+    ]
+}
+

@@ -639,78 +639,78 @@ if __name__ == "__main__":
         # Statebase
         episode['timestamps'] = h5_file["sim_time"] # type: ignore
 
-        # h5_temp.create_dataset(
-        #     "action",
-        #     shape=(h5_file["robots"]["robot"]["arm2_pos_target"].shape[0] ,13),# type: ignore
-        #     dtype=h5_file["robots"]["robot"]["arm2_pos_target"].dtype
-        # )
-
-        # h5_temp["action"][:,:7] = h5_file["robots"]["robot"]["arm2_pos_target"] # type: ignore
-        # h5_temp["action"][:,7:] = h5_file["robots"]["robot"]["hand2_pos_target"][:,:6] # type: ignore
-
-        # h5_temp.create_dataset(
-        #     "state",
-        #     shape=(h5_file["robots"]["robot"]["arm2_pos"].shape[0],20),# type: ignore
-        #     dtype=h5_file["robots"]["robot"]["arm2_pos"].dtype
-        # )
-
-        # h5_temp["state"][:,:7] = h5_file["rigid_objects"]["bottle"] # type: ignore
-        # h5_temp["state"][:,7:14] = h5_file["robots"]["robot"]["arm2_pos"] # type: ignore
-        # h5_temp["state"][:,14:] = h5_file["robots"]["robot"]["hand2_pos"][:,:6]# type: ignore
-
-        # episode['action'] = h5_temp["action"]# type: ignore
-        # episode['state'] = h5_temp["state"]
-        
-        # ## State and camera
         h5_temp.create_dataset(
             "action",
-            shape=(h5_file["robots"]["robot"]["arm2_pos_target"].shape[0],13),
+            shape=(h5_file["robots"]["robot"]["arm2_pos_target"].shape[0] ,13),# type: ignore
             dtype=h5_file["robots"]["robot"]["arm2_pos_target"].dtype
         )
 
-        h5_temp["action"][:,:7] = h5_file["robots"]["robot"]["arm2_pos_target"]
-        h5_temp["action"][:,7:] = h5_file["robots"]["robot"]["hand2_pos_target"][:,:6]
+        h5_temp["action"][:,:7] = h5_file["robots"]["robot"]["arm2_pos_target"] # type: ignore
+        h5_temp["action"][:,7:] = h5_file["robots"]["robot"]["hand2_pos_target"][:,:6] # type: ignore
+
+        h5_temp.create_dataset(
+            "state",
+            shape=(h5_file["robots"]["robot"]["arm2_pos"].shape[0],20),# type: ignore
+            dtype=h5_file["robots"]["robot"]["arm2_pos"].dtype
+        )
+
+        h5_temp["state"][:,:7] = h5_file["rigid_objects"]["bottle"] # type: ignore
+        h5_temp["state"][:,7:14] = h5_file["robots"]["robot"]["arm2_pos"] # type: ignore
+        h5_temp["state"][:,14:] = h5_file["robots"]["robot"]["hand2_pos"][:,:6]# type: ignore
 
         episode['action'] = h5_temp["action"]# type: ignore
-        episode['arm2_pos'] = h5_file["robots"]["robot"]["arm2_pos"] # type: ignore
-        episode['arm2_vel'] = h5_file["robots"]["robot"]["arm2_vel"] # type: ignore
-        episode['hand2_pos'] = h5_file["robots"]["robot"]["hand2_pos"][:,:6] # type: ignore
-        episode['hand2_vel'] = h5_file["robots"]["robot"]["hand2_vel"][:,:6] # type: ignore
-        episode['arm2_eef_pos'] = h5_file["robots"]["robot"]["arm2_eef_pose"][:,:3] # type: ignore
-        episode['arm2_eef_quat'] = h5_file["robots"]["robot"]["arm2_eef_pose"][:,3:] # type: ignore
-        episode['target_pose'] = h5_file["rigid_objects"]["bottle"][:,:7] # type: ignore
+        episode['state'] = h5_temp["state"]
         
-        # 头部相机
-        image_array = np.array(h5_file["robots"]["robot"]["head_camera.rgb"])
-        image_array_resize = np.zeros((image_array.shape[0],224,224,3))
+        # # ## State and camera
+        # h5_temp.create_dataset(
+        #     "action",
+        #     shape=(h5_file["robots"]["robot"]["arm2_pos_target"].shape[0],13),
+        #     dtype=h5_file["robots"]["robot"]["arm2_pos_target"].dtype
+        # )
 
-        for i in range(image_array.shape[0]):
-            img_bgr = cv2.cvtColor(image_array[i], cv2.COLOR_RGB2BGR)
-            img_bgr = cv2.resize(img_bgr, (224,224))
-            image_array_resize[i] = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+        # h5_temp["action"][:,:7] = h5_file["robots"]["robot"]["arm2_pos_target"]
+        # h5_temp["action"][:,7:] = h5_file["robots"]["robot"]["hand2_pos_target"][:,:6]
 
-        h5_temp.create_dataset(
-            "head_camera.rgb",
-            shape=(image_array.shape[0],224,224,3),
-            dtype=h5_file["robots"]["robot"]["head_camera.rgb"].dtype,
-            data=image_array_resize
-        )
+        # episode['action'] = h5_temp["action"]# type: ignore
+        # episode['arm2_pos'] = h5_file["robots"]["robot"]["arm2_pos"] # type: ignore
+        # episode['arm2_vel'] = h5_file["robots"]["robot"]["arm2_vel"] # type: ignore
+        # episode['hand2_pos'] = h5_file["robots"]["robot"]["hand2_pos"][:,:6] # type: ignore
+        # episode['hand2_vel'] = h5_file["robots"]["robot"]["hand2_vel"][:,:6] # type: ignore
+        # episode['arm2_eef_pos'] = h5_file["robots"]["robot"]["arm2_eef_pose"][:,:3] # type: ignore
+        # episode['arm2_eef_quat'] = h5_file["robots"]["robot"]["arm2_eef_pose"][:,3:] # type: ignore
+        # episode['target_pose'] = h5_file["rigid_objects"]["bottle"][:,:7] # type: ignore
+        
+        # # 头部相机
+        # image_array = np.array(h5_file["robots"]["robot"]["head_camera.rgb"])
+        # image_array_resize = np.zeros((image_array.shape[0],224,224,3))
 
-        # 胸部相机
-        image_array = np.array(h5_file["robots"]["robot"]["chest_camera.rgb"])
-        image_array_resize = np.zeros((image_array.shape[0],224,224,3))
+        # for i in range(image_array.shape[0]):
+        #     img_bgr = cv2.cvtColor(image_array[i], cv2.COLOR_RGB2BGR)
+        #     img_bgr = cv2.resize(img_bgr, (224,224))
+        #     image_array_resize[i] = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
 
-        for i in range(image_array.shape[0]):
-            img_bgr = cv2.cvtColor(image_array[i], cv2.COLOR_RGB2BGR)
-            img_bgr = cv2.resize(img_bgr, (224,224))
-            image_array_resize[i] = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+        # h5_temp.create_dataset(
+        #     "head_camera.rgb",
+        #     shape=(image_array.shape[0],224,224,3),
+        #     dtype=h5_file["robots"]["robot"]["head_camera.rgb"].dtype,
+        #     data=image_array_resize
+        # )
 
-        h5_temp.create_dataset(
-            "chest_camera.rgb",
-            shape=(image_array.shape[0],224,224,3),
-            dtype=h5_file["robots"]["robot"]["chest_camera.rgb"].dtype,
-            data=image_array_resize
-        )
+        # # 胸部相机
+        # image_array = np.array(h5_file["robots"]["robot"]["chest_camera.rgb"])
+        # image_array_resize = np.zeros((image_array.shape[0],224,224,3))
+
+        # for i in range(image_array.shape[0]):
+        #     img_bgr = cv2.cvtColor(image_array[i], cv2.COLOR_RGB2BGR)
+        #     img_bgr = cv2.resize(img_bgr, (224,224))
+        #     image_array_resize[i] = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+
+        # h5_temp.create_dataset(
+        #     "chest_camera.rgb",
+        #     shape=(image_array.shape[0],224,224,3),
+        #     dtype=h5_file["robots"]["robot"]["chest_camera.rgb"].dtype,
+        #     data=image_array_resize
+        # )
 
         # 第三人称相机
         # image_array = np.array(h5_file["robots"]["robot"]["third_person_camera.rgb"])
@@ -728,8 +728,8 @@ if __name__ == "__main__":
         #     data=image_array_resize
         # )
 
-        episode['head_camera_rgb'] = h5_temp["head_camera.rgb"] # type: ignore
-        episode['chest_camera_rgb'] = h5_temp["chest_camera.rgb"] # type: ignore
+        # episode['head_camera_rgb'] = h5_temp["head_camera.rgb"] # type: ignore
+        # episode['chest_camera_rgb'] = h5_temp["chest_camera.rgb"] # type: ignore
         # episode['third_person_camera_rgb'] = h5_temp["third_person_camera.rgb"] # type: ignore
 
     
