@@ -1,0 +1,51 @@
+[package]
+
+# Note: Semantic Versioning is used: https://semver.org/
+version = "1.0.0"
+
+# Description
+title = "Psi Lab framework for Robot Learning"
+description = "Extension providing main framework interfaces and abstractions for robot learning."
+readme = "docs/README.md"
+repository = "https://github.com/isaac-sim/IsaacLab"
+category = "robotics"
+keywords = ["kit", "robotics", "learning", "ai"]
+
+[python.pipapi]
+requirements = [
+    "numpy",
+    "prettytable==3.3.0",
+    "toml",
+    "hidapi",
+    "gymnasium==0.29.0",
+    "trimesh",
+    # open television
+    "pytransform3d==3.5.0",
+    "dex_retargeting==0.1.1",
+    "vuer==0.0.32rc7",
+    "aiohttp==3.9.5",
+    "aiortc==1.8.0",
+]
+
+modules = [
+    "numpy",
+    "prettytable",
+    "toml",
+    "hid",
+    "gymnasium",
+    "trimesh",
+    # open television
+    "pytransform3d",
+    "dex_retargeting",
+    "vuer",
+    "aiohttp",
+    "aiortc",
+]
+
+use_online_index = true
+
+[core]
+reloadable = false
+
+[[python.module]]
+name = "psilab"

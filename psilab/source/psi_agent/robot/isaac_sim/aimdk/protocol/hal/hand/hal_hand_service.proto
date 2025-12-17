@@ -1,0 +1,25 @@
+syntax = "proto3";
+package aimdk.protocol;
+
+import public "aimdk/protocol/common/rpc.proto";
+import public "aimdk/protocol/common/header.proto";
+import public "aimdk/protocol/hal/hand/hand.proto";
+
+
+// 获取机器人手部状态响应
+message HandStateResponse {
+  ResponseHeader header = 1;  // 响应头
+  HandState data = 2;         // 手部状态
+}
+
+// 设置机器人手部控制请求
+message HandCommandRequest {
+  RequestHeader header = 1;  // 请求头
+  HandCommand data = 2;      // 手部控制
+}
+
+// HandService
+service HalHandService {
+  rpc GetHandState(CommonRequest) returns (HandStateResponse);
+  rpc SetHandCommand(HandCommandRequest) returns (CommonResponse);
+}

@@ -1,0 +1,31 @@
+name: grasp_lego
+dataset_path: /home/psibot/psi-lab-v2/outputs/zarr/20251217_015945.zarr
+# 
+# image_shape: [3, 224, 224]
+shape_meta: &shape_meta
+  # acceptable types: rgb, low_dim
+  obs:
+    # top_camera:
+    #   shape: ${task.image_shape}
+    #   type: rgb
+    #   horizon: ${n_obs_steps}
+    state:
+      shape: [20]
+      type: low_dim
+      horizon: ${n_obs_steps}
+  action:
+    shape: [13]
+    horizon: ${n_action_steps}
+
+env_runner:
+  _target_: diffusion_policy.env_runner.real_pusht_image_runner.RealPushTImageRunner
+
+dataset:
+  # _target_: diffusion_policy.dataset.grasp_image_dataset.GraspImageDataset
+  _target_: psi_dp.dataset.grasp_lego_dataset.GraspLowdimDataset
+  zarr_path: ${task.dataset_path}
+  horizon: ${n_action_steps}
+  pad_before: ${eval:'${n_obs_steps}-1+${n_latency_steps}'}
+  pad_after: ${eval:'${n_action_steps}-1'}
+  seed: 42
+  val_ratio: 0

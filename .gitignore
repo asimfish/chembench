@@ -20,3 +20,20 @@ rad.json
 *.flf
 #Test results file
 TestResults.xml
+
+### Custom Ignores ###
+# Assets folder
+psilab/assets/
+
+# Docker folder
+psilab/docker/
+
+# Wandb logs
+psilab/wandb/
+diffusion_policy/wandb/
+
+# Logs folder
+psilab/logs/
+
+# Outputs folder
+diffusion_policy/data/outputs/

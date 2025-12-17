@@ -1,0 +1,35 @@
+{
+            "Object":{
+            "XXXXXX":[
+            {
+                "object_id": "CleanedUp_Bedroom",
+                "prim_path": "/World/+object_id",
+                "data_info_dir": "/home/zhwang/Albert/dataset/scene/CleanedUp_Bedroom/CleanedUp_Bedroom.usd",
+                "scale": [1,1,1]
+            },
+            
+            {
+                "object_id": "CleanedUp_Bedroom",
+                "prim_path": "/World/+object_id",
+                "data_info_dir": "/home/zhwang/Albert/dataset/scene/CleanedUp_Bedroom/CleanedUp_Bedroom.usd",
+                "scale": [1,1,1]
+            }
+            ], 
+            
+            "XXXXXX":[
+            {
+                "object_id": "CleanedUp_Bedroom",
+                "prim_path": "/World/+object_id",
+                "data_info_dir": "/home/zhwang/Albert/dataset/scene/CleanedUp_Bedroom/CleanedUp_Bedroom.usd",
+                "scale": [1,1,1]
+            },
+            
+            {
+                "object_id": "CleanedUp_Bedroom",
+                "prim_path": "/World/+object_id",
+                "data_info_dir": "/home/zhwang/Albert/dataset/scene/CleanedUp_Bedroom/CleanedUp_Bedroom.usd",
+                "scale": [1,1,1]
+            }
+            ]
+       } 
+}

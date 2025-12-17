@@ -1,0 +1,38 @@
+Metadata-Version: 2.4
+Name: psilab
+Version: 1.0.0
+Summary: Extension providing main framework interfaces and abstractions for robot learning.
+Home-page: https://github.com/isaac-sim/IsaacLab
+Author: Psi Lab Project Developers
+Maintainer: Psi Lab Project Developers
+License: BSD-3-Clause
+Keywords: kit,robotics,learning,ai
+Classifier: Natural Language :: English
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Isaac Sim :: 4.5.0
+Classifier: Isaac Lab :: 2.0.2
+Requires-Python: >=3.10
+Requires-Dist: pytransform3d==3.5.0
+Requires-Dist: dex_retargeting==0.1.1
+Requires-Dist: vuer[all]==0.0.32rc7
+Requires-Dist: aiohttp==3.9.5
+Requires-Dist: aiortc==1.8.0
+Requires-Dist: zarr==2.12.0
+Requires-Dist: dill==0.3.5.1
+Requires-Dist: diffusers==0.33.1
+Requires-Dist: timm==1.0.12
+Requires-Dist: numba==0.57.0
+Requires-Dist: accelerate==0.13.2
+Requires-Dist: numpy==1.23.5
+Requires-Dist: sapien==2.2.2
+Requires-Dist: pyserial==3.5
+Requires-Dist: openvr==1.23.701
+Dynamic: author
+Dynamic: classifier
+Dynamic: home-page
+Dynamic: keywords
+Dynamic: license
+Dynamic: maintainer
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary

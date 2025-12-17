@@ -1,0 +1,126 @@
+
+robot_cfg:
+    kinematics:
+        urdf_path: "/robots/PsiRobot_DC_02/Version_4.0/PsiRobot_DC_02.urdf"
+        # urdf_path: "/home/admin01/Work/02-PsiLab/psi-lab-v2/assets/urdf/robots/PsiRobot_DC_02/Version_4.0/PsiRobot_DC_02.urdf"
+        # asset_root_path: ""
+
+        base_link: "body"
+        ee_link: "arm1_link7"
+        link_names: ["body","arm1_link0","arm1_link1","arm1_link2","arm1_link3","arm1_link4","arm1_link5","arm1_link6","arm1_link7"]
+        lock_joints: null
+        extra_links: null
+
+
+        collision_link_names: ["arm1_link1","arm1_link2","arm1_link3","arm1_link4","arm1_link5","arm1_link6","arm1_link7"] # List[str]
+        collision_spheres: 
+            body:
+              - "center": [0, 0, 15.258575439453125]
+                "radius": 8.0
+              - "center": [7.835054762102278e-21, 2.340397596359253, 26.538745880126953]
+                "radius": 8.0
+              - "center": [3.017554874593445e-21, 1.8974475860595703, 36.769859313964844]
+                "radius": 8.0
+              - "center": [3.017554874593445e-21, 1.8974475860595703, 43.015804290771484]
+                "radius": 8.0
+              - "center": [7.093900933254765e-21, 1.2791441679000854, 55.26285171508789]
+                "radius": 6.0
+              - "center": [5.3257196558614134e-20, 4.497254371643066, 53.66856384277344]
+                "radius": 8.0
+              - "center": [-1.2996661784433171e-20, -0.5026184320449829, 60.86061477661133]
+                "radius": 8.0
+              - "center": [-3.790472438962994e-20, -7.227590560913086, 64.10132598876953]
+                "radius": 5.0
+            arm1_link1:
+              - "center": [0.002, 0.015, 0.003]
+                "radius": 0.05
+              - "center": [-0.001, 0.047, -0.001]
+                "radius": 0.05
+              - "center": [0.001, 0.026, -0.057]
+                "radius": 0.035
+              - "center": [-0.0, 0.0, -0.091]
+                "radius": 0.05
+            arm1_link2:
+              - "center": [0.119, -0.001, -0.0]
+                "radius": 0.04407
+              - "center": [0.043, 0.001, 0.026]
+                "radius": 0.02928
+              - "center": [0.083, 0.001, 0.006]
+                "radius": 0.04
+              - "center": [0.003, 0.0, 0.029]
+                "radius": 0.045
+            arm1_link3:
+              - "center": [-0.0, 0.014, 0.001]
+                "radius": 0.04316
+              - "center": [0.003, 0.027, -0.05]
+                "radius": 0.035
+              - "center": [-0.005, 0.03, -0.002]
+                "radius": 0.05
+              - "center": [-0.0, -0.0, -0.091]
+                "radius": 0.04
+            arm1_link4:
+              - "center": [-0.0, -0.081, -0.001]
+                "radius": 0.03833
+              - "center": [-0.003, -0.106, 0.0]
+                "radius": 0.03537
+              - "center": [-0.001, -0.041, 0.022]
+                "radius": 0.03
+              - "center": [-0.0, -0.001, 0.02]
+                "radius": 0.038
+            arm1_link5:
+              - "center": [-0.001, -0.004, -0.069]
+                "radius": 0.03751
+              - "center": [-0.003, -0.015, -0.002]
+                "radius": 0.042
+              - "center": [-0.003, -0.016, -0.039]
+                "radius": 0.02598
+            arm1_link6:
+              - "center": [-0.002, -0.046, 0.009]
+                "radius": 0.035
+              - "center": [0.003, -0.004, 0.01]
+                "radius": 0.04
+              - "center": [0.001, -0.086, 0.001]
+                "radius": 0.04
+            arm1_link7:
+              - "center": [-0.002, 0.001, -0.025]
+                "radius": 0.04
+        collision_sphere_buffer: 0.005
+        extra_collision_spheres: {}
+        self_collision_ignore:  {
+          "arm1_link1":[],
+          "arm1_link2":[],
+          "arm1_link3":[],
+          "arm1_link4":[],
+          "arm1_link5":[],
+          "arm1_link6":[],
+          "arm1_link7":[]
+          # "body":["arm1_link1"],
+          # "arm1_link1":["body","arm1_link2"],
+          # "arm1_link2":["arm1_link1","arm1_link3"],
+          # "arm1_link3":["arm1_link2","arm1_link4"],
+          # "arm1_link4":["arm1_link3","arm1_link5"],
+          # "arm1_link5":["arm1_link4","arm1_link6"],
+          # "arm1_link6":["arm1_link5","arm1_link7"],
+          # "arm1_link7":["arm1_link6"]
+        }
+        self_collision_buffer: {
+          # "body":0,
+          "arm1_link1":0,
+          "arm1_link2":0,
+          "arm1_link3":0,
+          "arm1_link4":0,
+          "arm1_link5":0,
+          "arm1_link6":0,
+          "arm1_link7":0
+        }
+
+        use_global_cumul: True
+        mesh_link_names: ["body","arm1_link0","arm1_link1","arm1_link2","arm1_link3","arm1_link4","arm1_link5","arm1_link6","arm1_link7"] # List[str]
+
+        cspace:
+            joint_names: ["arm1_joint_link1","arm1_joint_link2","arm1_joint_link3","arm1_joint_link4","arm1_joint_link5","arm1_joint_link6","arm1_joint_link7"] # List[str]
+            retract_config: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] # List[float]
+            null_space_weight:  [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] # List[str]
+            cspace_distance_weight:  [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] # List[str]
+            max_jerk: 500.0
+            max_acceleration: 15.0

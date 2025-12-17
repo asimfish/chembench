@@ -1,0 +1,18 @@
+stages:
+  - image
+
+image-dev:
+  image: registry.agibot.com/agibot-tech/dind:v1
+  stage: image
+  tags:
+    - dind
+  before_script:
+    - docker login $DOCKER_REGISTRY_HOST -u $DOCKER_REGISTRY_USER -p $DOCKER_REGISTRY_PWD
+  script:
+    - docker image build -t $DOCKER_REGISTRY_HOST/agibot-tech/aim-data-sim-isaac-agent:$CI_COMMIT_SHORT_SHA -f Dockerfile .
+    - docker push $DOCKER_REGISTRY_HOST/agibot-tech/aim-data-sim-isaac-agent:$CI_COMMIT_SHORT_SHA
+    - docker tag $DOCKER_REGISTRY_HOST/agibot-tech/aim-data-sim-isaac-agent:$CI_COMMIT_SHORT_SHA $DOCKER_REGISTRY_HOST/agibot-tech/aim-data-sim-isaac-agent:latest
+    - docker push $DOCKER_REGISTRY_HOST/agibot-tech/aim-data-sim-isaac-agent:latest
+  interruptible: true
+  rules:
+    - if: $CI_COMMIT_BRANCH == "master"

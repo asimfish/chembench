@@ -1,0 +1,15 @@
+protobuf
+grpcio
+numpy
+scikit-learn
+requests
+rtree
+shapely
+numba
+grasp_nms
+pin
+open3d
+trimesh
+chardet
+scikit-learn
+usd-core

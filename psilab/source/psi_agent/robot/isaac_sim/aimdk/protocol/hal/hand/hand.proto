@@ -1,0 +1,35 @@
+syntax = "proto3";
+package aimdk.protocol;
+
+import public "aimdk/protocol/common/header.proto";
+import public "aimdk/protocol/hal/hand/inspire.proto";
+import public "aimdk/protocol/hal/hand/jodell.proto";
+import public "aimdk/protocol/hal/hand/agi_claw.proto";
+
+
+message SingleHandState {
+  oneof hand {
+    InspireHand inspire = 1;              // 因时手
+    ClawHand claw = 2;                    // jodell夹爪手
+    AgiClawHandState agi_claw_state = 3;  // agi自研夹爪状态
+  }
+}
+
+message SingleHandCommand {
+  oneof hand {
+    InspireHand inspire = 1;              // 因时手
+    ClawHand claw = 2;                    // jodell夹爪手
+    AgiClawHandCommand agi_claw_cmd = 3;  // agi自研夹爪命令
+  }
+}
+
+message HandState {
+  SingleHandState left = 2;   // 左手状态
+  SingleHandState right = 3;  // 右手状态
+}
+
+message HandCommand {
+  SingleHandCommand left = 2;   // 左手指令
+  SingleHandCommand right = 3;  // 右手指令
+}
+

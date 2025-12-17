@@ -1,0 +1,9 @@
+pyproject.toml
+setup.py
+psilab/__init__.py
+psilab.egg-info/PKG-INFO
+psilab.egg-info/SOURCES.txt
+psilab.egg-info/dependency_links.txt
+psilab.egg-info/not-zip-safe
+psilab.egg-info/requires.txt
+psilab.egg-info/top_level.txt

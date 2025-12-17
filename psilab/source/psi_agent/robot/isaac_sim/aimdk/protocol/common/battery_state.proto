@@ -1,0 +1,95 @@
+syntax = "proto3";
+package aimdk.protocol;
+
+import "aimdk/protocol/common/timestamp.proto";
+
+
+/**
+ *@brief 电池状态
+ */
+enum PowerSupplyStatus{
+  PowerSupplyStatus_UNDEFINED = 0;
+  PowerSupplyStatus_CHARGING = 1;
+  PowerSupplyStatus_DISCHARGING = 2;
+  PowerSupplyStatus_NOT_CHARGING = 3;
+  PowerSupplyStatus_FULL = 4;
+}
+
+/**
+ *@brief 电池健康状态
+ */
+enum PowerSupplyHealth{
+  PowerSupplyHealth_UNDEFINED= 0;
+  PowerSupplyHealth_GOOD = 1;
+  PowerSupplyHealth_OVERHEAT = 2;
+  PowerSupplyHealth_DEAD = 3;
+  PowerSupplyHealth_OVERVOLTAGE = 4;
+  PowerSupplyHealth_UNSPEC_FAILURE = 5;
+  PowerSupplyHealth_COLD = 6;
+  PowerSupplyHealth_WATCHDOG_TIMER_EXPIRE = 7;
+  PowerSupplyHealth_SAFETY_TIMER_EXPIRE = 8;
+}
+
+
+/**
+ * @brief 电池技术
+ */
+enum PowerSupplyTechnology{
+  PowerSupplyTechnology_UNDEFINED = 0;
+  PowerSupplyTechnology_NIMH = 1;
+  PowerSupplyTechnology_LION = 2;
+  PowerSupplyTechnology_LIPO = 3;
+  PowerSupplyTechnology_LIFE = 4;
+  PowerSupplyTechnology_NICD = 5;
+  PowerSupplyTechnology_LIMN = 6;
+}
+
+/**
+ * @brief 电池状态 对应ROS中的: sensor_msgs/BatteryState.msg
+ */
+message BatteryState{
+    // 时间辍
+    Timestamp timestamp = 1;
+    
+    // 电池电压
+    float voltage = 2;
+
+    // 电流
+    float current = 3;
+
+    // 电量
+    float charge = 4;
+
+    // 电池容量
+    float capacity = 5;
+
+    // 设计容量
+    float design_capacity = 6;
+
+    // 电池百分比
+    float percentage = 7;
+
+    // 电池状态
+    PowerSupplyStatus power_supply_status = 8;
+
+    // 电池健康状态
+    PowerSupplyHealth power_supply_health = 9;
+
+    // 电池技术
+    PowerSupplyTechnology power_supply_technology = 10;
+
+    // 电池单元电压
+    repeated float cell_voltage = 11;
+
+    // 电池位置
+    string location = 12;
+
+    // 电池序列号
+    string serial_number = 13;
+    
+    // 电池功率
+    float power = 14;
+
+    // 电池温度
+    float temperature = 15;
+};

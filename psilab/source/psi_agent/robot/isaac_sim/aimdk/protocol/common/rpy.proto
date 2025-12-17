@@ -1,0 +1,13 @@
+syntax = "proto3";
+package aimdk.protocol;
+
+
+/**
+ * @brief RPY角度姿态表示
+ */
+message Rpy {
+  double rw = 1;
+  double rx = 2;  // 绕固定轴X旋转角度，单位：rad
+  double ry = 3;  // 绕固定轴Y旋转角度，单位：rad
+  double rz = 4;  // 绕固定轴Z旋转角度，单位：rad
+}

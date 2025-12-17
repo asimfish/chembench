@@ -1,0 +1,3 @@
+[submodule "aim_data_isaac_assets"]
+	path = aim_data_isaac_assets
+	url = git@code.agibot.com:agibot_cloud/aim_data/aim_data_isaac_assets.git

@@ -1,0 +1,114 @@
+import gymnasium as gym
+from . import scenes
+
+
+##
+# Register Gym environments.
+##
+
+gym.register(
+    id="Psi-TP-Grasp-Bottle-v1",
+    entry_point=f"{__name__}.grasp_bottle_tp_env_from_lego:GraspBottleEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.grasp_bottle_tp_env_from_lego:GraspBottleEnvCfg",
+        "scene_cfg_entry_point":f"{scenes.__name__}.room_cfg:PSI_DC_02_CFG",
+    },
+)
+
+gym.register(
+    id="Psi-MP-Grasp-Bottle-v1",
+    entry_point=f"{__name__}.grasp_bottle_mp_env:GraspBottleEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.grasp_bottle_mp_env:GraspBottleEnvCfg",
+        "scene_cfg_entry_point":f"{scenes.__name__}.room_cfg:PSI_DC_02_CFG",
+    },
+)
+
+
+gym.register(
+    id="Psi-IL-Grasp-Bottle-v1",
+    entry_point=f"{__name__}.grasp_bottle_il_env:GraspBottleEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.grasp_bottle_il_env:GraspBottleEnvCfg",
+        "scene_cfg_entry_point":f"{scenes.__name__}.room_cfg:PSI_DC_02_CFG",
+    },
+)
+
+gym.register(
+    id="Psi-IL-Grasp-Bottle-Chempi-v1",
+    entry_point=f"{__name__}.grasp_bottle_il_chempi_env:GraspBottleEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.grasp_bottle_il_chempi_env:GraspBottleEnvCfg",
+        "scene_cfg_entry_point":f"{scenes.__name__}.room_cfg:PSI_DC_02_CFG",
+    },
+)
+
+
+
+gym.register(
+    id="Psi-MP-Grasp-Beaker-003-v1",
+    entry_point=f"{__name__}.grasp_beaker_003_mp:GraspBottleEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.grasp_beaker_003_mp:GraspBottleEnvCfg",
+        "scene_cfg_entry_point":f"{scenes.__name__}.room_cfg:PSI_DC_Beaker_003_CFG",
+    },
+)
+
+gym.register(
+    id="Psi-IL-Grasp-Beaker-003-v1",
+    entry_point=f"{__name__}.grasp_beaker_003_il:GraspBottleEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.grasp_beaker_003_il:GraspBottleEnvCfg",
+        "scene_cfg_entry_point":f"{scenes.__name__}.room_cfg:PSI_DC_Beaker_003_CFG",
+    },
+)
+
+gym.register(
+    id="Psi-MP-Grasp-Beaker-003-Art-v1",
+    entry_point=f"{__name__}.grasp_beaker_003_art_mp:GraspBottleEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.grasp_beaker_003_art_mp:GraspBottleEnvCfg",
+        "scene_cfg_entry_point":f"{scenes.__name__}.room_cfg:PSI_DC_Beaker_003_Art_CFG",
+    },
+)
+
+
+gym.register(
+    id="Psi-TP-Grasp-Beaker-003-v1",
+    entry_point=f"{__name__}.grasp_beaker_003_tp:GraspBottleEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.grasp_beaker_003_tp:GraspBottleEnvCfg",
+        "scene_cfg_entry_point":f"{scenes.__name__}.room_cfg:PSI_DC_Beaker_003_CFG",
+    },
+)
+
+
+gym.register(
+    id="Psi-TP-Grasp-Chem-v1",
+    entry_point=f"{__name__}.grasp_chem_tp:GraspBottleEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.grasp_chem_tp:GraspBottleEnvCfg",
+        "scene_cfg_entry_point":f"{scenes.__name__}.room_cfg:PSI_DC_Chem_CFG",
+    },
+)
+
+
+# 抓取参数查找器 - 用于通过遥操作找到合适的抓取位置和旋转
+gym.register(
+    id="Psi-TP-Grasp-Param-Finder-v1",
+    entry_point=f"{__name__}.grasp_param_finder_tp:GraspParamFinderEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.grasp_param_finder_tp:GraspParamFinderEnvCfg",
+        "scene_cfg_entry_point":f"{scenes.__name__}.room_cfg:PSI_DC_Beaker_003_CFG",
+    },
+)

@@ -1,0 +1,297 @@
+{
+    "num_envs": 1,
+    "env_spacing": 4.0,
+    "replicate_physics": true,
+    "global_light_cfg": {
+        "prim_path": "/World/Light",
+        "spawn": {
+            "func": "isaaclab.sim.spawners.lights.lights:spawn_light",
+            "prim_type": "DomeLight",
+            "color": [
+                0.75,
+                0.75,
+                0.75
+            ],
+            "color_temperature": 6500.0,
+            "intensity": 3000.0
+        },
+        "init_state": {
+            "pos": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rot": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+            ]
+        }
+    },
+    "local_lights_cfg": {},
+    "robots_cfg": {
+        "robot": {
+            "class_type": "psilab.assets.robot.robot_base:RobotBase",
+            "prim_path": "/World/Robot",
+            "spawn": {
+                "func": "isaaclab.sim.spawners.from_files.from_files:spawn_from_usd",
+                "usd_path": "/home/admin01/Work/02-Code/psi-lab-v2/assets/usd/robots/Robot_Psi_DC_01/PsiRobot_DC_01.usd",
+                "activate_contact_sensors": true,
+                "articulation_props": {
+                    "enabled_self_collisions": true
+                },
+                "rigid_props": {
+                    "solver_position_iteration_count": 255
+                }
+            },
+            "init_state": {
+                "pos": [
+                    -0.5,
+                    0.0,
+                    0.0
+                ],
+                "rot": [
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "lin_vel": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "ang_vel": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "joint_pos": {
+                    "arm1_joint_link1": -0.24,
+                    "arm1_joint_link2": -0.64,
+                    "arm1_joint_link3": -1.52,
+                    "arm1_joint_link4": -0.81,
+                    "arm1_joint_link5": 0.30,
+                    "arm1_joint_link6": -1.03,
+                    "arm1_joint_link7": 1.35,
+                    "arm2_joint_link1": 0.24,
+                    "arm2_joint_link2": -0.64,
+                    "arm2_joint_link3": 1.52,
+                    "arm2_joint_link4": -0.81,
+                    "arm2_joint_link5": -0.30,
+                    "arm2_joint_link6": -1.03,
+                    "arm2_joint_link7": -0.36,
+                    "hand1_joint_link_1_1": 0.0,
+                    "hand1_joint_link_1_2": 0.63,
+                    "hand1_joint_link_1_3": 0.03,
+                    "hand1_joint_link_2_1": 3.10,
+                    "hand1_joint_link_2_2": 1.56,
+                    "hand1_joint_link_3_1": 3.06,
+                    "hand1_joint_link_3_2": 1.56,
+                    "hand1_joint_link_4_1": 3.06,
+                    "hand1_joint_link_4_2": 1.56,
+                    "hand1_joint_link_5_1": 3.04,
+                    "hand1_joint_link_5_2": 1.56,
+                    "hand2_joint_link_1_1": 0.0,
+                    "hand2_joint_link_1_2": 0.64,
+                    "hand2_joint_link_1_3": 0.03,
+                    "hand2_joint_link_2_1": 3.11,
+                    "hand2_joint_link_2_2": 1.56,
+                    "hand2_joint_link_3_1": 3.06,
+                    "hand2_joint_link_3_2": 1.56,
+                    "hand2_joint_link_4_1": 3.08,
+                    "hand2_joint_link_4_2": 1.56,
+                    "hand2_joint_link_5_1": 3.05,
+                    "hand2_joint_link_5_2": 1.56
+                },
+                "joint_vel": {
+                    ".*": 0.0
+                }
+            },
+            "actuators": {
+                "arm1": {
+                    "class_type": "isaaclab.actuators.actuator_pd:ImplicitActuator",
+                    "joint_names_expr": [
+                        "arm1_joint_link1",
+                        "arm1_joint_link2",
+                        "arm1_joint_link3",
+                        "arm1_joint_link4",
+                        "arm1_joint_link5",
+                        "arm1_joint_link6",
+                        "arm1_joint_link7"
+                    ],
+                    "stiffness": null,
+                    "damping": null
+                },
+                "arm2": {
+                    "class_type": "isaaclab.actuators.actuator_pd:ImplicitActuator",
+                    "joint_names_expr": [
+                        "arm2_joint_link1",
+                        "arm2_joint_link2",
+                        "arm2_joint_link3",
+                        "arm2_joint_link4",
+                        "arm2_joint_link5",
+                        "arm2_joint_link6",
+                        "arm2_joint_link7"
+                    ],
+                    "stiffness": null,
+                    "damping": null
+                },
+                "hand1": {
+                    "class_type": "isaaclab.actuators.actuator_pd:ImplicitActuator",
+                    "joint_names_expr": [
+                        "hand1_joint_link_1_1",
+                        "hand1_joint_link_2_1",
+                        "hand1_joint_link_3_1",
+                        "hand1_joint_link_4_1",
+                        "hand1_joint_link_5_1",
+                        "hand1_joint_link_1_2",
+                        "hand1_joint_link_2_2",
+                        "hand1_joint_link_3_2",
+                        "hand1_joint_link_4_2",
+                        "hand1_joint_link_5_2",
+                        "hand1_joint_link_1_3"
+                    ],
+                    "stiffness": null,
+                    "damping": null
+                },
+                "hand2": {
+                    "class_type": "isaaclab.actuators.actuator_pd:ImplicitActuator",
+                    "joint_names_expr": [
+                        "hand2_joint_link_1_1",
+                        "hand2_joint_link_2_1",
+                        "hand2_joint_link_3_1",
+                        "hand2_joint_link_4_1",
+                        "hand2_joint_link_5_1",
+                        "hand2_joint_link_1_2",
+                        "hand2_joint_link_2_2",
+                        "hand2_joint_link_3_2",
+                        "hand2_joint_link_4_2",
+                        "hand2_joint_link_5_2",
+                        "hand2_joint_link_1_3"
+                    ],
+                    "stiffness": null,
+                    "damping": null
+                }
+            },
+            "diff_ik_controllers": {},
+            "eef_links": {
+                "arm1": "arm1_link7",
+                "arm2": "arm2_link7"
+            },
+            "cameras": {},
+            "tiled_cameras": {}
+        }
+    },
+    "static_objects_cfg": {
+        "room": {
+            "class_type": null,
+            "prim_path": "/World/Room",
+            "spawn": {
+                "func": "isaaclab.sim.spawners.from_files.from_files:spawn_from_usd",
+                "usd_path": "/home/admin01/Work/02-Code/psi-lab-v2/assets/usd/envs/psi_garage/GarageScene.usd"
+            },
+            "init_state": {
+                "pos": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "rot": [
+                    0.707,
+                    0.707,
+                    0.0,
+                    0.0
+                ]
+            }
+        }
+    },
+    "rigid_objects_cfg": {
+        "table": {
+            "class_type": "isaaclab.assets.rigid_object.rigid_object:RigidObject",
+            "prim_path": "/World/Table",
+            "spawn": {
+                "func": "isaaclab.sim.spawners.from_files.from_files:spawn_from_usd",
+                "usd_path": "/home/admin01/Work/02-Code/psi-lab-v2/assets/usd/rigid_objects/low_poly/table/CubeTable.usd",
+                "rigid_props": {
+                    "kinematic_enabled": true,
+                    "solver_position_iteration_count": 255
+                },
+                "scale": [
+                    1.0,
+                    1.0,
+                    0.78
+                ]
+            },
+            "init_state": {
+                "pos": [
+                    0.15,
+                    0.0,
+                    0.0
+                ],
+                "rot": [
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "lin_vel": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "ang_vel": [
+                    0.0,
+                    0.0,
+                    0.0
+                ]
+            }
+        },
+        "bottle": {
+            "class_type": "isaaclab.assets.rigid_object.rigid_object:RigidObject",
+            "prim_path": "/World/Bottle",
+            "spawn": {
+                "func": "isaaclab.sim.spawners.from_files.from_files:spawn_from_usd",
+                "usd_path": "/home/admin01/Work/02-Code/psi-lab-v2/assets/usd/rigid_objects/high_poly/manipulable_objects/drink/B36/B36.usd",
+                "scale": [
+                    0.6,
+                    0.6,
+                    0.6
+                ],
+                "visual_material": null,
+                "rigid_props": {
+                    "solver_position_iteration_count": 255
+                }
+            },
+            "init_state": {
+                "pos": [
+                    0.0,
+                    0.0,
+                    0.85
+                ],
+                "rot": [
+                    0.707,
+                    0.707,
+                    0.0,
+                    0.0
+                ],
+                "lin_vel": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "ang_vel": [
+                    0.0,
+                    0.0,
+                    0.0
+                ]
+            }
+        }
+    },
+    "deformable_objects_cfg": {},
+    "cameras_cfg": {},
+    "tiled_cameras_cfg": {},
+    "marker_cfg": null,
+    "random": null
+}
