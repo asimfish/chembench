@@ -81,7 +81,7 @@ class GraspBottleEnvCfg(ILEnvCfg):
 
     # 
     episode_length_s = 10
-    decimation = 2
+    decimation = 4
     sample_step = 1
 
     # viewer config
@@ -186,30 +186,30 @@ class GraspBottleEnv(ILEnv):
         
         # create obs dict
         # data shape is Batch_size,1,data_shape...
-        current_obs = {
-            'chest_camera_rgb': chest_camera_rgb.unsqueeze(1),
-            'head_camera_rgb': head_camera_rgb.unsqueeze(1),
-            'arm2_pos': self._robot.data.joint_pos[:,self._robot.actuators["arm2"].joint_indices].unsqueeze(1),
-            'arm2_vel': self._robot.data.joint_vel[:,self._robot.actuators["arm2"].joint_indices].unsqueeze(1),
-            'hand2_pos': self._robot.data.joint_pos[:,self._robot.actuators["hand2"].joint_indices[:6]].unsqueeze(1), # type: ignore
-            'hand2_vel': self._robot.data.joint_vel[:,self._robot.actuators["hand2"].joint_indices[:6]].unsqueeze(1), # type: ignore
-            'arm2_eef_pos': eef_state[:,:3].unsqueeze(1),
-            'arm2_eef_quat': eef_state[:,3:7].unsqueeze(1),
-            'target_pose': target_pose.unsqueeze(1),
-        }
+        # current_obs = {
+        #     'chest_camera_rgb': chest_camera_rgb.unsqueeze(1),
+        #     'head_camera_rgb': head_camera_rgb.unsqueeze(1),
+        #     'arm2_pos': self._robot.data.joint_pos[:,self._robot.actuators["arm2"].joint_indices].unsqueeze(1),
+        #     'arm2_vel': self._robot.data.joint_vel[:,self._robot.actuators["arm2"].joint_indices].unsqueeze(1),
+        #     'hand2_pos': self._robot.data.joint_pos[:,self._robot.actuators["hand2"].joint_indices[:6]].unsqueeze(1), # type: ignore
+        #     'hand2_vel': self._robot.data.joint_vel[:,self._robot.actuators["hand2"].joint_indices[:6]].unsqueeze(1), # type: ignore
+        #     'arm2_eef_pos': eef_state[:,:3].unsqueeze(1),
+        #     'arm2_eef_quat': eef_state[:,3:7].unsqueeze(1),
+        #     'target_pose': target_pose.unsqueeze(1),
+        # }
 
 
 
 
         # create obs dict
         # data shape is Batch_size,1,data_shape...
-        # obs = torch.cat(
-        #     (target_pose.unsqueeze(1),
-        #     self._robot.data.joint_pos[:,self._robot.actuators["arm2"].joint_indices].clone().unsqueeze(1),
-        #     self._robot.data.joint_pos[:,self._robot.actuators["hand2"].joint_indices][:,:6].clone().unsqueeze(1)),
-        #     dim=2
-        # )
-        # current_obs = {"state":obs}
+        obs = torch.cat(
+            (target_pose.unsqueeze(1),
+            self._robot.data.joint_pos[:,self._robot.actuators["arm2"].joint_indices].clone().unsqueeze(1),
+            self._robot.data.joint_pos[:,self._robot.actuators["hand2"].joint_indices][:,:6].clone().unsqueeze(1)),
+            dim=2
+        )
+        current_obs = {"state":obs}
 
 
         # policy model step

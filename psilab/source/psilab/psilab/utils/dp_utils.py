@@ -10,8 +10,8 @@ import dill
 import torch
 import hydra
 import sys
-sys.path.insert(0, '/home/psibot/dp_new')  # 添加 psi_dp 所在目录
-
+# sys.path.insert(0, '/home/psibot/dp_new')  # 添加 psi_dp 所在目录
+sys.path.insert(0, '/home/psibot/chembench/diffusion_policy')  # 添加 psi_dp 所在目录
 
 def load_diffusion_policy_2(checkpoint_path, device='cpu'):
     # 加载 checkpoint 字典
@@ -183,25 +183,25 @@ def process_batch_image(imgs:torch.Tensor):
 
 # def process_batch_image(imgs:torch.Tensor):
     
-    images_proccessed = torch.tensor([],dtype=torch.uint8,device= imgs.device)
+#     images_proccessed = torch.tensor([],dtype=torch.uint8,device= imgs.device)
 
-    for i in range(imgs.shape[0]):
-        img = imgs[i,...]
-        # 只保留RGB通道
-        img = img[...,:3].float()  
-        # 调整通道顺序 [H, W, C] -> [C, H, W]
-        # img = img.permute(0, 3, 1, 2)  
-        # img = img.permute(2, 1, 0)  # 调整通道顺序
-        img = img.permute(2, 0, 1)  # 调整通道顺序
+#     for i in range(imgs.shape[0]):
+#         img = imgs[i,...]
+#         # 只保留RGB通道
+#         img = img[...,:3].float()  
+#         # 调整通道顺序 [H, W, C] -> [C, H, W]
+#         # img = img.permute(0, 3, 1, 2)  
+#         # img = img.permute(2, 1, 0)  # 调整通道顺序
+#         img = img.permute(2, 0, 1)  # 调整通道顺序
 
-        # 归一化到[0,1]并调整尺寸
-        img = F.interpolate(
-            img.unsqueeze(0) / 255.0,  # 添加batch维度并归一化
-            size=(224, 224),           # 调整到模型期望的尺寸
-            mode='bilinear',
-            align_corners=False
-        )
+#         # 归一化到[0,1]并调整尺寸
+#         img = F.interpolate(
+#             img.unsqueeze(0) / 255.0,  # 添加batch维度并归一化
+#             size=(224, 224),           # 调整到模型期望的尺寸
+#             mode='bilinear',
+#             align_corners=False
+#         )
 
-        images_proccessed = torch.cat((images_proccessed,img),dim=0)
+#         images_proccessed = torch.cat((images_proccessed,img),dim=0)
 
-    return images_proccessed
+#     return images_proccessed
