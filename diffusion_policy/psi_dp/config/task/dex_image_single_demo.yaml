@@ -2,7 +2,7 @@ name: dex_image_single_demo
 
 image_shape: [3, 224, 224]
 mask_image_shape: [4, 224, 224]
-dataset_path: /home/psibot/psi-lab-v2/outputs/zarr/20251216_033903.zarr
+dataset_path: /home/psibot/chembench/psilab/outputs/zarr_data/20251217_161148.zarr
 shape_meta: &shape_meta
   # 修改FYD
   # acceptable types: rgb, low_dim

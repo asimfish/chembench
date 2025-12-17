@@ -513,8 +513,8 @@ class GraspBottleEnv(MPEnv):
         
 
         # 
-        self.create_trajectory(env_ids)
-        # self.create_trajectory_smooth(env_ids)
+        # self.create_trajectory(env_ids)
+        self.create_trajectory_smooth(env_ids)
 
 
 

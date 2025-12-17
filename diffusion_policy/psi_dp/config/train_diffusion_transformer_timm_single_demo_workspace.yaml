@@ -145,8 +145,8 @@ training:
   seed: 42
   debug: False
   # Feng Yunduo
-  # resume: False
-  resume: True
+  resume: False
+  # resume: True
   lastest_ckpt_path: "/home/admin01/Work/02-DiffusionPolicy/diffusion_policy/data/outputs/2025.08.14/14.41.36_train_diffusion_transformer_timm_dex_image_single_demo/checkpoints/epoch=0070-train_loss=0.050.ckpt"
   # optimization
   lr_scheduler: cosine

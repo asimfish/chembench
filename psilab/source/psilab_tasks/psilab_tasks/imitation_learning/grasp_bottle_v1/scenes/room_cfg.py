@@ -489,7 +489,8 @@ PSI_DC_02_CFG = BASE_CFG.replace(
                 ),
                 init_state=ArticulationCfg.InitialStateCfg(
                     # pos=(0.0, 0.0, 0.0),
-                    pos=(-1.7, -5.0, 0.0),
+                    # pos=(-1.7, -5.0, 0.0),
+                    pos=(-1.6, -5.0, 0.0),
                     rot=(1.0,0.0,0.0,0.0),
                     # rot=(0.0, 0.0, 0.0, 1.0),
                     # rot=(0.7071, 0.0000, 0.0000, 0.7071),

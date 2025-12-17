@@ -10,9 +10,9 @@ pillow==11.0.0
 
 [all]
 skrl>=1.4.1
-gym
-rsl-rl-lib>=2.1.1
 rl-games==1.6.1
+rsl-rl-lib>=2.1.1
+gym
 stable-baselines3>=2.1
 
 [rl-games]
