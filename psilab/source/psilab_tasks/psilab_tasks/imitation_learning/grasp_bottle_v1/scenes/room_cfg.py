@@ -719,7 +719,6 @@ PSI_DC_02_CFG = BASE_CFG.replace(
 
 PSI_DC_Beaker_003_CFG = PSI_DC_02_CFG.replace(
     rigid_objects_cfg={
-
         "bottle" : RigidObjectCfg(
                 prim_path="/World/envs/env_[0-9]+/Bottle",
                 spawn=sim_utils.UsdFileCfg(
@@ -777,6 +776,71 @@ PSI_DC_Beaker_003_CFG = PSI_DC_02_CFG.replace(
 
 
     )
+
+
+
+
+
+PSI_DC_Grasp_CFG = PSI_DC_02_CFG.replace(
+    rigid_objects_cfg={
+        "bottle" : RigidObjectCfg(
+                prim_path="/World/envs/env_[0-9]+/Bottle",
+                spawn=sim_utils.UsdFileCfg(
+                    usd_path="/home/psibot/psi-lab-v2/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_100ml/Beaker003.usd",
+                    # usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/mortar/Mortar001.usd",
+                    # usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_50ml/Beaker002.usd",
+                    # usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_500ml/Beaker005.usd",
+
+                    ##beaker
+                    scale=(1.0,1.0,1.0),
+
+                    ##motar
+                    # scale=(0.8,0.8,1.1),
+
+                    rigid_props=RigidBodyPropertiesCfg(
+                        solver_position_iteration_count=255
+                    )
+                ),
+                init_state=RigidObjectCfg.InitialStateCfg(
+                    # pos=(0.5,-0.105,0.85),
+                    # pos=(-1.250358,-5.30277,0.85 ),
+                    # pos=(-1.050358,-5.30277,0.85 ),
+                    # pos=(-1.150358,-5.30277,1.07 ),
+                    # pos=(-1.15358,-5.10277,0.9 ),
+
+
+                    pos=(-1.15358,-5.10277,1.05 ),
+                    rot= (0.0, 0.0, 0.0, 1.0)
+
+                    # pos=(-1.15358,-5.20277,1.10 ),
+                    # rot= (0.0, 0.0, 0.0, 1.0)
+                ),
+                enable_height_offset=True
+            ),
+        "table" : RigidObjectCfg(
+                    prim_path="/World/envs/env_[0-9]+/Table", 
+                    spawn=sim_utils.UsdFileCfg(
+                        usd_path=PSILAB_USD_ASSET_DIR + "/rigid_objects/high_poly/workbench/willow_table/WillowTable.usd",
+                        scale=(1.0, 1.0, 1.0),
+                        visual_material=None,
+                        rigid_props=RigidBodyPropertiesCfg(
+                            kinematic_enabled = True,
+                            solver_position_iteration_count=255
+                        )
+                    ),
+
+
+                    init_state = RigidObjectCfg.InitialStateCfg(
+                        pos=(0.65, 0.0, 0.0), 
+                        rot= (0.707, 0.0, 0.0, 0.707)
+                    )
+                ),
+
+    },
+
+
+    )
+
 
 
 PSI_DC_Chem_CFG = PSI_DC_02_CFG.replace(

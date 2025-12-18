@@ -162,8 +162,80 @@
         },
 
         // ============================================
-        // Diffusion Policy 测试配置
+        // Diffusion Policy 批量评估
+        // 使用说明：编辑 eval_configs.yaml 配置要测试的模型
         // ============================================
+        {
+            "name": "IL-Batch-Eval",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "cd ${workspaceFolder}/psilab/scripts_psi/workflows/imitation_learning && bash batch_eval_yaml.sh"
+        },
+
+        // ============================================
+        // Diffusion Policy 单次测试配置
+        // 使用说明：
+        //   - RGB模式: 使用图像+状态输入，需要 --enable_cameras
+        //   - State模式: 仅使用状态输入，不需要相机
+        //   - 修改 --checkpoint 为要测试的模型路径
+        //   - 修改 --scene 为要测试的物体场景
+        // ============================================
+        // RGB模式测试
+        // {
+        //     "name": "IL-Eval-RGB",
+        //     "type": "debugpy",
+        //     "request": "launch",
+        //     "args": [
+        //         "--task",
+        //         "Psi-IL-Grasp-Beaker-003-v1",
+        //         "--num_envs",
+        //         "1",
+        //         "--seed",
+        //         "17",
+        //         "--scene",
+        //         "room_cfg:PSI_DC_Beaker_003_CFG",  // 可选: PSI_DC_Beaker_002_CFG, PSI_DC_Beaker_005_CFG, PSI_DC_Crucible_CFG
+        //         "--enable_cameras",
+        //         "--async_reset",
+        //         "--checkpoint",
+        //         "/home/psibot/chembench/data/outputs/grasp_rgb/100ml玻璃烧杯/xxx/checkpoints/latest.ckpt",
+        //         "--max_step",
+        //         "500",
+        //         "--max_episode",
+        //         "100",
+        //         "--enable_eval",
+        //     ],
+        //     "program": "${workspaceFolder}/psilab/scripts_psi/workflows/imitation_learning/play.py",
+        //     "console": "integratedTerminal",
+        //     "justMyCode": false
+        // },
+        // State模式测试
+        // {
+        //     "name": "IL-Eval-State",
+        //     "type": "debugpy",
+        //     "request": "launch",
+        //     "args": [
+        //         "--task",
+        //         "Psi-IL-Grasp-Beaker-003-State-v1",  // State模式的task
+        //         "--num_envs",
+        //         "1",
+        //         "--seed",
+        //         "17",
+        //         "--scene",
+        //         "room_cfg:PSI_DC_Beaker_003_CFG",
+        //         "--async_reset",
+        //         "--checkpoint",
+        //         "/home/psibot/chembench/data/outputs/grasp_state/100ml玻璃烧杯/xxx/checkpoints/latest.ckpt",
+        //         "--max_step",
+        //         "500",
+        //         "--max_episode",
+        //         "100",
+        //         "--enable_eval",
+        //     ],
+        //     "program": "${workspaceFolder}/psilab/scripts_psi/workflows/imitation_learning/play.py",
+        //     "console": "integratedTerminal",
+        //     "justMyCode": false
+        // },
+        // // 旧版RGB测试（保留）
         {
             "name": "IL-Grasp-Beaker-003-v1:Play",
             "type": "debugpy",

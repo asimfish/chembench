@@ -1,0 +1,87 @@
+# ==============================================================================
+# 批量评估配置文件
+# 
+# 使用方法:
+#   1. 编辑此文件，添加要测试的模型配置
+#   2. 运行: bash batch_eval_yaml.sh
+#
+# 配置说明:
+#   - checkpoint: 模型权重路径
+#   - mode: rgb 或 state
+#   - object_name: 物体名称（用于日志记录）
+#   - usd_path: 物体的USD资源路径
+#   - task: Isaac Lab task名称（可选，会根据mode自动选择）
+#   - num_envs: 环境数量（可选，默认10）
+#   - max_episode: 最大测试次数（可选，默认100）
+# ==============================================================================
+
+# 全局配置
+global:
+  num_envs: 10
+  seed: 17
+  max_episode: 10
+  max_step: 500
+  headless: false  # 必须有头模式
+
+# 统一场景配置（所有物体都使用同一个场景配置）
+scene_config: PSI_DC_Grasp_CFG
+
+# 物体USD路径映射（方便引用）
+usd_paths:
+  100ml玻璃烧杯: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_100ml/Beaker003.usd"
+  50ml玻璃烧杯: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_50ml/Beaker002.usd"
+  500ml玻璃烧杯: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_500ml/Beaker005.usd"
+  坩埚: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/crucible/Crucible001.usd"
+  研钵: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/mortar/Mortar001.usd"
+
+# Task配置映射
+tasks:
+  rgb: Psi-IL-Grasp-Beaker-003-v1
+  state: Psi-IL-Grasp-Beaker-003-State-v1
+
+# 评估任务列表
+evaluations:
+  # ==================== RGB模式测试 ====================
+  - name: "100ml玻璃烧杯_RGB_v1"
+    checkpoint: "/home/psibot/chembench/data/outputs/2025.12.18/03.37.22_train_diffusion_transformer_timm_dex_image_single_demo/checkpoints/epoch=0220-train_loss=0.008.ckpt"
+    mode: rgb
+    object_name: 100ml玻璃烧杯
+    usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_100ml/Beaker003.usd"
+    enabled: true
+
+  - name: "100ml玻璃烧杯_RGB_v2"
+    checkpoint: "/home/psibot/chembench/data/outputs/2025.12.18/03.37.22_train_diffusion_transformer_timm_dex_image_single_demo/checkpoints/epoch=0300-train_loss=0.007.ckpt"
+    mode: rgb
+    object_name: 100ml玻璃烧杯
+    usd_path: "/home/psibot/chembench/data/outputs/2025.12.18/03.30.32_train_diffusion_transformer_timm_dex_image_single_demo/checkpoints/epoch=0200-train_loss=0.006.ckpt"
+    enabled: true
+
+  # ==================== State模式测试 ====================
+  # - name: "100ml玻璃烧杯_State_v1"
+  #   checkpoint: "/home/psibot/chembench/data/outputs/grasp_state/100ml玻璃烧杯/xxx/checkpoints/latest.ckpt"
+  #   mode: state
+  #   object_name: 100ml玻璃烧杯
+  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_100ml/Beaker003.usd"
+  #   enabled: false
+
+  # ==================== 其他物体测试示例 ====================
+  # - name: "500ml玻璃烧杯_RGB"
+  #   checkpoint: "/home/psibot/chembench/data/outputs/grasp_rgb/500ml玻璃烧杯/xxx/checkpoints/latest.ckpt"
+  #   mode: rgb
+  #   object_name: 500ml玻璃烧杯
+  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_500ml/Beaker005.usd"
+  #   enabled: false
+
+  # - name: "坩埚_RGB"
+  #   checkpoint: "/home/psibot/chembench/data/outputs/grasp_rgb/坩埚/xxx/checkpoints/latest.ckpt"
+  #   mode: rgb
+  #   object_name: 坩埚
+  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/crucible/Crucible001.usd"
+  #   enabled: false
+
+  # - name: "研钵_RGB"
+  #   checkpoint: "/home/psibot/chembench/data/outputs/grasp_rgb/研钵/xxx/checkpoints/latest.ckpt"
+  #   mode: rgb
+  #   object_name: 研钵
+  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/mortar/Mortar001.usd"
+  #   enabled: false
