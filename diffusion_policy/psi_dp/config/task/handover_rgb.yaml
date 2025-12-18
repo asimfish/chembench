@@ -1,0 +1,89 @@
+name: handover_rgb
+
+# ==================== 数据集配置（需要修改的部分）====================
+# 物体名称 - 用于输出文件夹命名和wandb记录
+object_name: "默认物体"  # 修改这里：物体名称
+# 数据条数 - 用于输出文件夹命名和wandb记录（0表示自动从数据集读取）
+num_demos: 0  # 修改这里：数据条数，0表示自动检测
+
+# 数据集根目录
+data_root: /home/psibot/chembench/data/zarr_rgb/motion_plan/handover
+# 完整数据集路径 = data_root / object_name.zarr
+dataset_path: ${task.data_root}/${task.object_name}.zarr
+
+# ==================== 数据采集时的随机化配置 ====================
+randomization:
+  position:
+    enabled: true
+    x_range: [-0.1, 0.1]
+    y_range: [-0.1, 0.1]
+    z_range: [0.0, 0.0]
+  rotation:
+    enabled: false
+    yaw_range: [-30, 30]
+  lighting: false
+  texture: false
+
+# ==================== 数据信息 ====================
+data_info:
+  obs_type: "rgb"
+  obs_keys: ["chest_camera_rgb", "head_camera_rgb", "arm2_pos", "arm2_vel", "hand2_pos", "hand2_vel", "arm2_eef_pos", "arm2_eef_quat", "target_pose"]
+  action_dim: 13
+  image_size: 224
+
+# ==================== 以下配置通常不需要修改 ====================
+image_shape: [3, 224, 224]
+
+shape_meta: &shape_meta
+  obs:
+    chest_camera_rgb:
+      shape: ${task.image_shape}
+      type: rgb
+      horizon: ${n_obs_steps}
+    head_camera_rgb:
+      shape: ${task.image_shape}
+      type: rgb
+      horizon: ${n_obs_steps}
+    arm2_pos:
+      shape: [7]
+      type: low_dim 
+      horizon: ${n_obs_steps} 
+    arm2_vel:
+      shape: [7]
+      type: low_dim 
+      horizon: ${n_obs_steps} 
+    hand2_pos:
+      shape: [6]
+      type: low_dim
+      horizon: ${n_obs_steps}
+    hand2_vel:
+      shape: [6]
+      type: low_dim
+      horizon: ${n_obs_steps}
+    arm2_eef_pos:
+      shape: [3]
+      type: low_dim
+      horizon: ${n_obs_steps}
+    arm2_eef_quat:
+      shape: [4]
+      type: low_dim
+      horizon: ${n_obs_steps}
+    target_pose:
+      shape: [7]
+      type: low_dim
+      horizon: ${n_obs_steps}
+  action: 
+    shape: [13]
+    horizon: ${n_action_steps}
+
+env_runner:
+  _target_: diffusion_policy.env_runner.real_pusht_image_runner.RealPushTImageRunner
+
+dataset:
+  _target_: psi_dp.dataset.single_demo_image_dataset.SingleDemoImageDataset
+  zarr_path: ${task.dataset_path}
+  horizon: ${n_action_steps}
+  pad_before: ${eval:'${n_obs_steps}-1+${n_latency_steps}'}
+  pad_after: ${eval:'${n_action_steps}-1'}
+  seed: 42
+  val_ratio: 0

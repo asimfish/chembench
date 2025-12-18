@@ -32,8 +32,8 @@ from ..config_loader import load_grasp_config
 
 # ========== 任务配置（修改这里即可切换不同任务）==========
 # TARGET_OBJECT_NAME = "mortar"  # 目标物体名称，如 "mortar", "glass_beaker_100ml" 等
-# TARGET_OBJECT_NAME = "glass_beaker_100ml"  # 目标物体名称，如 "mortar", "glass_beaker_100ml" 等
-TARGET_OBJECT_NAME = "glass_beaker_500ml"  # 目标物体名称，如 "mortar", "glass_beaker_100ml" 等
+TARGET_OBJECT_NAME = "glass_beaker_100ml"  # 目标物体名称，如 "mortar", "glass_beaker_100ml" 等
+# TARGET_OBJECT_NAME = "glass_beaker_500ml"  # 目标物体名称，如 "mortar", "glass_beaker_100ml" 等
 TASK_TYPE = "grasp"            # 任务类型：grasp, handover, pick_place, pour 等
 
 # 数据根目录：统一存储到 chembench/data 下
@@ -99,7 +99,7 @@ class GraspBottleEnvCfg(MPEnvCfg):
     smooth_finger_close: bool = True
 
     # 是否启用轨迹平滑
-    enable_trajectory_smooth: bool = False
+    enable_trajectory_smooth: bool = True
     
     # 成功判断：朝向偏差阈值（sin²(θ/2)，0=完全一致，1=上下颠倒）
     # 0.1 约等于 37° 的偏差，0.05 约等于 26° 的偏差
@@ -196,6 +196,7 @@ class GraspBottleEnv(MPEnv):
         self._target_pos_init = torch.zeros((self.num_envs,3),device=self.device)
         self._target_quat_init = torch.zeros((self.num_envs,4),device=self.device)  # 初始朝向（wxyz）
 
+        self.sim.set_camera_view([-0.7, -5.2, 1.3], [-1.2, -5.2, 1.1])
         # 设置 RTX 渲染选项
         import carb
         carb_settings_iface = carb.settings.get_settings()
@@ -239,8 +240,6 @@ class GraspBottleEnv(MPEnv):
         
         
         target_position = self._target.data.root_pos_w[env_ids,:]-self._robot.data.root_link_pos_w[env_ids,:]
-        
-        
         
         eef_pose_target_1 = torch.cat((eff_offset+target_position,eff_quat),dim=1)
         

@@ -16,32 +16,111 @@
         },
 
         // ============================================
-        // Diffusion Policy 训练配置
+        // Diffusion Policy 训练配置（新版）
+        // 使用说明：修改 task/*.yaml 中的 object_name 和 num_demos
         // ============================================
+        // RGB任务训练 - 使用图像输入（修改 task/grasp_rgb.yaml）
         {
-            "name": "DP:Train",
+            "name": "DP:Train-Grasp-RGB",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/diffusion_policy/train.py",
             "console": "integratedTerminal",
             "args": [
                 "--config-name",
-                "train_diffusion_transformer_timm_single_demo_workspace",
+                "train_diffusion_transformer_timm_workspace",
+                "task=grasp_rgb"
             ],
+            "env": {
+                "CUDA_VISIBLE_DEVICES": "0"
+            },
             "justMyCode": false
         },
+        // State任务训练 - 仅使用状态输入（修改 task/grasp_state.yaml）
         {
-            "name": "DP:Grasp-Lego-Train",
+            "name": "DP:Train-Grasp-State",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/diffusion_policy/train.py",
             "console": "integratedTerminal",
             "args": [
                 "--config-name",
-                "train_diffusion_transformer_grasp_lego_workspace",
+                "train_diffusion_transformer_state_workspace",
+                "task=grasp_state"
             ],
+            "env": {
+                "CUDA_VISIBLE_DEVICES": "1"
+            },
             "justMyCode": false
         },
+        // Handover RGB训练（修改 task/handover_rgb.yaml）
+        // {
+        //     "name": "DP:Train-Handover-RGB",
+        //     "type": "debugpy",
+        //     "request": "launch",
+        //     "program": "${workspaceFolder}/diffusion_policy/train.py",
+        //     "console": "integratedTerminal",
+        //     "args": [
+        //         "--config-name",
+        //         "train_diffusion_transformer_timm_workspace",
+        //         "task=handover_rgb"
+        //     ],
+        //     "env": {
+        //         "CUDA_VISIBLE_DEVICES": "4"
+        //     },
+        //     "justMyCode": false
+        // },
+        // Handover State训练（修改 task/handover_state.yaml）
+        // {
+        //     "name": "DP:Train-Handover-State",
+        //     "type": "debugpy",
+        //     "request": "launch",
+        //     "program": "${workspaceFolder}/diffusion_policy/train.py",
+        //     "console": "integratedTerminal",
+        //     "args": [
+        //         "--config-name",
+        //         "train_diffusion_transformer_state_workspace",
+        //         "task=handover_state"
+        //     ],
+        //     "env": {
+        //         "CUDA_VISIBLE_DEVICES": "4"
+        //     },
+        //     "justMyCode": false
+        // },
+
+        // // ============================================
+        // // Diffusion Policy 旧版训练配置（保留兼容）
+        // // ============================================
+        // {
+        //     "name": "DP:Train-Legacy",
+        //     "type": "debugpy",
+        //     "request": "launch",
+        //     "program": "${workspaceFolder}/diffusion_policy/train.py",
+        //     "console": "integratedTerminal",
+        //     "args": [
+        //         "--config-name",
+        //         "train_diffusion_transformer_timm_single_demo_workspace",
+        //     ],
+        //     "env": {
+        //         "CUDA_VISIBLE_DEVICES": "4"  // 指定 GPU，可改为 "1", "0,1" 等
+        //     },
+        //     "justMyCode": false
+        // },
+        // {
+        //     "name": "DP:Grasp-Lego-Train-Legacy",
+        //     "type": "debugpy",
+        //     "request": "launch",
+        //     "program": "${workspaceFolder}/diffusion_policy/train.py",
+        //     "console": "integratedTerminal",
+        //     "args": [
+        //         "--config-name",
+        //         "train_diffusion_transformer_grasp_lego_workspace",
+        //     ],
+        //     "env": {
+        //         "CUDA_VISIBLE_DEVICES": "4"  // 指定 GPU，可改为 "1", "0,1" 等
+        //     },
+        //     "justMyCode": false
+        // },
 
         // ============================================
         // IsaacSim 启动配置
@@ -177,16 +256,42 @@
             "console": "integratedTerminal",
             "justMyCode": false
         },
+        // ============================================
+        // HDF5 to Zarr 数据转换
+        // 使用说明：
+        // 1. 修改 --h5_dir 为你的原始数据目录
+        // 2. 输出会自动按照路径结构生成，如：
+        //    输入: data/motion_plan/grasp/100ml玻璃烧杯/20251218_215604
+        //    State输出: data/zarr_state/motion_plan/grasp/100ml玻璃烧杯.zarr
+        //    RGB输出: data/zarr_rgb/motion_plan/grasp/100ml玻璃烧杯.zarr
+        // ============================================
         {
-            "name": "HDF5 to Zarr",
+            "name": "HDF5 to Zarr (State-Based)",
             "type": "debugpy",
             "request": "launch",
             "args": [
                 "--h5_dir",
-                "${workspaceFolder}/data/motion_plan/grasp/坩埚",
+                "${workspaceFolder}/data/motion_plan/grasp/100ml玻璃烧杯/20251218_215604",
                 "--zarr_dir",
-                // "${workspaceFolder}/psilab/outputs/zarr_data",
-                "${workspaceFolder}/data/zarr_data",
+                "${workspaceFolder}/data/zarr_state",
+                "--mode",
+                "state"
+            ],
+            "program": "${workspaceFolder}/psilab/source/psilab/psilab/utils/zarr_utils.py",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
+            "name": "HDF5 to Zarr (RGB-Based)",
+            "type": "debugpy",
+            "request": "launch",
+            "args": [
+                "--h5_dir",
+                "${workspaceFolder}/data/motion_plan/grasp/100ml玻璃烧杯/20251218_215604",
+                "--zarr_dir",
+                "${workspaceFolder}/data/zarr_rgb",
+                "--mode",
+                "rgb"
             ],
             "program": "${workspaceFolder}/psilab/source/psilab/psilab/utils/zarr_utils.py",
             "console": "integratedTerminal",
@@ -194,4 +299,3 @@
         }
     ]
 }
-

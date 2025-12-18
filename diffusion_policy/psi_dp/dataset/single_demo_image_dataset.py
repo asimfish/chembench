@@ -36,6 +36,7 @@ class SingleDemoImageDataset(BaseImageDataset):
                 # FYD修改
                 'chest_camera_rgb', # 胸部相机
                 'head_camera_rgb',# 头部相机
+                'third_person_camera_rgb', # 第三人称相机
                 'arm2_pos',
                 'arm2_vel',
                 'hand2_pos',
@@ -134,6 +135,7 @@ class SingleDemoImageDataset(BaseImageDataset):
         # 处理图像数据
         sensor1_frames = self._process_image_batch(sample['head_camera_rgb'][T_slice])
         sensor2_frames = self._process_image_batch(sample['chest_camera_rgb'][T_slice])
+        sensor3_frames = self._process_image_batch(sample['third_person_camera_rgb'][T_slice])
 
         
         # 修改：FYD
@@ -142,6 +144,7 @@ class SingleDemoImageDataset(BaseImageDataset):
             'obs': {
                 'head_camera_rgb': sensor1_frames,
                 'chest_camera_rgb': sensor2_frames,
+                'third_person_camera_rgb': sensor3_frames,
                 'arm2_pos': sample['arm2_pos'][T_slice].astype(np.float32),
                 'arm2_vel': sample['arm2_vel'][T_slice].astype(np.float32),
                 'hand2_pos': sample['hand2_pos'][T_slice].astype(np.float32),
@@ -173,6 +176,7 @@ class SingleDemoImageDataset(BaseImageDataset):
         # 修改：FYD
         normalizer['head_camera_rgb'] = get_image_range_normalizer()
         normalizer['chest_camera_rgb'] = get_image_range_normalizer()
+        normalizer['third_person_camera_rgb'] = get_image_range_normalizer()
         return normalizer
 
     def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:

@@ -17,9 +17,11 @@ from functools import cached_property
 import cv2
 
 # add argparse arguments
-parser = argparse.ArgumentParser(description="This script demonstrates lego grasp task demo from gym.")
-parser.add_argument("--h5_dir", type=str, default="", help="Name of the task.")
-parser.add_argument("--zarr_dir", type=str, default="", help="Name of the task.")
+parser = argparse.ArgumentParser(description="Convert HDF5 data to Zarr format for diffusion policy training.")
+parser.add_argument("--h5_dir", type=str, default="", help="Directory containing HDF5 files.")
+parser.add_argument("--zarr_dir", type=str, default="", help="Output directory for Zarr files.")
+parser.add_argument("--mode", type=str, default="state", choices=["state", "rgb"], 
+                    help="Conversion mode: 'state' for pure state-based, 'rgb' for state + camera images.")
 
 def check_chunks_compatible(chunks: tuple, shape: tuple):
     assert len(shape) == len(chunks)
@@ -604,135 +606,204 @@ class ReplayBuffer:
                     rechunk_recompress_array(self.data, key, compressor=compressor)
 
 
+def convert_state_based(h5_file, h5_temp) -> dict:
+    """
+    纯状态模式转换
+    
+    包含数据：
+    - timestamps: 仿真时间
+    - action: 手臂位置目标(7) + 手指位置目标(6) = 13维
+    - state: 物体位姿(7) + 手臂位置(7) + 手指位置(6) = 20维
+    """
+    episode = dict()
+    
+    episode['timestamps'] = h5_file["sim_time"]
+    
+    # Action: arm2_pos_target(7) + hand2_pos_target(6) = 13维
+    h5_temp.create_dataset(
+        "action",
+        shape=(h5_file["robots"]["robot"]["arm2_pos_target"].shape[0], 13),
+        dtype=h5_file["robots"]["robot"]["arm2_pos_target"].dtype
+    )
+    h5_temp["action"][:, :7] = h5_file["robots"]["robot"]["arm2_pos_target"]
+    h5_temp["action"][:, 7:] = h5_file["robots"]["robot"]["hand2_pos_target"][:, :6]
+    
+    # State: bottle_pose(7) + arm2_pos(7) + hand2_pos(6) = 20维
+    h5_temp.create_dataset(
+        "state",
+        shape=(h5_file["robots"]["robot"]["arm2_pos"].shape[0], 20),
+        dtype=h5_file["robots"]["robot"]["arm2_pos"].dtype
+    )
+    h5_temp["state"][:, :7] = h5_file["rigid_objects"]["bottle"]
+    h5_temp["state"][:, 7:14] = h5_file["robots"]["robot"]["arm2_pos"]
+    h5_temp["state"][:, 14:] = h5_file["robots"]["robot"]["hand2_pos"][:, :6]
+    
+    episode['action'] = h5_temp["action"]
+    episode['state'] = h5_temp["state"]
+    
+    return episode
+
+
+def convert_rgb_based(h5_file, h5_temp, image_size: int = 224) -> dict:
+    """
+    RGB图像 + 状态模式转换
+    
+    包含数据：
+    - timestamps: 仿真时间
+    - action: 手臂位置目标(7) + 手指位置目标(6) = 13维
+    - arm2_pos: 手臂关节位置(7)
+    - arm2_vel: 手臂关节速度(7)
+    - hand2_pos: 手指关节位置(6)
+    - hand2_vel: 手指关节速度(6)
+    - arm2_eef_pos: 末端执行器位置(3)
+    - arm2_eef_quat: 末端执行器四元数(4)
+    - target_pose: 目标物体位姿(7)
+    - head_camera_rgb: 头部相机RGB图像 (N, 224, 224, 3)
+    - chest_camera_rgb: 胸部相机RGB图像 (N, 224, 224, 3)
+    - third_person_camera_rgb: 第三人称相机RGB图像 (N, 224, 224, 3)
+    """
+    episode = dict()
+    
+    episode['timestamps'] = h5_file["sim_time"]
+    
+    # Action: arm2_pos_target(7) + hand2_pos_target(6) = 13维
+    h5_temp.create_dataset(
+        "action",
+        shape=(h5_file["robots"]["robot"]["arm2_pos_target"].shape[0], 13),
+        dtype=h5_file["robots"]["robot"]["arm2_pos_target"].dtype
+    )
+    h5_temp["action"][:, :7] = h5_file["robots"]["robot"]["arm2_pos_target"]
+    h5_temp["action"][:, 7:] = h5_file["robots"]["robot"]["hand2_pos_target"][:, :6]
+    
+    episode['action'] = h5_temp["action"]
+    episode['arm2_pos'] = h5_file["robots"]["robot"]["arm2_pos"]
+    episode['arm2_vel'] = h5_file["robots"]["robot"]["arm2_vel"]
+    episode['hand2_pos'] = h5_file["robots"]["robot"]["hand2_pos"][:, :6]
+    episode['hand2_vel'] = h5_file["robots"]["robot"]["hand2_vel"][:, :6]
+    episode['arm2_eef_pos'] = h5_file["robots"]["robot"]["arm2_eef_pose"][:, :3]
+    episode['arm2_eef_quat'] = h5_file["robots"]["robot"]["arm2_eef_pose"][:, 3:]
+    episode['target_pose'] = h5_file["rigid_objects"]["bottle"][:, :7]
+    
+    # 处理相机图像
+    camera_names = ["head_camera.rgb", "chest_camera.rgb", "third_person_camera.rgb"]
+    output_names = ["head_camera_rgb", "chest_camera_rgb", "third_person_camera_rgb"]
+    
+    for cam_name, out_name in zip(camera_names, output_names):
+        cam_key = f"robots/robot/{cam_name}"
+        if cam_name in h5_file["robots"]["robot"]:
+            image_array = np.array(h5_file["robots"]["robot"][cam_name])
+            image_array_resize = np.zeros((image_array.shape[0], image_size, image_size, 3), dtype=image_array.dtype)
+            
+            for i in range(image_array.shape[0]):
+                img_bgr = cv2.cvtColor(image_array[i], cv2.COLOR_RGB2BGR)
+                img_bgr = cv2.resize(img_bgr, (image_size, image_size))
+                image_array_resize[i] = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+            
+            h5_temp.create_dataset(
+                out_name,
+                shape=(image_array.shape[0], image_size, image_size, 3),
+                dtype=image_array.dtype,
+                data=image_array_resize
+            )
+            episode[out_name] = h5_temp[out_name]
+    
+    return episode
+
+
+def extract_path_structure(h5_dir: str) -> tuple:
+    """
+    从输入路径中提取目录结构
+    
+    例如：
+    输入：/path/to/data/motion_plan/grasp/100ml玻璃烧杯/20251218_215604
+    输出：('motion_plan', 'grasp', '100ml玻璃烧杯')
+    
+    会自动识别以下关键词作为结构起点：
+    - motion_plan
+    - 如果没有找到，则使用最后3级目录
+    """
+    parts = h5_dir.rstrip('/').split('/')
+    
+    # 查找 motion_plan 的位置
+    try:
+        mp_idx = parts.index('motion_plan')
+        # 返回 motion_plan 之后的结构（不包含时间戳目录）
+        # 假设结构为：motion_plan/task_type/object_name/[timestamp]
+        structure_parts = parts[mp_idx:]
+        # 如果最后一部分看起来像时间戳（纯数字或下划线数字），则排除
+        if structure_parts and structure_parts[-1].replace('_', '').isdigit():
+            structure_parts = structure_parts[:-1]
+        return tuple(structure_parts)
+    except ValueError:
+        # 没找到 motion_plan，使用最后2-3级目录
+        relevant_parts = parts[-3:] if len(parts) >= 3 else parts
+        # 排除时间戳目录
+        if relevant_parts and relevant_parts[-1].replace('_', '').isdigit():
+            relevant_parts = relevant_parts[:-1]
+        return tuple(relevant_parts)
+
+
 if __name__ == "__main__":
     args = parser.parse_args()
     h5_dir = args.h5_dir
     zarr_dir = args.zarr_dir
+    mode = args.mode
 
-    if not os.path.exists(zarr_dir):
-        os.makedirs(zarr_dir, exist_ok= True)
+    # 提取输入路径的结构
+    path_structure = extract_path_structure(h5_dir)
+    
+    # 构建输出路径：zarr_dir/motion_plan/task_type/object_name.zarr
+    # 例如：zarr_state/motion_plan/grasp/100ml玻璃烧杯.zarr
+    zarr_subdir = os.path.join(zarr_dir, *path_structure[:-1]) if len(path_structure) > 1 else zarr_dir
+    zarr_filename = path_structure[-1] if path_structure else "output"
+    zarr_path = os.path.join(zarr_subdir, zarr_filename + ".zarr")
+    
+    # 确保输出目录存在
+    if not os.path.exists(zarr_subdir):
+        os.makedirs(zarr_subdir, exist_ok=True)
+    
+    print(f"=" * 60)
+    print(f"HDF5 to Zarr 转换器")
+    print(f"=" * 60)
+    print(f"模式: {mode}")
+    print(f"输入目录: {h5_dir}")
+    print(f"路径结构: {'/'.join(path_structure)}")
+    print(f"输出路径: {zarr_path}")
+    print(f"=" * 60)
 
     replay_buffer = ReplayBuffer.create_from_path(
-        zarr_path=os.path.join(zarr_dir, h5_dir.split("/")[-1]+".zarr"),
-        mode = "w"
+        zarr_path=zarr_path,
+        mode="w"
     )
 
-    # Get All H5 in File
-    h5_file_names=[]
+    # 获取所有 HDF5 文件
+    h5_file_names = []
     for file in os.listdir(h5_dir):
-        if file.split(".")[-1]=="hdf5":
+        if file.split(".")[-1] == "hdf5":
             h5_file_names.append(file)
-    h5_temp = h5py.File(os.path.join(h5_dir,"temp"),'w')
-
-    for h5_file_name in h5_file_names:
-
-        h5_temp.clear()
-        print(h5_file_name)
-        h5_file = h5py.File(os.path.join(h5_dir,h5_file_name), 'r')
-
-        episode = dict()
-
-        # # 原始
-        # episode['timestamps'] = h5_file["sim_time"][:num:4,:] # type: ignore
-        # episode['action'] = h5_file["robots"]["robot"]["arm2_pos_target"] + h5_file["robots"]["robot"]["hand2_pos_target"][:,:6]
-
-        # Statebase
-        episode['timestamps'] = h5_file["sim_time"] # type: ignore
-
-        h5_temp.create_dataset(
-            "action",
-            shape=(h5_file["robots"]["robot"]["arm2_pos_target"].shape[0] ,13),# type: ignore
-            dtype=h5_file["robots"]["robot"]["arm2_pos_target"].dtype
-        )
-
-        h5_temp["action"][:,:7] = h5_file["robots"]["robot"]["arm2_pos_target"] # type: ignore
-        h5_temp["action"][:,7:] = h5_file["robots"]["robot"]["hand2_pos_target"][:,:6] # type: ignore
-
-        h5_temp.create_dataset(
-            "state",
-            shape=(h5_file["robots"]["robot"]["arm2_pos"].shape[0],20),# type: ignore
-            dtype=h5_file["robots"]["robot"]["arm2_pos"].dtype
-        )
-
-        h5_temp["state"][:,:7] = h5_file["rigid_objects"]["bottle"] # type: ignore
-        h5_temp["state"][:,7:14] = h5_file["robots"]["robot"]["arm2_pos"] # type: ignore
-        h5_temp["state"][:,14:] = h5_file["robots"]["robot"]["hand2_pos"][:,:6]# type: ignore
-
-        episode['action'] = h5_temp["action"]# type: ignore
-        episode['state'] = h5_temp["state"]
-        
-        # # ## State and camera
-        # h5_temp.create_dataset(
-        #     "action",
-        #     shape=(h5_file["robots"]["robot"]["arm2_pos_target"].shape[0],13),
-        #     dtype=h5_file["robots"]["robot"]["arm2_pos_target"].dtype
-        # )
-
-        # h5_temp["action"][:,:7] = h5_file["robots"]["robot"]["arm2_pos_target"]
-        # h5_temp["action"][:,7:] = h5_file["robots"]["robot"]["hand2_pos_target"][:,:6]
-
-        # episode['action'] = h5_temp["action"]# type: ignore
-        # episode['arm2_pos'] = h5_file["robots"]["robot"]["arm2_pos"] # type: ignore
-        # episode['arm2_vel'] = h5_file["robots"]["robot"]["arm2_vel"] # type: ignore
-        # episode['hand2_pos'] = h5_file["robots"]["robot"]["hand2_pos"][:,:6] # type: ignore
-        # episode['hand2_vel'] = h5_file["robots"]["robot"]["hand2_vel"][:,:6] # type: ignore
-        # episode['arm2_eef_pos'] = h5_file["robots"]["robot"]["arm2_eef_pose"][:,:3] # type: ignore
-        # episode['arm2_eef_quat'] = h5_file["robots"]["robot"]["arm2_eef_pose"][:,3:] # type: ignore
-        # episode['target_pose'] = h5_file["rigid_objects"]["bottle"][:,:7] # type: ignore
-        
-        # # 头部相机
-        # image_array = np.array(h5_file["robots"]["robot"]["head_camera.rgb"])
-        # image_array_resize = np.zeros((image_array.shape[0],224,224,3))
-
-        # for i in range(image_array.shape[0]):
-        #     img_bgr = cv2.cvtColor(image_array[i], cv2.COLOR_RGB2BGR)
-        #     img_bgr = cv2.resize(img_bgr, (224,224))
-        #     image_array_resize[i] = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
-
-        # h5_temp.create_dataset(
-        #     "head_camera.rgb",
-        #     shape=(image_array.shape[0],224,224,3),
-        #     dtype=h5_file["robots"]["robot"]["head_camera.rgb"].dtype,
-        #     data=image_array_resize
-        # )
-
-        # # 胸部相机
-        # image_array = np.array(h5_file["robots"]["robot"]["chest_camera.rgb"])
-        # image_array_resize = np.zeros((image_array.shape[0],224,224,3))
-
-        # for i in range(image_array.shape[0]):
-        #     img_bgr = cv2.cvtColor(image_array[i], cv2.COLOR_RGB2BGR)
-        #     img_bgr = cv2.resize(img_bgr, (224,224))
-        #     image_array_resize[i] = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
-
-        # h5_temp.create_dataset(
-        #     "chest_camera.rgb",
-        #     shape=(image_array.shape[0],224,224,3),
-        #     dtype=h5_file["robots"]["robot"]["chest_camera.rgb"].dtype,
-        #     data=image_array_resize
-        # )
-
-        # # 第三人称相机
-        # image_array = np.array(h5_file["robots"]["robot"]["third_person_camera.rgb"])
-        # image_array_resize = np.zeros((image_array.shape[0],224,224,3))
-
-        # for i in range(image_array.shape[0]):
-        #     img_bgr = cv2.cvtColor(image_array[i], cv2.COLOR_RGB2BGR)
-        #     img_bgr = cv2.resize(img_bgr, (224,224))
-        #     image_array_resize[i] = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
-
-        # h5_temp.create_dataset(
-        #     "third_person_camera.rgb",
-        #     shape=(image_array.shape[0],224,224,3),
-        #     dtype=h5_file["robots"]["robot"]["third_person_camera.rgb"].dtype,
-        #     data=image_array_resize
-        # )
-
-        # episode['head_camera_rgb'] = h5_temp["head_camera.rgb"] # type: ignore
-        # episode['chest_camera_rgb'] = h5_temp["chest_camera.rgb"] # type: ignore
-        # episode['third_person_camera_rgb'] = h5_temp["third_person_camera.rgb"] # type: ignore
-
     
-        replay_buffer.add_episode(episode,compressors="disk")
+    print(f"找到 {len(h5_file_names)} 个 HDF5 文件")
+    
+    h5_temp = h5py.File(os.path.join(h5_dir, "temp"), 'w')
 
-    os.remove(os.path.join(h5_dir,"temp"))
+    for idx, h5_file_name in enumerate(h5_file_names):
+        h5_temp.clear()
+        print(f"[{idx + 1}/{len(h5_file_names)}] 处理: {h5_file_name}")
+        h5_file = h5py.File(os.path.join(h5_dir, h5_file_name), 'r')
+
+        # 根据模式选择转换函数
+        if mode == "state":
+            episode = convert_state_based(h5_file, h5_temp)
+        else:  # mode == "rgb"
+            episode = convert_rgb_based(h5_file, h5_temp)
+        
+        replay_buffer.add_episode(episode, compressors="disk")
+        h5_file.close()
+
+    h5_temp.close()
+    os.remove(os.path.join(h5_dir, "temp"))
+    
+    print(f"=" * 60)
+    print(f"转换完成！共处理 {len(h5_file_names)} 个文件")
+    print(f"输出路径: {zarr_path}")
+    print(f"=" * 60)
