@@ -41,4 +41,3 @@ diffusion_policy/data/outputs/
 data/
 diffusion_policy/diffusion_policy.egg-info/
 psilab/outputs/
-wandb/

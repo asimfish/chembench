@@ -178,38 +178,42 @@ class GraspBottleEnv(ILEnv):
         chest_camera_rgb = process_batch_image(self._robot.tiled_cameras["chest_camera"].data.output["rgb"][:,:,:,:])
         # 头部相机
         head_camera_rgb = process_batch_image(self._robot.tiled_cameras["head_camera"].data.output["rgb"][:,:,:,:])
-        
-        # 目标物体位姿（相对于环境原点，与训练数据保持一致）
+        #第三人称相机
+        third_person_camera_rgb = process_batch_image(self._robot.tiled_cameras["third_person_camera"].data.output["rgb"][:,:,:,:])
+        #
+        #  目标物体位姿（相对于环境原点，与训练数据保持一致）
         # 注意：训练数据 zarr_utils.py 中使用的是相对于 env_origins 的坐标
         target_pose = self._target.data.root_state_w[:,:7].clone()
         target_pose[:,:3] -= self.scene.env_origins
         
         # create obs dict
         # data shape is Batch_size,1,data_shape...
-        # current_obs = {
-        #     'chest_camera_rgb': chest_camera_rgb.unsqueeze(1),
-        #     'head_camera_rgb': head_camera_rgb.unsqueeze(1),
-        #     'arm2_pos': self._robot.data.joint_pos[:,self._robot.actuators["arm2"].joint_indices].unsqueeze(1),
-        #     'arm2_vel': self._robot.data.joint_vel[:,self._robot.actuators["arm2"].joint_indices].unsqueeze(1),
-        #     'hand2_pos': self._robot.data.joint_pos[:,self._robot.actuators["hand2"].joint_indices[:6]].unsqueeze(1), # type: ignore
-        #     'hand2_vel': self._robot.data.joint_vel[:,self._robot.actuators["hand2"].joint_indices[:6]].unsqueeze(1), # type: ignore
-        #     'arm2_eef_pos': eef_state[:,:3].unsqueeze(1),
-        #     'arm2_eef_quat': eef_state[:,3:7].unsqueeze(1),
-        #     'target_pose': target_pose.unsqueeze(1),
-        # }
+        current_obs = {
+
+            'chest_camera_rgb': chest_camera_rgb.unsqueeze(1),
+            'head_camera_rgb': head_camera_rgb.unsqueeze(1),
+            'third_person_camera_rgb': third_person_camera_rgb.unsqueeze(1),
+            'arm2_pos': self._robot.data.joint_pos[:,self._robot.actuators["arm2"].joint_indices].unsqueeze(1),
+            'arm2_vel': self._robot.data.joint_vel[:,self._robot.actuators["arm2"].joint_indices].unsqueeze(1),
+            'hand2_pos': self._robot.data.joint_pos[:,self._robot.actuators["hand2"].joint_indices[:6]].unsqueeze(1), # type: ignore
+            'hand2_vel': self._robot.data.joint_vel[:,self._robot.actuators["hand2"].joint_indices[:6]].unsqueeze(1), # type: ignore
+            'arm2_eef_pos': eef_state[:,:3].unsqueeze(1),
+            'arm2_eef_quat': eef_state[:,3:7].unsqueeze(1),
+            'target_pose': target_pose.unsqueeze(1),
+        }
 
 
 
 
         # create obs dict
         # data shape is Batch_size,1,data_shape...
-        obs = torch.cat(
-            (target_pose.unsqueeze(1),
-            self._robot.data.joint_pos[:,self._robot.actuators["arm2"].joint_indices].clone().unsqueeze(1),
-            self._robot.data.joint_pos[:,self._robot.actuators["hand2"].joint_indices][:,:6].clone().unsqueeze(1)),
-            dim=2
-        )
-        current_obs = {"state":obs}
+        # obs = torch.cat(
+        #     (target_pose.unsqueeze(1),
+        #     self._robot.data.joint_pos[:,self._robot.actuators["arm2"].joint_indices].clone().unsqueeze(1),
+        #     self._robot.data.joint_pos[:,self._robot.actuators["hand2"].joint_indices][:,:6].clone().unsqueeze(1)),
+        #     dim=2
+        # )
+        # current_obs = {"state":obs}
 
 
         # policy model step

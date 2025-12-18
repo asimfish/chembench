@@ -712,7 +712,7 @@ if __name__ == "__main__":
         #     data=image_array_resize
         # )
 
-        # 第三人称相机
+        # # 第三人称相机
         # image_array = np.array(h5_file["robots"]["robot"]["third_person_camera.rgb"])
         # image_array_resize = np.zeros((image_array.shape[0],224,224,3))
 

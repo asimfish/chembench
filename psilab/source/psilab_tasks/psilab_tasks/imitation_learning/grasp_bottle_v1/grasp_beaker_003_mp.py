@@ -286,10 +286,10 @@ class GraspBottleEnv(MPEnv):
         
         # ========== 阶段时间分配 ==========
         phase_ratios = {
-            'approach': 0.20,  # 接近阶段
+            'approach': 0.30,  # 接近阶段
             'descend': 0.20,   # 下降阶段  
-            'grasp': 0.10,     # 抓取阶段（手指闭合）
-            'lift': 0.50       # 抬起阶段
+            'grasp': 0.20,     # 抓取阶段（手指闭合）
+            'lift': 0.30       # 抬起阶段
         }
         
         approach_end = int(phase_ratios['approach'] * total_steps)
@@ -298,7 +298,8 @@ class GraspBottleEnv(MPEnv):
         lift_end = total_steps
         
         # ========== 抓取姿态配置 ==========
-        grasp_config = get_grasp_config("glass_beaker_100ml")
+        # grasp_config = get_grasp_config("glass_beaker_100ml")
+        grasp_config = get_grasp_config("mortar")
         grasp_euler_deg = grasp_config["euler_deg"]
         grasp_offset = grasp_config["offset"]
         

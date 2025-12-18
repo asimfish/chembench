@@ -490,7 +490,7 @@ PSI_DC_02_CFG = BASE_CFG.replace(
                 init_state=ArticulationCfg.InitialStateCfg(
                     # pos=(0.0, 0.0, 0.0),
                     # pos=(-1.7, -5.0, 0.0),
-                    pos=(-1.6, -5.0, 0.0),
+                    pos=(-1.65, -5.0, 0.0),
                     rot=(1.0,0.0,0.0,0.0),
                     # rot=(0.0, 0.0, 0.0, 1.0),
                     # rot=(0.7071, 0.0000, 0.0000, 0.7071),
@@ -724,6 +724,7 @@ PSI_DC_Beaker_003_CFG = PSI_DC_02_CFG.replace(
                 prim_path="/World/envs/env_[0-9]+/Bottle",
                 spawn=sim_utils.UsdFileCfg(
                     usd_path="/home/psibot/psi-lab-v2/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_100ml/Beaker003.usd",
+                    # usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/mortar/Mortar001.usd",
 
                     # usd_path="/home/psibot/psi-lab-v2/assets/usd/asset_collection/sim_ready/solid_assets/mortar/Mortar001.usd",
 
