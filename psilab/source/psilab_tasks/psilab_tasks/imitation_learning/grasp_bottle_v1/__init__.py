@@ -1,6 +1,17 @@
 import gymnasium as gym
 from . import scenes
 
+# 导出配置工具函数（从上级目录的 config_loader 模块）
+from ..config_loader import (
+    load_grasp_config,
+    load_handover_config,
+    load_pick_place_config,
+    load_pour_config,
+    load_operation_config,
+    get_object_names,
+    get_supported_operations,
+)
+
 
 ##
 # Register Gym environments.

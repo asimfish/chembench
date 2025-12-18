@@ -457,9 +457,9 @@
             "grasp",
             "lift"
           ],
-          "approach_ratio": 0.4,
+          "approach_ratio": 0.5,
           "grasp_ratio": 0.2,
-          "lift_ratio": 0.4
+          "lift_ratio": 0.3
         }
       },
       "handover": {
@@ -5949,7 +5949,7 @@
     },
     "mortar": {
       "name": "mortar",
-      "name_cn": "坩埚/研钵",
+      "name_cn": "坩埚",
       "description": "坩埚或研钵，质量约0.25kg。支持操作：抓取(grasp)、抓放(pick_place)。用于研磨固体或高温灼烧，从钵体外侧抓取，配合研杵使用。",
       "supported_operations": [
         "grasp",
@@ -5978,16 +5978,16 @@
           0.0175
         ]
       },
-      "grasp": {
+      "grasp": {       
         "grasp_offset": [
-          -0.03,
-          -0.22,
-          0.06
+          -0.0574,
+          -0.1388,
+          0.0266
         ],
         "grasp_euler_deg": [
-          160.0,
-          70.0,
-          -150.0
+          -95.43,
+          -43.63,
+          -44.42
         ],
         "lift_height": 0.3,
         "timing": {
@@ -5996,9 +5996,9 @@
             "grasp",
             "lift"
           ],
-          "approach_ratio": 0.4,
-          "grasp_ratio": 0.2,
-          "lift_ratio": 0.4
+          "approach_ratio": 0.65,
+          "grasp_ratio": 0.1,
+          "lift_ratio": 0.25
         }
       },
       "handover": null,

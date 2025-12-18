@@ -21,6 +21,149 @@
 - 正面抓: euler_deg ≈ [90, 0, 0]
 """
 
+import json
+import os
+from pathlib import Path
+from typing import Optional, Dict, Any
+
+# 获取 object_config.json 的路径
+_CURRENT_DIR = Path(__file__).parent
+_OBJECT_CONFIG_PATH = _CURRENT_DIR / "scenes" / "object_config.json"
+
+# 全局缓存，避免重复加载 JSON 文件
+_object_config_cache: Optional[Dict[str, Any]] = None
+
+
+def load_object_config() -> Dict[str, Any]:
+    """
+    加载 object_config.json 配置文件
+    
+    Returns:
+        完整的配置字典
+    """
+    global _object_config_cache
+    
+    if _object_config_cache is not None:
+        return _object_config_cache
+    
+    if not _OBJECT_CONFIG_PATH.exists():
+        print(f"[Warning] 配置文件不存在: {_OBJECT_CONFIG_PATH}")
+        return {}
+    
+    with open(_OBJECT_CONFIG_PATH, 'r', encoding='utf-8') as f:
+        _object_config_cache = json.load(f)
+    
+    return _object_config_cache
+
+
+def get_grasp_config_from_json(object_name: str, operation: str = "grasp") -> Dict[str, Any]:
+    """
+    从 object_config.json 获取指定物体的操作配置
+    
+    Args:
+        object_name: 物体名称 (如 "glass_beaker_100ml", "mortar")
+        operation: 操作类型 (如 "grasp", "handover", "pick_place", "pour" 等)
+        
+    Returns:
+        包含操作配置的字典，包括:
+        - offset/grasp_offset: 位置偏移
+        - euler_deg/grasp_euler_deg: 欧拉角
+        - lift_height: 抬起高度 (仅 grasp 操作)
+        - timing: 时序配置
+        - 其他操作特定参数
+    """
+    config = load_object_config()
+    
+    if not config:
+        print(f"[Warning] 无法加载配置文件，使用默认配置")
+        return get_default_grasp_config()
+    
+    objects = config.get("objects", {})
+    
+    if object_name not in objects:
+        print(f"[Warning] 未找到物体 '{object_name}' 的配置，使用默认配置")
+        return get_default_grasp_config()
+    
+    obj_config = objects[object_name]
+    operation_config = obj_config.get(operation)
+    
+    if operation_config is None:
+        print(f"[Warning] 物体 '{object_name}' 不支持操作 '{operation}'，使用默认配置")
+        return get_default_grasp_config()
+    
+    # 标准化输出格式
+    result = {
+        "object_name": object_name,
+        "object_name_cn": obj_config.get("name_cn", object_name),
+        "description": obj_config.get("description", ""),
+        "operation": operation,
+    }
+    
+    # 提取抓取操作特定参数
+    if operation == "grasp":
+        result["offset"] = operation_config.get("grasp_offset", [-0.02, -0.19, 0.05])
+        result["euler_deg"] = operation_config.get("grasp_euler_deg", [157.43, 69.16, -154.0])
+        result["lift_height"] = operation_config.get("lift_height", 0.3)
+        result["timing"] = operation_config.get("timing", {
+            "phases": ["approach", "grasp", "lift"],
+            "approach_ratio": 0.4,
+            "grasp_ratio": 0.2,
+            "lift_ratio": 0.4
+        })
+    else:
+        # 其他操作类型的参数提取
+        result["config"] = operation_config
+    
+    # 添加物理材质和边界框信息
+    result["mass"] = obj_config.get("mass", 0.1)
+    result["physics_material"] = obj_config.get("physics_material", {})
+    result["bbox"] = obj_config.get("bbox", {})
+    
+    return result
+
+
+def get_default_grasp_config() -> Dict[str, Any]:
+    """获取默认的抓取配置"""
+    return {
+        "object_name": "default",
+        "object_name_cn": "默认物体",
+        "description": "默认抓取配置",
+        "operation": "grasp",
+        "offset": [-0.02, -0.19, 0.05],
+        "euler_deg": [157.43, 69.16, -154.0],
+        "lift_height": 0.3,
+        "timing": {
+            "phases": ["approach", "grasp", "lift"],
+            "approach_ratio": 0.4,
+            "grasp_ratio": 0.2,
+            "lift_ratio": 0.4
+        },
+        "mass": 0.1,
+        "physics_material": {},
+        "bbox": {}
+    }
+
+
+def list_available_objects() -> list:
+    """列出所有可用的物体名称"""
+    config = load_object_config()
+    if not config:
+        return []
+    return list(config.get("objects", {}).keys())
+
+
+def get_object_supported_operations(object_name: str) -> list:
+    """获取指定物体支持的操作类型"""
+    config = load_object_config()
+    if not config:
+        return []
+    
+    objects = config.get("objects", {})
+    if object_name not in objects:
+        return []
+    
+    return objects[object_name].get("supported_operations", [])
+
 # ========== 烧杯系列 ==========
 BEAKER_CONFIGS = {
     "glass_beaker_50ml": {

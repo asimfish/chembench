@@ -9,6 +9,7 @@ from typing import Any
 from collections.abc import Sequence
 
 """ Common Modules  """ 
+import os
 import torch
 from datetime import datetime
 from scipy.spatial.transform import Rotation as R
@@ -20,7 +21,6 @@ from isaaclab.envs.common import ViewerCfg
 
 
 """ Psi Lab Modules  """
-from psilab import OUTPUT_DIR
 from psilab.envs.mp_env import MPEnv 
 from psilab.envs.mp_env_cfg import MPEnvCfg
 from psilab.utils.timer_utils import Timer
@@ -28,7 +28,15 @@ from psilab.eval.grasp_rigid import eval_fail,eval_success
 from psilab.utils.data_collect_utils import parse_data,save_data
 
 """ Local Modules """
-from .grasp_configs import get_grasp_config, GRASP_CONFIGS
+from ..config_loader import load_grasp_config
+
+# ========== 任务配置（修改这里即可切换不同任务）==========
+TARGET_OBJECT_NAME = "mortar"  # 目标物体名称，如 "mortar", "glass_beaker_100ml" 等
+TASK_TYPE = "grasp"            # 任务类型：grasp, handover, pick_place, pour 等
+
+# 数据根目录：统一存储到 chembench/data 下
+DATA_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../../../../data"))
+
 
 @configclass
 class GraspBottleEnvCfg(MPEnvCfg):
@@ -69,11 +77,67 @@ class GraspBottleEnvCfg(MPEnvCfg):
 
     )
 
-    # defualt ouput folder
-    output_folder = OUTPUT_DIR + "/Mp_grasp/Beaker_003"
-    # output_folder = OUTPUT_DIR + "/Mp_grasp/Beaker_003_Smooth"
-    # lift desired height
-    lift_height_desired = 0.3
+    # ========== 物体抓取配置参数（从 object_config.json 加载）==========
+    # 目标物体名称（使用文件顶部定义的 TARGET_OBJECT_NAME）
+    target_object_name: str = TARGET_OBJECT_NAME
+    
+    # 抓取偏移 [x, y, z]（相对于物体中心）
+    grasp_offset: list = None  # type: ignore
+    
+    # 抓取角度 [roll, pitch, yaw]（欧拉角，单位：度）
+    grasp_euler_deg: list = None  # type: ignore
+    
+    # 抬起高度（单位：米）
+    lift_height_desired: float = 0.3
+    
+    # 轨迹生成的时序参数
+    phase_ratios: dict = None  # type: ignore
+    
+    # 手指闭合方式：True=平滑闭合，False=直接闭合（类似 create_trajectory）
+    smooth_finger_close: bool = True
+
+    # 是否启用轨迹平滑
+    enable_trajectory_smooth: bool = True
+    
+    # 输出文件夹：chembench/data/motion_plan/{任务类型}/{物体名称}
+    output_folder: str = None  # type: ignore
+    
+    def __post_init__(self):
+        """
+        初始化后从 object_config.json 加载默认参数
+        
+        直接调用 config_loader 模块读取 JSON 配置文件
+        
+        输出路径格式：chembench/data/motion_plan/{任务类型}/{物体名称}
+        """
+        # 从 JSON 加载抓取配置
+        grasp_config = load_grasp_config(self.target_object_name)
+        
+        # 设置抓取偏移（如果未手动指定）
+        if self.grasp_offset is None:
+            self.grasp_offset = grasp_config["grasp_offset"]
+        
+        # 设置抓取角度（如果未手动指定）
+        if self.grasp_euler_deg is None:
+            self.grasp_euler_deg = grasp_config["grasp_euler_deg"]
+        
+        # 设置抬起高度（如果使用默认值）
+        if self.lift_height_desired == 0.3:
+            self.lift_height_desired = grasp_config["lift_height"]
+        
+        # 设置轨迹时序参数（如果未手动指定）
+        if self.phase_ratios is None:
+            timing = grasp_config["timing"]
+            self.phase_ratios = {
+                "approach": timing.get("approach_ratio", 0.4),
+                "grasp": timing.get("grasp_ratio", 0.2),
+                "lift": timing.get("lift_ratio", 0.4)
+            }
+        
+        # 设置输出文件夹：chembench/data/motion_plan/{任务类型}/{物体名称}
+        if self.output_folder is None:
+            object_name = grasp_config.get("name_cn", self.target_object_name)
+            self.output_folder = os.path.join(DATA_ROOT, "motion_plan", TASK_TYPE, object_name)
 
 class GraspBottleEnv(MPEnv):
 
@@ -154,11 +218,9 @@ class GraspBottleEnv(MPEnv):
         k1_step = int(k1 * self.max_episode_length)
         k2_step = int(k2 * self.max_episode_length)
         
-        # ========== 抓取姿态配置 ==========
-        # 从配置文件读取抓取参数（修改这里的物体名称即可切换不同物体的抓取配置）
-        grasp_config = get_grasp_config("glass_beaker_100ml")
-        grasp_euler_deg = grasp_config["euler_deg"]
-        grasp_offset = grasp_config["offset"]
+        # ========== 抓取姿态配置（从配置加载）==========
+        grasp_euler_deg = self.cfg.grasp_euler_deg
+        grasp_offset = self.cfg.grasp_offset
         
         # 欧拉角转四元数 (scipy 返回 xyzw，需要转换为 wxyz)
         quat_xyzw = R.from_euler('xyz', grasp_euler_deg, degrees=True).as_quat()
@@ -194,14 +256,14 @@ class GraspBottleEnv(MPEnv):
         self._hand_pos_target[env_ids,k1_step:,:] = hand_pos_target_2.unsqueeze(1).repeat(1,self.max_episode_length - k1_step,1)
 
         # 修改 eef 第一阶段轨迹
-        delta_eef_pos = (1 / k1_step) * (eef_pose_target_1[:,:3] - self._robot.data.body_link_pos_w[env_ids,self._eef_link_index,:])
-        delta_eef_quat = (1 / k1_step) * (eef_pose_target_1[:,3:7] - self._robot.data.body_link_quat_w[env_ids,self._eef_link_index,:])
-        for i in range(int(k1_step * 0.3)):            
-            self._eef_pose_target[env_ids,i,:3] = self._robot.data.body_link_pos_w[env_ids,self._eef_link_index,:3] + i * delta_eef_pos[:,:3]
-            self._eef_pose_target[env_ids,i,3:7] = self._robot.data.body_link_quat_w[env_ids,self._eef_link_index,:] + i * delta_eef_quat[:,:]
-        for i in range(int(k1_step * 0.3)):            
-            self._eef_pose_target[env_ids,i,1] = self._robot.data.body_link_pos_w[env_ids,self._eef_link_index,1] + i * delta_eef_pos[:,1]
-            self._eef_pose_target[env_ids,i,3:7] = self._robot.data.body_link_quat_w[env_ids,self._eef_link_index,:] + i * delta_eef_quat[:,:]
+        # delta_eef_pos = (1 / k1_step) * (eef_pose_target_1[:,:3] - self._robot.data.body_link_pos_w[env_ids,self._eef_link_index,:])
+        # delta_eef_quat = (1 / k1_step) * (eef_pose_target_1[:,3:7] - self._robot.data.body_link_quat_w[env_ids,self._eef_link_index,:])
+        # for i in range(int(k1_step * 0.3)):            
+        #     self._eef_pose_target[env_ids,i,:3] = self._robot.data.body_link_pos_w[env_ids,self._eef_link_index,:3] + i * delta_eef_pos[:,:3]
+        #     self._eef_pose_target[env_ids,i,3:7] = self._robot.data.body_link_quat_w[env_ids,self._eef_link_index,:] + i * delta_eef_quat[:,:]
+        # for i in range(int(k1_step * 0.3)):            
+        #     self._eef_pose_target[env_ids,i,1] = self._robot.data.body_link_pos_w[env_ids,self._eef_link_index,1] + i * delta_eef_pos[:,1]
+        #     self._eef_pose_target[env_ids,i,3:7] = self._robot.data.body_link_quat_w[env_ids,self._eef_link_index,:] + i * delta_eef_quat[:,:]
 
     def _minimum_jerk_interpolation(self, t: torch.Tensor) -> torch.Tensor:
         """
@@ -220,6 +282,28 @@ class GraspBottleEnv(MPEnv):
         """
         t = torch.clamp(t, 0.0, 1.0)
         return 10 * t**3 - 15 * t**4 + 6 * t**5
+    
+    def _smooth_approach_interpolation(self, t: torch.Tensor) -> torch.Tensor:
+        """
+        更平滑的接近插值函数（末端减速更平缓）
+        
+        使用 7 阶多项式，在末端有更长的减速区间
+        s(t) = 35*t^4 - 84*t^5 + 70*t^6 - 20*t^7
+        
+        特性：
+        - s(0) = 0, s(1) = 1
+        - s'(0) = s'(1) = 0 (起点和终点速度为0)
+        - s''(0) = s''(1) = 0 (起点和终点加速度为0)
+        - s'''(0) = s'''(1) = 0 (起点和终点加加速度为0)
+        - 相比 minimum jerk，末端减速更加平缓
+        
+        Args:
+            t: 归一化时间 [0, 1]，shape: (N,) 或标量
+        Returns:
+            插值系数，shape: 同输入
+        """
+        t = torch.clamp(t, 0.0, 1.0)
+        return 35 * t**4 - 84 * t**5 + 70 * t**6 - 20 * t**7
     
     def _slerp_batch(self, q0: torch.Tensor, q1: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
         """
@@ -275,33 +359,41 @@ class GraspBottleEnv(MPEnv):
         使用最小加加速度轨迹(Minimum Jerk)实现平滑的位置过渡
         使用球面线性插值(SLERP)实现平滑的姿态过渡
         
-        轨迹分为4个阶段：
-        1. approach (20%): 从当前位置移动到预抓取位置（抓取点上方）
-        2. descend (20%): 从预抓取位置下降到抓取位置
-        3. grasp (20%): 保持位置，关闭手指
-        4. lift (40%): 抬起物体到目标高度
+        轨迹分为5个阶段（时序参数从配置文件加载）：
+        1. approach: 从当前位置移动到预抓取位置（抓取点上方）
+        2. descend: 从预抓取位置下降到抓取位置
+        3. dwell: 在抓取位置稳定等待（确保IK收敛）
+        4. grasp: 保持位置，关闭手指
+        5. lift: 抬起物体到目标高度
         """
         env_len = env_ids.shape[0]
         total_steps = self.max_episode_length
         
-        # ========== 阶段时间分配 ==========
+        # ========== 阶段时间分配（从配置加载）==========
+        # 从 JSON 配置的 timing 转换为5阶段分配
+        cfg_ratios = self.cfg.phase_ratios
+        
+        # 将配置转换为5阶段（增加 dwell 稳定阶段）
+        approach_total = cfg_ratios.get('approach', 0.4)
+        grasp_total = cfg_ratios.get('grasp', 0.2)
+        
         phase_ratios = {
-            'approach': 0.30,  # 接近阶段
-            'descend': 0.20,   # 下降阶段  
-            'grasp': 0.20,     # 抓取阶段（手指闭合）
-            'lift': 0.30       # 抬起阶段
+            'approach': approach_total * 0.5,    # 接近预抓取位置
+            'descend': approach_total * 0.5,     # 下降到抓取位置
+            'dwell': approach_total * 0.00,       # 稳定等待（关键：让IK收敛）
+            'grasp': grasp_total,                # 手指闭合
+            'lift': cfg_ratios.get('lift', 0.4)  # 抬起阶段
         }
         
         approach_end = int(phase_ratios['approach'] * total_steps)
         descend_end = approach_end + int(phase_ratios['descend'] * total_steps)
-        grasp_end = descend_end + int(phase_ratios['grasp'] * total_steps)
+        dwell_end = descend_end + int(phase_ratios['dwell'] * total_steps)
+        grasp_end = dwell_end + int(phase_ratios['grasp'] * total_steps)
         lift_end = total_steps
         
-        # ========== 抓取姿态配置 ==========
-        # grasp_config = get_grasp_config("glass_beaker_100ml")
-        grasp_config = get_grasp_config("mortar")
-        grasp_euler_deg = grasp_config["euler_deg"]
-        grasp_offset = grasp_config["offset"]
+        # ========== 抓取姿态配置（从配置加载）==========
+        grasp_euler_deg = self.cfg.grasp_euler_deg
+        grasp_offset = self.cfg.grasp_offset
         
         # 欧拉角转四元数 (scipy 返回 xyzw，需要转换为 wxyz)
         quat_xyzw = R.from_euler('xyz', grasp_euler_deg, degrees=True).as_quat()
@@ -319,12 +411,15 @@ class GraspBottleEnv(MPEnv):
         eef_pos_current = self._robot.data.body_link_pos_w[env_ids, self._eef_link_index, :] - self._robot.data.root_link_pos_w[env_ids, :]
         eef_quat_current = self._robot.data.body_link_quat_w[env_ids, self._eef_link_index, :]
         
-        # 预抓取位置（抓取点上方）
-        pre_grasp_height = 0.15  # 预抓取高度偏移
-        pre_grasp_offset = torch.tensor([0, 0, pre_grasp_height], device=self.device).unsqueeze(0).repeat(env_len, 1)
+        # 预抓取位置（抓取点上方 + y轴负方向偏移，从侧上方接近）
+
+        pre_grasp_height = 0.05   # z轴上方偏移 10cm
+        pre_grasp_y_offset = -0.10  # y轴负方向偏移 10cm（从侧面接近）
+        pre_grasp_x_offset = -0.02  # y轴负方向偏移 10cm（从侧面接近）
+        pre_grasp_offset = torch.tensor([pre_grasp_x_offset, pre_grasp_y_offset, pre_grasp_height], device=self.device).unsqueeze(0).repeat(env_len, 1)
         pos_pre_grasp = eff_offset + target_position + pre_grasp_offset
         
-        # 抓取位置
+        # 抓取位置（精确位置）
         pos_grasp = eff_offset + target_position
         
         # 抬起位置
@@ -342,9 +437,10 @@ class GraspBottleEnv(MPEnv):
         for step in range(total_steps):
             if step < approach_end:
                 # 阶段1: 接近 - 从当前位置移动到预抓取位置
+                # 使用更平滑的插值函数，末端减速更平缓，避免撞到物体
                 t_normalized = step / max(approach_end, 1)
-                t_smooth = self._minimum_jerk_interpolation(torch.tensor(t_normalized, device=self.device))
-                
+                t_smooth = self._smooth_approach_interpolation(torch.tensor(t_normalized, device=self.device))
+                # t_smooth = self._minimum_jerk_interpolation(torch.tensor(t_normalized, device=self.device))
                 # 位置插值
                 pos_interp = eef_pos_current + t_smooth * (pos_pre_grasp - eef_pos_current)
                 # 姿态插值
@@ -356,8 +452,8 @@ class GraspBottleEnv(MPEnv):
             elif step < descend_end:
                 # 阶段2: 下降 - 从预抓取位置下降到抓取位置
                 t_normalized = (step - approach_end) / max(descend_end - approach_end, 1)
-                t_smooth = self._minimum_jerk_interpolation(torch.tensor(t_normalized, device=self.device))
-                
+                # t_smooth = self._minimum_jerk_interpolation(torch.tensor(t_normalized, device=self.device))
+                t_smooth = self._smooth_approach_interpolation(torch.tensor(t_normalized, device=self.device))
                 # 位置插值
                 pos_interp = pos_pre_grasp + t_smooth * (pos_grasp - pos_pre_grasp)
                 # 姿态保持目标姿态
@@ -365,19 +461,32 @@ class GraspBottleEnv(MPEnv):
                 # 手指保持打开
                 hand_interp = hand_pos_open
                 
-            elif step < grasp_end:
-                # 阶段3: 抓取 - 保持位置，平滑关闭手指
-                t_normalized = (step - descend_end) / max(grasp_end - descend_end, 1)
-                t_smooth = self._minimum_jerk_interpolation(torch.tensor(t_normalized, device=self.device))
+            elif step < dwell_end:
+                # 阶段3: 稳定 - 在抓取位置保持不动，等待IK收敛
+                # 位置精确保持在抓取位置（关键：提高抓取精度）
+                pos_interp = pos_grasp
+                quat_interp = eff_quat
+                # 手指保持打开
+                hand_interp = hand_pos_open
                 
+            elif step < grasp_end:
+                # 阶段4: 抓取 - 保持位置，关闭手指
                 # 位置保持在抓取位置
                 pos_interp = pos_grasp
                 quat_interp = eff_quat
-                # 手指平滑闭合
-                hand_interp = hand_pos_open + t_smooth * (hand_pos_closed - hand_pos_open)
+                
+                # 手指闭合方式
+                if self.cfg.smooth_finger_close:
+                    # 平滑闭合：使用最小加加速度插值
+                    t_normalized = (step - dwell_end) / max(grasp_end - dwell_end, 1)
+                    t_smooth = self._minimum_jerk_interpolation(torch.tensor(t_normalized, device=self.device))
+                    hand_interp = hand_pos_open + t_smooth * (hand_pos_closed - hand_pos_open)
+                else:
+                    # 直接闭合：整个 grasp 阶段都保持闭合状态
+                    hand_interp = hand_pos_closed
                 
             else:
-                # 阶段4: 抬起 - 从抓取位置抬起到目标高度
+                # 阶段5: 抬起 - 从抓取位置抬起到目标高度
                 t_normalized = (step - grasp_end) / max(lift_end - grasp_end, 1)
                 t_smooth = self._minimum_jerk_interpolation(torch.tensor(t_normalized, device=self.device))
                 
@@ -405,6 +514,9 @@ class GraspBottleEnv(MPEnv):
         self._robot.set_ik_command({"arm2":eef_pose_target})
         self._robot.set_joint_position_target(hand_pos_target,self._robot.actuators["hand2"].joint_indices[:6]) # type: ignore
 
+        # self._target_dof_vel = (self._curr_targets[:, self._robot_index]- self._robot.data.joint_pos[:, self._robot_index]) / self.cfg.sim.dt
+        # self._robot.set_joint_position_target(self._curr_targets[:, self._arm_joint_index], joint_ids=self._arm_joint_index)
+        # self._robot.set_joint_velocity_target(self._target_dof_vel, joint_ids=self._arm_joint_index)
 
         # sim step according to decimation
         for i in range(self.cfg.decimation):
@@ -513,9 +625,10 @@ class GraspBottleEnv(MPEnv):
             self._log_info()
         
 
-        # 
-        # self.create_trajectory(env_ids)
-        self.create_trajectory_smooth(env_ids)
+        if self.cfg.enable_trajectory_smooth:
+            self.create_trajectory_smooth(env_ids)
+        else:
+            self.create_trajectory(env_ids)
 
 
 
