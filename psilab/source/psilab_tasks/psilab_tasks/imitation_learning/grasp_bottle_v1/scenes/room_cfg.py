@@ -724,14 +724,15 @@ PSI_DC_Beaker_003_CFG = PSI_DC_02_CFG.replace(
                 prim_path="/World/envs/env_[0-9]+/Bottle",
                 spawn=sim_utils.UsdFileCfg(
                     # usd_path="/home/psibot/psi-lab-v2/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_100ml/Beaker003.usd",
-                    usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/mortar/Mortar001.usd",
-
+                    # usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/mortar/Mortar001.usd",
+                    usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_50ml/Beaker002.usd",
+                    # usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_500ml/Beaker005.usd",
 
                     ##beaker
-                    # scale=(1.0,1.0,1.0),
+                    scale=(1.0,1.0,1.0),
 
                     ##motar
-                    scale=(0.8,0.8,1.1),
+                    # scale=(0.8,0.8,1.1),
 
                     rigid_props=RigidBodyPropertiesCfg(
                         solver_position_iteration_count=255

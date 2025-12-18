@@ -41,6 +41,11 @@ class RobotBase(Articulation):
     tiled_cameras : dict[str,TiledCamera] = None # type: ignore
     ik_controllers : dict[str,DiffIKController] = None # type: ignore
     eef_links : dict[str,int] = None # type: ignore
+    
+    # 速度控制相关
+    vel_target : dict[str,torch.Tensor] = None  # type: ignore
+    enable_velocity_control : bool = False  # 是否启用速度控制
+    sim_dt : float = 1.0 / 40.0  # 仿真时间步长
 
     def __init__(self, cfg: RobotBaseCfg):
         """Initialize the Robot.
@@ -55,6 +60,7 @@ class RobotBase(Articulation):
         self.ik_controllers = {}
         self.eef_links = {}
         self.pos_target = {}
+        self.vel_target = {}  # 速度目标
         # add physics material 
         if self.cfg.physics_material is not None:
             asset_path_is_regex = re.match(r"^[a-zA-Z0-9/_]+$", self.cfg.prim_path) is None
@@ -126,11 +132,25 @@ class RobotBase(Articulation):
     def step(self):
         """
         Step for each simulation step, include all computation and set varibale values to data
+        
+        支持两种控制模式：
+        - enable_velocity_control = False: 仅位置控制
+        - enable_velocity_control = True: 位置 + 速度控制（更平滑）
         """
         # only update joint position target according to ik result
         if self.ik_controllers:
-            for name,controller in self.ik_controllers.items():
-                self.set_joint_position_target(self.pos_target[name],controller.joint_index)
+            for name, controller in self.ik_controllers.items():
+                # 设置位置目标
+                self.set_joint_position_target(self.pos_target[name], controller.joint_index)
+                
+                # 如果启用速度控制，同时设置速度目标
+                if self.enable_velocity_control:
+                    # 计算速度目标：(目标位置 - 当前位置) / dt
+                    current_pos = self.data.joint_pos[:, controller.joint_index]
+                    self.vel_target[name] = (self.pos_target[name] - current_pos) / self.sim_dt
+                    self.set_joint_velocity_target(self.vel_target[name], controller.joint_index)
+
+
 
     def ik_step(self):
         # get root stae 

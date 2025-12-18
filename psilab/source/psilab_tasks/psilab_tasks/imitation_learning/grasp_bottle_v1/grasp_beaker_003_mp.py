@@ -31,7 +31,9 @@ from psilab.utils.data_collect_utils import parse_data,save_data
 from ..config_loader import load_grasp_config
 
 # ========== 任务配置（修改这里即可切换不同任务）==========
-TARGET_OBJECT_NAME = "mortar"  # 目标物体名称，如 "mortar", "glass_beaker_100ml" 等
+# TARGET_OBJECT_NAME = "mortar"  # 目标物体名称，如 "mortar", "glass_beaker_100ml" 等
+# TARGET_OBJECT_NAME = "glass_beaker_100ml"  # 目标物体名称，如 "mortar", "glass_beaker_100ml" 等
+TARGET_OBJECT_NAME = "glass_beaker_500ml"  # 目标物体名称，如 "mortar", "glass_beaker_100ml" 等
 TASK_TYPE = "grasp"            # 任务类型：grasp, handover, pick_place, pour 等
 
 # 数据根目录：统一存储到 chembench/data 下
@@ -97,7 +99,11 @@ class GraspBottleEnvCfg(MPEnvCfg):
     smooth_finger_close: bool = True
 
     # 是否启用轨迹平滑
-    enable_trajectory_smooth: bool = True
+    enable_trajectory_smooth: bool = False
+    
+    # 成功判断：朝向偏差阈值（sin²(θ/2)，0=完全一致，1=上下颠倒）
+    # 0.1 约等于 37° 的偏差，0.05 约等于 26° 的偏差
+    orientation_threshold: float = 0.05
     
     # 输出文件夹：chembench/data/motion_plan/{任务类型}/{物体名称}
     output_folder: str = None  # type: ignore
@@ -188,6 +194,7 @@ class GraspBottleEnv(MPEnv):
         # variables
         self._has_contacted = torch.zeros(self.num_envs,device=self.device, dtype=torch.bool) # type: ignore
         self._target_pos_init = torch.zeros((self.num_envs,3),device=self.device)
+        self._target_quat_init = torch.zeros((self.num_envs,4),device=self.device)  # 初始朝向（wxyz）
 
         # 设置 RTX 渲染选项
         import carb
@@ -416,6 +423,11 @@ class GraspBottleEnv(MPEnv):
         pre_grasp_height = 0.05   # z轴上方偏移 10cm
         pre_grasp_y_offset = -0.10  # y轴负方向偏移 10cm（从侧面接近）
         pre_grasp_x_offset = -0.02  # y轴负方向偏移 10cm（从侧面接近）
+
+        pre_grasp_height = 0.1   # z轴上方偏移 10cm
+        pre_grasp_y_offset = 0.00  # y轴负方向偏移 10cm（从侧面接近）
+        pre_grasp_x_offset = 0.00  # y轴负方向偏移 10cm（从侧面接近）
+
         pre_grasp_offset = torch.tensor([pre_grasp_x_offset, pre_grasp_y_offset, pre_grasp_height], device=self.device).unsqueeze(0).repeat(env_len, 1)
         pos_pre_grasp = eff_offset + target_position + pre_grasp_offset
         
@@ -579,18 +591,83 @@ class GraspBottleEnv(MPEnv):
         #
         super().reset()
 
+    def _quat_orientation_loss(self, quat_init: torch.Tensor, quat_current: torch.Tensor) -> torch.Tensor:
+        """
+        计算两个四元数之间的 pitch+roll 朝向偏差
+        
+        返回值 ∈ [0, 1]：
+        - 0: 朝向完全一致
+        - 1: 上下颠倒（180°偏差）
+        
+        Args:
+            quat_init: 初始四元数 [N, 4] (wxyz)
+            quat_current: 当前四元数 [N, 4] (wxyz)
+        Returns:
+            loss: 朝向偏差 [N]
+        """
+        # 四元数分量 (wxyz format)
+        aw, ax, ay, az = quat_init.unbind(-1)
+        bw, bx, by, bz = quat_current.unbind(-1)
+        
+        # 计算 conj(a)
+        cw, cx, cy, cz = aw, -ax, -ay, -az
+        
+        # 计算相对四元数 Δq = conj(a) ⊗ b
+        rw = cw * bw - cx * bx - cy * by - cz * bz
+        rx = cw * bx + cx * bw + cy * bz - cz * by
+        ry = cw * by - cx * bz + cy * bw + cz * bx
+        rz = cw * bz + cx * by - cy * bx + cz * bw
+        
+        # 归一化（数值安全）
+        norm = torch.sqrt(rw * rw + rx * rx + ry * ry + rz * rz) + 1e-8
+        rx, ry = rx / norm, ry / norm
+        
+        # pitch+roll 误差：sin²(θ_pr/2) ∈ [0,1]
+        loss = rx * rx + ry * ry
+        return loss
+
+    def _eval_success_with_orientation(self) -> torch.Tensor:
+        """
+        评估抓取是否成功（同时检查高度和朝向）
+        
+        成功条件：
+        1. 物体被抬起到目标高度附近（±5cm）
+        2. 物体与机器人保持接触
+        3. 物体朝向偏离初始朝向不超过阈值
+        """
+        # 1. 检查抬起高度
+        height_lift = self._target.data.root_pos_w[:, 2] - self._target_pos_init[:, 2]
+        height_check = torch.abs(height_lift - self.cfg.lift_height_desired) <= 0.05
+        
+        # 2. 检查接触状态
+        contact_force_num = torch.zeros(self.num_envs, dtype=torch.int8, device=self.device)
+        for sensor_name, contact_sensor in self._contact_sensors.items():
+            forces = torch.sum(contact_sensor.data.net_forces_w, dim=[1, 2])
+            contact_force_num = torch.where(forces > 0.0, contact_force_num + 1, contact_force_num)
+        contacting = contact_force_num > 0
+        
+        # 3. 检查朝向偏差
+        current_quat = self._target.data.root_quat_w  # 当前朝向 (wxyz)
+        orientation_loss = self._quat_orientation_loss(self._target_quat_init, current_quat)
+        orientation_check = orientation_loss < self.cfg.orientation_threshold
+        
+        # 综合判断：高度 AND 接触 AND 朝向
+        bsuccessed = height_check & contacting & orientation_check
+        
+        return bsuccessed
+
     def _get_dones(self) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         # 
         time_out = self.episode_length_buf >= self.max_episode_length - 1
         # task evalutation
-        bfailed,self._has_contacted = eval_fail(self._target,self._contact_sensors, self._has_contacted) # type: ignore
-        # success eval
-        bsuccessed = eval_success(self._target, self._contact_sensors,self._target_pos_init, self.cfg.lift_height_desired)
+        bfailed, self._has_contacted = eval_fail(self._target, self._contact_sensors, self._has_contacted)  # type: ignore
+        # success eval（使用新的带朝向检查的函数）
+        bsuccessed = self._eval_success_with_orientation()
      
         # update success number
-        self._episode_success_num+=len(torch.nonzero(bsuccessed==True).squeeze(1).tolist())
+        self._episode_success_num += len(torch.nonzero(bsuccessed == True).squeeze(1).tolist())
 
-        return bsuccessed, bfailed, time_out # type: ignore
+        return bsuccessed, bfailed, time_out  # type: ignore
     
     def _reset_idx(self, env_ids: torch.Tensor | None, success_ids:Sequence[int]|None=None):
 
@@ -634,8 +711,9 @@ class GraspBottleEnv(MPEnv):
 
         # reset variables
         self._episode_step[env_ids] = torch.zeros_like(self._episode_step[env_ids])
-        self._target_pos_init[env_ids,:]=self._target.data.root_link_pos_w[env_ids,:].clone()
-        self._has_contacted[env_ids] = torch.zeros_like(self._has_contacted[env_ids],device=self.device, dtype=torch.bool) # type: ignore
+        self._target_pos_init[env_ids, :] = self._target.data.root_link_pos_w[env_ids, :].clone()
+        self._target_quat_init[env_ids, :] = self._target.data.root_quat_w[env_ids, :].clone()  # 保存初始朝向
+        self._has_contacted[env_ids] = torch.zeros_like(self._has_contacted[env_ids], device=self.device, dtype=torch.bool)  # type: ignore
 
     def _log_info(self):
         # log policy evalutation result
