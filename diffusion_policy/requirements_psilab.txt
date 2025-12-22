@@ -1,0 +1,47 @@
+# diffusion_policy 在 psilab 环境上的额外依赖
+# 使用方法: pip install -r requirements_psilab.txt
+
+# 配置管理
+hydra-core>=1.2.0
+omegaconf
+
+# 数据存储
+zarr>=2.12.0
+numcodecs>=0.10.0
+h5py>=3.7.0
+
+# 深度学习工具
+einops>=0.4.0
+accelerate>=0.13.0
+diffusers>=0.11.0
+
+# 日志和可视化
+wandb>=0.13.0
+tensorboardX>=2.5
+scikit-video>=1.1.11
+imageio>=2.22.0
+imageio-ffmpeg>=0.4.7
+
+# 仿真环境
+pygame>=2.1.0
+pymunk>=6.2.0
+shapely>=1.8.0
+dm_control>=1.0.0
+mujoco>=2.3.0
+
+# 机器人学习
+robomimic>=0.2.0
+pytorchvideo>=0.1.5
+
+# 分布式训练
+ray[default,tune]>=2.2.0
+
+# 图像处理
+imagecodecs>=2022.8.8
+
+# 其他
+dill>=0.3.5
+termcolor>=2.0.0
+psutil>=5.9.0
+click>=8.0.0
+

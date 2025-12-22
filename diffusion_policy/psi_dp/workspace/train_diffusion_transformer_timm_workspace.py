@@ -21,7 +21,10 @@ import pickle
 import time
 import sys
 import os
+# Enable high precision for TF32 on Ampere+ GPUs (A800)
+torch.set_float32_matmul_precision('high')
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+
 from diffusion_policy.common.pytorch_util import dict_apply
 from diffusion_policy.workspace.base_workspace import BaseWorkspace
 # Feng Yunduo, Start

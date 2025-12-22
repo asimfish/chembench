@@ -32,7 +32,7 @@
                 "task=grasp_rgb"
             ],
             "env": {
-                "CUDA_VISIBLE_DEVICES": "0"
+                "CUDA_VISIBLE_DEVICES": "5"
             },
             "justMyCode": false
         },
@@ -49,7 +49,24 @@
                 "task=grasp_state"
             ],
             "env": {
-                "CUDA_VISIBLE_DEVICES": "1"
+                "CUDA_VISIBLE_DEVICES": "5"
+            },
+            "justMyCode": false
+        },
+        // RGBM任务训练 - 使用 RGB+Mask 4通道图像输入（修改 task/grasp_rgbm.yaml）
+        {
+            "name": "DP:Train-Grasp-RGBM",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/diffusion_policy/train.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--config-name",
+                "train_diffusion_transformer_rgbm_workspace",
+                "task=grasp_rgbm"
+            ],
+            "env": {
+                "CUDA_VISIBLE_DEVICES": "7"
             },
             "justMyCode": false
         },

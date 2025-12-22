@@ -1,0 +1,170 @@
+defaults:
+  - _self_
+  - task: grasp_rgbm  # RGBM 专用任务配置
+
+name: train_diffusion_transformer_rgbm
+_target_: psi_dp.workspace.train_diffusion_transformer_timm_workspace.TrainDiffusionTransformerTimmWorkspace
+
+task_name: ${task.name}
+shape_meta: ${task.shape_meta}
+exp_name: "default"
+
+# ==================== 实验标识（从task继承）====================
+object_name: ${task.object_name}
+num_demos: ${task.num_demos}
+
+n_action_steps: 4
+n_obs_steps: 1
+n_emb: 768
+n_latency_steps: 0
+dataset_obs_steps: ${n_obs_steps}
+past_action_visible: False
+keypoint_visible_rate: 1.0
+obs_as_cond: True
+
+policy:
+  _target_: psi_dp.policy.diffusion_transformer_timm_policy.DiffusionTransformerTimmPolicy
+  shape_meta: ${shape_meta}
+  
+  noise_scheduler:
+    _target_: diffusers.DDIMScheduler
+    num_train_timesteps: 50
+    beta_start: 0.0001
+    beta_end: 0.02
+    beta_schedule: squaredcos_cap_v2
+    clip_sample: True
+    set_alpha_to_one: True
+    steps_offset: 0
+    prediction_type: epsilon
+
+  obs_encoder:
+    _target_: psi_dp.model.vision.timm_obs_encoder.TimmObsEncoder
+    shape_meta: ${shape_meta}
+    global_pool: ''
+    n_emb: ${n_emb}
+    model_name: 'vit_small_r26_s32_224'
+    pretrained: True
+    frozen: False
+    feature_aggregation: null
+    use_mask_input: True  # 启用 RGBM 4通道输入支持
+    downsample_ratio: 32
+    transforms:
+      - type: RandomCrop
+        ratio: 0.9
+    use_group_norm: True
+    share_rgb_model: False
+
+  num_inference_steps: 16
+  input_pertub: 0.1
+  n_layer: 7
+  n_head: 8
+  n_emb: ${n_emb}
+  p_drop_attn: 0.1
+
+ema:
+  _target_: diffusion_policy.model.diffusion.ema_model.EMAModel
+  update_after_step: 0
+  inv_gamma: 1.0
+  power: 0.75
+  min_value: 0.0
+  max_value: 0.9999
+
+dataloader:
+  batch_size: 128
+  num_workers: 12
+  shuffle: True
+  pin_memory: True
+  persistent_workers: True
+
+val_dataloader:
+  batch_size: 128
+  num_workers: 12
+  shuffle: False
+  pin_memory: True
+  persistent_workers: True
+
+optimizer:
+  lr: 3.0e-4
+  weight_decay: 1.0e-6
+  obs_encoder_lr: 3.0e-5
+  obs_encoder_weight_decay: 1.0e-6
+  betas: [0.95, 0.999]
+  
+training:
+  device: "cuda:0"
+  seed: 42
+  debug: False
+  resume: False
+  lastest_ckpt_path: null
+  lr_scheduler: cosine
+  lr_warmup_steps: 2000
+  num_epochs: 20000
+  gradient_accumulate_every: 1
+  use_ema: True
+  freeze_encoder: False
+  rollout_every: 10
+  checkpoint_every: 10
+  val_every: 1
+  sample_every: 5
+  max_train_steps: null
+  max_val_steps: null
+  tqdm_interval_sec: 1.0
+
+# ==================== WandB日志配置 ====================
+logging:
+  project: DP_并行实验1222_${task.name}
+  resume: False
+  mode: online
+  name: ${object_name}_n${num_demos}_${now:%Y%m%d_%H%M%S}
+  tags: [
+    # 基本信息
+    "${task_name}",
+    "${object_name}",
+    "n${num_demos}",
+    # 数据类型
+    "obs:${task.data_info.obs_type}",
+    "action_dim:${task.data_info.action_dim}",
+    "img:${task.data_info.image_size}",
+    # RGBM 特有标记
+    "mask_input:True",
+    # 随机化配置
+    "pos_rand:${task.randomization.position.enabled}",
+    "rot_rand:${task.randomization.rotation.enabled}",
+    # 模型配置
+    "encoder:${policy.obs_encoder.model_name}",
+    "pretrained:${policy.obs_encoder.pretrained}",
+    # 超参数
+    "bs:${dataloader.batch_size}",
+    "lr:${optimizer.lr}",
+    "n_layer:${policy.n_layer}",
+    "n_emb:${n_emb}",
+    "act_steps:${n_action_steps}",
+    "obs_steps:${n_obs_steps}",
+  ]
+  id: null
+  group: ${object_name}
+  notes: "物体:${object_name} | 数据:${num_demos}条 | 观测:${task.data_info.obs_type}(RGBM) | 图像:${task.data_info.image_size} | 位置随机:${task.randomization.position.enabled} | 旋转随机:${task.randomization.rotation.enabled} | 编码器:${policy.obs_encoder.model_name}"
+
+checkpoint:
+  topk:
+    monitor_key: train_loss
+    mode: min
+    k: 10
+    format_str: 'epoch={epoch:04d}-train_loss={train_loss:.3f}.ckpt'
+  save_last_ckpt: True
+  save_last_snapshot: False
+
+multi_run:
+  run_dir: data/outputs/${task_name}/${object_name}/${now:%Y%m%d_%H%M%S}_n${num_demos}
+  wandb_name_base: ${object_name}_n${num_demos}_${now:%Y%m%d_%H%M%S}
+
+# ==================== 输出目录结构 ====================
+hydra:
+  job:
+    override_dirname: ${name}
+  run:
+    dir: data/outputs/${task_name}/${object_name}/${now:%Y%m%d_%H%M%S}_n${num_demos}
+  sweep:
+    dir: data/outputs/${task_name}/${object_name}/${now:%Y%m%d_%H%M%S}_n${num_demos}
+    subdir: ${hydra.job.num}
+

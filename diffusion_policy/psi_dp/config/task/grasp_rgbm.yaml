@@ -1,0 +1,111 @@
+name: grasp_rgbm
+
+# ==================== 数据集配置（需要修改的部分）====================
+# 物体名称 - 用于输出文件夹命名和wandb记录
+object_name: "100ml玻璃量筒_smooth_rgbm_batch${dataloader.batch_size}_action${n_action_steps}"
+# 数据条数 - 用于输出文件夹命名和wandb记录（0表示自动从数据集读取）
+num_demos: 50  # 修改这里：数据条数，0表示自动检测
+
+# 数据集根目录
+data_root: /share_data/liyufeng/code/chembench/data/zarr_rgbm/motion_plan/grasp
+# 完整数据集路径 = data_root / object_name.zarr
+dataset_path: "/share_data/liyufeng/code/chembench/data/zarr_rgbm/motion_plan/grasp/100ml玻璃量筒_smooth_rgbm.zarr"
+# ==================== 数据采集时的随机化配置 ====================
+# 这些配置用于记录数据采集时的随机化设置，便于实验对比
+randomization:
+  # 位置随机化
+  position:
+    enabled: true
+    x_range: [-0.02, 0.02]  # X轴随机范围(米)
+    y_range: [-0.02, 0.02]  # Y轴随机范围(米)
+    z_range: [0.0, 0.0]     # Z轴随机范围(米)
+  # 旋转随机化
+  rotation:
+    enabled: false
+    yaw_range: [-26, 26]    # 偏航角随机范围(度)
+  # 其他随机化
+  lighting: false           # 光照随机化
+  texture: false            # 纹理随机化
+
+# ==================== 观测配置开关 ====================
+# 设置为 true/false 来控制是否使用对应的观测
+obs_config:
+  use_velocity: True  # 是否使用速度观测 (arm2_vel, hand2_vel)
+
+# ==================== 数据信息 ====================
+data_info:
+  obs_type: "rgbm"           # 观测类型: state, rgb, rgbm
+  # 根据 use_velocity 选择不同的 obs_keys
+  # obs_keys: ["chest_camera_rgb", "head_camera_rgb", "arm2_pos", "hand2_pos", "arm2_eef_pos", "arm2_eef_quat", "target_pose"]
+  # 如果 use_velocity=true，使用下面这行（手动切换）
+  obs_keys: ["chest_camera_rgb", "head_camera_rgb", "arm2_pos", "arm2_vel", "hand2_pos", "hand2_vel", "arm2_eef_pos", "arm2_eef_quat", "target_pose"]
+  action_dim: 13             # 动作维度: arm(7) + hand(6)
+  image_size: 224            # 图像尺寸
+
+# ==================== 以下配置通常不需要修改 ====================
+# RGBM: 4通道 = RGB(3) + Mask(1)
+image_shape: [4, 224, 224]
+
+# ==================== 不使用速度的观测配置 ====================
+shape_meta: &shape_meta
+  # acceptable types: rgb, rgbm, low_dim
+  obs:
+    # 胸部相机 RGBM (4通道: RGB + Mask)
+    chest_camera_rgb:
+      shape: ${task.image_shape}
+      type: rgbm
+      horizon: ${n_obs_steps}
+    # 头部相机 RGBM (4通道: RGB + Mask)
+    head_camera_rgb:
+      shape: ${task.image_shape}
+      type: rgbm
+      horizon: ${n_obs_steps}
+    arm2_pos:
+      shape: [7]
+      type: low_dim 
+      horizon: ${n_obs_steps} 
+    # ===== 速度观测（取消注释以启用）=====
+    arm2_vel:
+      shape: [7]
+      type: low_dim 
+      horizon: ${n_obs_steps} 
+    hand2_pos:
+      shape: [6]
+      type: low_dim
+      horizon: ${n_obs_steps}
+    hand2_vel:
+      shape: [6]
+      type: low_dim
+      horizon: ${n_obs_steps}
+    # ===== 速度观测结束 =====
+    arm2_eef_pos:
+      shape: [3]
+      type: low_dim
+      horizon: ${n_obs_steps}
+    arm2_eef_quat:
+      shape: [4]
+      type: low_dim
+      horizon: ${n_obs_steps}
+    # 目标物体位姿
+    target_pose:
+      shape: [7]
+      type: low_dim
+      horizon: ${n_obs_steps}
+  action: 
+    shape: [13]
+    horizon: ${n_action_steps}
+
+env_runner:
+  _target_: diffusion_policy.env_runner.real_pusht_image_runner.RealPushTImageRunner
+
+# 使用 RGBM 专用数据集
+dataset:
+  _target_: psi_dp.dataset.rgbm_image_dataset.RGBMImageDataset
+  zarr_path: ${task.dataset_path}
+  horizon: ${n_action_steps}
+  pad_before: ${eval:'${n_obs_steps}-1+${n_latency_steps}'}
+  pad_after: ${eval:'${n_action_steps}-1'}
+  seed: 42
+  val_ratio: 0
+  use_velocity: ${task.obs_config.use_velocity}  # 是否使用速度观测
+
