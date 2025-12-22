@@ -55,8 +55,10 @@ def eval_fail(target: RigidObject, contact_sensors: dict[str,ContactSensor], has
     velocity_z = torch.round(target.data.root_state_w[:,9], decimals = 2)
     angle_velocity = torch.round(target.data.root_state_w[:,10:], decimals = 2)
     # we thougt target is falling down while velocity on Z-axis is greater than 0.2m/s or angle velocity is greater than 5 deg/s
-    bfalling = (velocity_z<=-0.1) | (angle_velocity[:,0]>=2)| (angle_velocity[:,1]>=2)| (angle_velocity[:,2]>=2)
-
+    # bfalling = (velocity_z<=-0.1) | (angle_velocity[:,0]>=2)| (angle_velocity[:,1]>=2)| (angle_velocity[:,2]>=2)
+    # bfalling = (velocity_z<=-0.1) | (angle_velocity[:,0]>=2)| (angle_velocity[:,1]>=2)| (angle_velocity[:,2]>=2)
+    bfalling = ((velocity_z<=1) | (angle_velocity[:,0]>=10)| (angle_velocity[:,1]>=10)| (angle_velocity[:,2]>=10)) & 0
+    # print(f'angle_velocity: {angle_velocity}')
     # get force number between target and robot in contact sensor
     contact_force_num = torch.zeros(has_contacted.shape, dtype=torch.int8,device=has_contacted.device)
     for sensor_name,contact_sensor in contact_sensors.items():

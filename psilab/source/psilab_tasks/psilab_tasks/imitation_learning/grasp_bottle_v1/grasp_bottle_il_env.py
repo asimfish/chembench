@@ -80,7 +80,7 @@ class GraspBottleEnvCfg(ILEnvCfg):
     state_space = 130
 
     # 
-    episode_length_s = 20
+    episode_length_s = 2
     decimation = 4
     sample_step = 1
 
@@ -114,7 +114,7 @@ class GraspBottleEnvCfg(ILEnvCfg):
     output_folder = OUTPUT_DIR + "/il"
 
     # lift desired height
-    lift_height_desired = 0.3
+    lift_height_desired = 0.
 
 class GraspBottleEnv(ILEnv):
 

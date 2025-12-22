@@ -22,6 +22,12 @@ rad.json
 TestResults.xml
 
 ### Custom Ignores ###
+# Python compiled files
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+
 # Assets folder
 psilab/assets/
 
@@ -42,3 +48,5 @@ data/
 diffusion_policy/diffusion_policy.egg-info/
 psilab/outputs/
 wandb/
+analysis_results/
+final

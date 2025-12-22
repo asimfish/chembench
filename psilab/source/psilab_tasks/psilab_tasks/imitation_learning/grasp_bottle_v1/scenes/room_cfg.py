@@ -44,13 +44,13 @@ BASE_CFG = SceneCfg(
         replicate_physics=True,
         
         # global light
-        global_light_cfg = DomeLightCfg(
-            prim_path="/World/Light", 
-            spawn=sim_utils.DomeLightCfg(
-                intensity=3000.0, 
-                color=(0.75, 0.75, 0.75)
-            )
-        ),
+        # global_light_cfg = DomeLightCfg(
+        #     prim_path="/World/Light", 
+        #     spawn=sim_utils.DomeLightCfg(
+        #         intensity=3000.0, 
+        #         color=(0.75, 0.75, 0.75)
+        #     )
+        # ),
    
         # static object
         static_objects_cfg = {
@@ -59,7 +59,11 @@ BASE_CFG = SceneCfg(
                 spawn=sim_utils.UsdFileCfg(
                     # usd_path=PSILAB_USD_ASSET_DIR + "/envs/psi_garage/GarageScene.usd"
                     # usd_path=PSILAB_USD_ASSET_DIR + "/Chemistrylab/lab_real.usd"
-                    usd_path=PSILAB_USD_ASSET_DIR + "/Chemistrylab/lab_change_desk.usd"
+
+                    # usd_path=PSILAB_USD_ASSET_DIR + "/Chemistrylab/lab_change_desk.usd"
+                    usd_path=PSILAB_USD_ASSET_DIR + "/Chemistrylab/lab_simple.usd"
+                    # usd_path=PSILAB_USD_ASSET_DIR + "/Chemistrylab/lab_real_new_desk.usd"
+                    # lab_real_new_desk.usd
                 ),
                 init_state = RigidObjectCfg.InitialStateCfg(
                     # pos=(-1.0, 8, -0.3), 
@@ -114,11 +118,11 @@ BASE_CFG = SceneCfg(
                 ),
                 init_state=RigidObjectCfg.InitialStateCfg(
                     # pos=(0.0,0.0,0.85),
-                    pos=(0.5,-0.105,0.85),
+                    pos=(0.5,-0.105,1.0),
                     # rot= (0.707, 0.707, 0.0, 0.0)
                     rot= (0.0, 0.0, 0.0, 1.0)
                 ),
-                enable_height_offset=True
+                enable_height_offset=False
             ),
           
         },
@@ -226,7 +230,8 @@ BASE_CFG = SceneCfg(
                     position= PositionRandomCfg(
                         enable=[True,True,False],
                         type="range",
-                        offset_range=[0.03,0.03,0.0],
+                        offset_range=[0.02,0.02,0.0],
+                        # offset_range=[0.0,0.0,0.0],
                         # offset_list=[
                         #     [0.1,0.0,0.0],
                         #     [0.0,0.1,0.0],
@@ -477,8 +482,8 @@ PSI_DC_02_CFG = BASE_CFG.replace(
             "robot" : RobotBaseCfg(
                 prim_path = "/World/envs/env_[0-9]+/Robot",
                 spawn = sim_utils.UsdFileCfg(
-                    usd_path=PSILAB_USD_ASSET_DIR+"/robots/Robot_Psi_DC_02/PsiRobot_DC_02_PerfectControl9.1_aligned_fingermass_D435_640x480.usd",
-                    # usd_path=PSILAB_USD_ASSET_DIR+"/robots/Robot_Psi_DC_02/PsiRobot_DC_02_PerfectControl9.1_aligned_fingermass_D435_640x480_minimal.usd",
+                    # usd_path=PSILAB_USD_ASSET_DIR+"/robots/Robot_Psi_DC_02/PsiRobot_DC_02_PerfectControl9.1_aligned_fingermass_D435_640x480.usd",
+                    usd_path=PSILAB_USD_ASSET_DIR+"/robots/Robot_Psi_DC_02/PsiRobot_DC_02_PerfectControl9.1_aligned_fingermass_D435_640x480_minimal.usd",
                     activate_contact_sensors = True,
                     articulation_props=sim_utils.ArticulationRootPropertiesCfg(
                         enabled_self_collisions=True,
@@ -644,28 +649,31 @@ PSI_DC_02_CFG = BASE_CFG.replace(
                 tiled_cameras={
                 "head_camera": TiledCameraCfg(
                     prim_path="/World/envs/env_[0-9]+/Robot/camera_head_base/camera_head_color",
-                    data_types=["rgb"],
+                    data_types=["rgb", "instance_segmentation_fast"],
+                    # data_types=["rgb"],
                     width=640,
                     height=480,
                     spawn=None,
                 ),
-                "arm1_camera": TiledCameraCfg(
-                    prim_path="/World/envs/env_[0-9]+/Robot/falan1/arm1_camera_rgb",
-                    data_types=["rgb"],
-                    width=640,
-                    height=480,
-                    spawn=None,
-                ),
-                "arm2_camera": TiledCameraCfg(
-                    prim_path="/World/envs/env_[0-9]+/Robot/falan2/arm2_camera_rgb",
-                    data_types=["rgb"],
-                    width=640,
-                    height=480,
-                    spawn=None,
-                ),
+                # "arm1_camera": TiledCameraCfg(
+                #     prim_path="/World/envs/env_[0-9]+/Robot/falan1/arm1_camera_rgb",
+                #     data_types=["rgb"],
+                #     width=640,
+                #     height=480,
+                #     spawn=None,
+                # ),
+                # "arm2_camera": TiledCameraCfg(
+                #     prim_path="/World/envs/env_[0-9]+/Robot/falan2/arm2_camera_rgb",
+                #     data_types=["rgb"],
+                #     width=640,
+                #     height=480,
+                #     spawn=None,
+                # ),
                 "chest_camera": TiledCameraCfg(
                     prim_path="/World/envs/env_[0-9]+/Robot/camera_chest_base/camera_chest_color",
-                    data_types=["rgb"],
+                    
+                    data_types=["rgb", "instance_segmentation_fast"],
+                    # data_types=["rgb"],
                     width=640,
                     height=480,
                     spawn=None,
@@ -676,39 +684,39 @@ PSI_DC_02_CFG = BASE_CFG.replace(
                     #     convention="ros"
                     # ),
                 ),
-                "third_person_camera": TiledCameraCfg(
-                    prim_path="/World/envs/env_[0-9]+/ThirdPersonCamera",
-                    data_types=["rgb"],
-                    width=640,
-                    height=480,
-                    # width=640 * 4,
-                    # height=480 * 4,
+                # "third_person_camera": TiledCameraCfg(
+                #     prim_path="/World/envs/env_[0-9]+/ThirdPersonCamera",
+                #     data_types=["rgb"],
+                #     width=640,
+                #     height=480,
+                #     # width=640 * 4,
+                #     # height=480 * 4,
 
-                    spawn=sim_utils.PinholeCameraCfg(),
-                    offset=TiledCameraCfg.OffsetCfg(
-                        # pos=(2.2, 0.0, 1.2),
-                        # rot=(0.0, 0.0, 0.0, 1.0),  # 180 degrees around Z axis to look towards -X
+                #     spawn=sim_utils.PinholeCameraCfg(),
+                #     offset=TiledCameraCfg.OffsetCfg(
+                #         # pos=(2.2, 0.0, 1.2),
+                #         # rot=(0.0, 0.0, 0.0, 1.0),  # 180 degrees around Z axis to look towards -X
                         
-                        # pos=(5.3, 1.5, 1.2),
-                        # # rot=(0.0, 0.0, 0.0, 1.0),  # 180 degrees around Z axis to look towards -X
-                        # # rot =(0.0000, 0.0000, 0.7071, -0.7071),
-                        # rot=(-0.7071, 0, 0, 0.7071),
+                #         # pos=(5.3, 1.5, 1.2),
+                #         # # rot=(0.0, 0.0, 0.0, 1.0),  # 180 degrees around Z axis to look towards -X
+                #         # # rot =(0.0000, 0.0000, 0.7071, -0.7071),
+                #         # rot=(-0.7071, 0, 0, 0.7071),
 
-                        pos = (0.6,-5.0,1.2),
+                #         pos = (0.6,-5.0,1.2),
 
-                        # rot = (0.5, -0.5, 0.5, 0.5),  # 欧拉角 (90°, 90°, 0°) XYZ顺序,
-                        # rot = (0.5000, 0.5000, 0.5000, -0.5000),
-                        # rot = (-0.5, 0.5, -0.5, -0.5),  # 欧拉角 (90°, 90°, 0°) xyz顺序
-                        rot = (0, 0, 0, 1),
+                #         # rot = (0.5, -0.5, 0.5, 0.5),  # 欧拉角 (90°, 90°, 0°) XYZ顺序,
+                #         # rot = (0.5000, 0.5000, 0.5000, -0.5000),
+                #         # rot = (-0.5, 0.5, -0.5, -0.5),  # 欧拉角 (90°, 90°, 0°) xyz顺序
+                #         rot = (0, 0, 0, 1),
 
 
                         
-                        # rot = (0, 0, -0.707, -0.707),
+                #         # rot = (0, 0, -0.707, -0.707),
                         
                         
-                        convention="world"
-                    ),
-                ),
+                #         convention="world"
+                #     ),
+                # ),
             },        
             )
         },
@@ -717,129 +725,164 @@ PSI_DC_02_CFG = BASE_CFG.replace(
 
 
 
-PSI_DC_Beaker_003_CFG = PSI_DC_02_CFG.replace(
-    rigid_objects_cfg={
-        "bottle" : RigidObjectCfg(
-                prim_path="/World/envs/env_[0-9]+/Bottle",
-                spawn=sim_utils.UsdFileCfg(
-                    usd_path="/home/psibot/psi-lab-v2/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_100ml/Beaker003.usd",
-                    # usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/mortar/Mortar001.usd",
-                    # usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_50ml/Beaker002.usd",
-                    # usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_500ml/Beaker005.usd",
-
-                    ##beaker
-                    scale=(1.0,1.0,1.0),
-
-                    ##motar
-                    # scale=(0.8,0.8,1.1),
-
-                    rigid_props=RigidBodyPropertiesCfg(
-                        solver_position_iteration_count=255
-                    )
-                ),
-                init_state=RigidObjectCfg.InitialStateCfg(
-                    # pos=(0.5,-0.105,0.85),
-                    # pos=(-1.250358,-5.30277,0.85 ),
-                    # pos=(-1.050358,-5.30277,0.85 ),
-                    # pos=(-1.150358,-5.30277,1.07 ),
-                    # pos=(-1.15358,-5.10277,0.9 ),
-
-
-                    pos=(-1.15358,-5.10277,1.05 ),
-                    rot= (0.0, 0.0, 0.0, 1.0)
-
-                    # pos=(-1.15358,-5.20277,1.10 ),
-                    # rot= (0.0, 0.0, 0.0, 1.0)
-                ),
-                enable_height_offset=True
-            ),
-        "table" : RigidObjectCfg(
-                    prim_path="/World/envs/env_[0-9]+/Table", 
-                    spawn=sim_utils.UsdFileCfg(
-                        usd_path=PSILAB_USD_ASSET_DIR + "/rigid_objects/high_poly/workbench/willow_table/WillowTable.usd",
-                        scale=(1.0, 1.0, 1.0),
-                        visual_material=None,
-                        rigid_props=RigidBodyPropertiesCfg(
-                            kinematic_enabled = True,
-                            solver_position_iteration_count=255
-                        )
-                    ),
-
-
-                    init_state = RigidObjectCfg.InitialStateCfg(
-                        pos=(0.65, 0.0, 0.0), 
-                        rot= (0.707, 0.0, 0.0, 0.707)
-                    )
-                ),
-
-    },
-
-
-    )
-
-
-
-
-
 PSI_DC_Grasp_CFG = PSI_DC_02_CFG.replace(
+
     rigid_objects_cfg={
         "bottle" : RigidObjectCfg(
                 prim_path="/World/envs/env_[0-9]+/Bottle",
                 spawn=sim_utils.UsdFileCfg(
-                    usd_path="/home/psibot/psi-lab-v2/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_100ml/Beaker003.usd",
+                    # usd_path="/home/psibot/psi-lab-v2/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_100ml/Beaker003.usd",
+                    # usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/funnel_stand/FunnelStand001.usd",
+                    # usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/brown_reagent_bottle_large/ReagentBottle001.usd",
+                    # usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_100ml/Beaker003_rot.usd",
                     # usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/mortar/Mortar001.usd",
+                    # usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_250ml/Beaker004.usd",
                     # usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_50ml/Beaker002.usd",
                     # usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_500ml/Beaker005.usd",
+                    # usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/clear_reagent_bottle_large/ReagentBottle002.usd",
+                    # usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/hygrothermometer/TemperatureAndHumidityMeter001.usd",
+                    # usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_test_tube_20ml/TestTube001.usd",
+                    # usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_test_tube_50ml/TestTube002.usd",
+                    # usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_cylinder_100ml/GraduatedCylinder004.usd",
+                    # usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/brown_reagent_bottle_small/ReagentBottle004.usd",
+                    # usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/clear_reagent_bottle_small/ReagentBottle003.usd",
+                    # usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/spherical_condenser/SphericalCondenser001.usd",
+                    usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/erlenmeyer_flask/ErlenmeyerFlask001.usd",
 
-                    ##beaker
+                    
+                    ##normal
                     scale=(1.0,1.0,1.0),
 
                     ##motar
                     # scale=(0.8,0.8,1.1),
 
+                    ##漏斗架
+                    # scale= (0.3,0.3,0.6),
+
                     rigid_props=RigidBodyPropertiesCfg(
                         solver_position_iteration_count=255
-                    )
+                    ),
+                    semantic_tags=[("class","target")]
                 ),
                 init_state=RigidObjectCfg.InitialStateCfg(
-                    # pos=(0.5,-0.105,0.85),
-                    # pos=(-1.250358,-5.30277,0.85 ),
-                    # pos=(-1.050358,-5.30277,0.85 ),
-                    # pos=(-1.150358,-5.30277,1.07 ),
-                    # pos=(-1.15358,-5.10277,0.9 ),
-
-
+                    #normal
                     pos=(-1.15358,-5.10277,1.05 ),
-                    rot= (0.0, 0.0, 0.0, 1.0)
+                    # ##normal
+                    rot= (1.0, 0.0, 0.0, 0.0),
 
-                    # pos=(-1.15358,-5.20277,1.10 ),
+                    ##温湿度计
+                    # rot= ( -0.2623749, 0, 0, 0.964966)
+
+                    #漏斗架
+                    # rot= (  -0.7071, 0, 0, -0.7071 )
+
+                    #50ml试管
+                    # pos=(-1.1431-0.01, -5.2052, 1.09),
                     # rot= (0.0, 0.0, 0.0, 1.0)
+
+                    ##100ml玻璃量筒
+                    # pos=(-1.15358,-5.10277,1.13 )
                 ),
                 enable_height_offset=True
             ),
-        "table" : RigidObjectCfg(
-                    prim_path="/World/envs/env_[0-9]+/Table", 
-                    spawn=sim_utils.UsdFileCfg(
-                        usd_path=PSILAB_USD_ASSET_DIR + "/rigid_objects/high_poly/workbench/willow_table/WillowTable.usd",
-                        scale=(1.0, 1.0, 1.0),
-                        visual_material=None,
-                        rigid_props=RigidBodyPropertiesCfg(
-                            kinematic_enabled = True,
-                            solver_position_iteration_count=255
-                        )
-                    ),
 
-
-                    init_state = RigidObjectCfg.InitialStateCfg(
-                        pos=(0.65, 0.0, 0.0), 
-                        rot= (0.707, 0.0, 0.0, 0.707)
-                    )
-                ),
+            ##50ml试管架和试管
+            # "shelf" : RigidObjectCfg(
+            #     prim_path="/World/envs/env_[0-9]+/Shelf",
+            #     spawn=sim_utils.UsdFileCfg(
+            #         # usd_path="/home/psibot/psi-lab-v2/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_100ml/Beaker003.usd",
+            #         usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/new/TestTubeRack001/TestTubeRack001.usd",
+            #         # usd_path="/home/wyh/wyh/psi-lab-v2/assets/lyf_usd/objs/glass_beaker_100ml/Beaker003.usd",
+            #         scale=(1.4,1.4,1.0),
+            #         # scale=(1.4,1.4,1.0),
+            #         rigid_props=RigidBodyPropertiesCfg(
+            #             solver_position_iteration_count=2047,
+            #             kinematic_enabled = True
+            #         ), 
+            #         mass_props=sim_utils.MassPropertiesCfg(mass=1.0),
+            #     ),
+            #     init_state=RigidObjectCfg.InitialStateCfg(
+            #         # pos=(-1.15358-0.01801, -5.2+0.01780, 1.11),
+            #         pos=(-1.15358-0.01801-0.01, -5.2+0.01780, 1.01),
+            #         rot=(0.707, 0.0, 0.0, 0.707)
+            #     ),
+            # ),
+        
+        # "table" : RigidObjectCfg(
+        #             prim_path="/World/envs/env_[0-9]+/Table", 
+        #             spawn=sim_utils.UsdFileCfg(
+        #                 usd_path=PSILAB_USD_ASSET_DIR + "/Chemistrylab/table_chem.usd",
+        #                 scale=(1.0, 1.0, 1.0),
+        #                 visual_material=None,
+        #                 rigid_props=RigidBodyPropertiesCfg(
+        #                     kinematic_enabled = True,
+        #                     solver_position_iteration_count=255
+        #                 )
+        #             ),
+        #             init_state = RigidObjectCfg.InitialStateCfg(
+        #                 pos=(0.65, 0.0, 0.0), 
+        #                 rot= (0.707, 0.0, 0.0, 0.707)
+        #             )
+        #         ),
 
     },
 
 
     )
+
+PSI_DC_Grasp_Art_CFG = PSI_DC_02_CFG.replace(
+
+
+    articulated_objects_cfg={
+        "bottle" : ArticulatedObjectCfg(
+                prim_path="/World/envs/env_[0-9]+/Bottle",
+                spawn=sim_utils.UsdFileCfg(
+                    usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_100ml/Beaker003_art.usd",
+                    scale=(1.0,1.0,1.0),
+                    articulation_props=sim_utils.ArticulationRootPropertiesCfg(
+                        enabled_self_collisions=False,
+                    ),
+                    rigid_props=RigidBodyPropertiesCfg(
+                        solver_position_iteration_count=255
+                    )
+                ),
+                init_state=ArticulationCfg.InitialStateCfg(
+                    pos=(-1.15358,-5.10277,1.00 ),
+                    # rot= (0.0, 0.0, 0.0, 1.0),  # 这里需要逗号
+                    rot= (1.0, 0.0, 0.0, 0.0),  # 这里需要逗号
+                    # rot= (1.0, 0.0, 0.0, 0.0)
+                    joint_pos={},
+                    joint_vel={}
+                ),
+                # actuators 是必需字段，即使没有关节也需要提供空字典
+                actuators={},
+            ),
+    },
+
+
+    # rigid_objects_cfg={
+    #     "table" : RigidObjectCfg(
+    #                 prim_path="/World/envs/env_[0-9]+/Table", 
+    #                 spawn=sim_utils.UsdFileCfg(
+    #                     usd_path=PSILAB_USD_ASSET_DIR + "/rigid_objects/high_poly/workbench/willow_table/WillowTable.usd",
+    #                     scale=(1.0, 1.0, 1.0),
+    #                     visual_material=None,
+    #                     rigid_props=RigidBodyPropertiesCfg(
+    #                         kinematic_enabled = True,
+    #                         solver_position_iteration_count=255
+    #                     )
+    #                 ),
+    #                 init_state = RigidObjectCfg.InitialStateCfg(
+    #                     pos=(0.65, 0.0, 0.0), 
+    #                     rot= (0.707, 0.0, 0.0, 0.707)
+    #                 )
+    #             ),
+
+    # },
+
+
+    )
+
 
 
 

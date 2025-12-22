@@ -24,8 +24,7 @@ from psilab.scene import SceneCfg
 from psilab.envs.il_env import ILEnv 
 from psilab.envs.il_env_cfg import ILEnvCfg
 from psilab.utils.timer_utils import Timer
-from psilab.eval.grasp_rigid import eval_success,eval_fail
-from psilab.eval.grasp_rigid import eval_success_only_height
+from psilab.eval.grasp_rigid import eval_fail
 from psilab.utils.data_collect_utils import parse_data,save_data
 from psilab.utils.dp_utils import load_diffusion_policy,process_image,process_batch_image
 def load_diffusion_policy_from_checkpoint(checkpoint_path: str, device: str = 'cuda:0'):
@@ -80,7 +79,7 @@ class GraspBottleEnvCfg(ILEnvCfg):
     state_space = 130
 
     # 
-    episode_length_s = 10
+    episode_length_s = 2
     decimation = 4
     sample_step = 1
 
@@ -116,7 +115,11 @@ class GraspBottleEnvCfg(ILEnvCfg):
     output_folder = OUTPUT_DIR + "/il"
 
     # lift desired height
-    lift_height_desired = 0.3
+    lift_height_desired = 0.25
+    
+    # 成功判断：朝向偏差阈值（sin²(θ/2)，0=完全一致，1=上下颠倒）
+    # 0.1 约等于 37° 的偏差，0.05 约等于 26° 的偏差
+    orientation_threshold: float = 0.1
 
 class GraspBottleEnv(ILEnv):
 
@@ -160,6 +163,10 @@ class GraspBottleEnv(ILEnv):
         # variables used to store contact flag
         self._has_contacted = torch.zeros(self.num_envs,device=self.device, dtype=torch.bool) # type: ignore
         self._target_pos_init = torch.zeros((self.num_envs,3),device=self.device)
+        self._target_quat_init = torch.zeros((self.num_envs,4),device=self.device)  # 初始朝向（wxyz）
+        
+        # 记录成功时的步数列表
+        self._success_steps_list: list[int] = []
 
         # 设置 RTX 渲染选项: Fractional Cutout Opacity
         import carb
@@ -179,7 +186,7 @@ class GraspBottleEnv(ILEnv):
         # 头部相机
         head_camera_rgb = process_batch_image(self._robot.tiled_cameras["head_camera"].data.output["rgb"][:,:,:,:])
         #第三人称相机
-        third_person_camera_rgb = process_batch_image(self._robot.tiled_cameras["third_person_camera"].data.output["rgb"][:,:,:,:])
+        # third_person_camera_rgb = process_batch_image(self._robot.tiled_cameras["third_person_camera"].data.output["rgb"][:,:,:,:])
         #
         #  目标物体位姿（相对于环境原点，与训练数据保持一致）
         # 注意：训练数据 zarr_utils.py 中使用的是相对于 env_origins 的坐标
@@ -192,7 +199,7 @@ class GraspBottleEnv(ILEnv):
 
             'chest_camera_rgb': chest_camera_rgb.unsqueeze(1),
             'head_camera_rgb': head_camera_rgb.unsqueeze(1),
-            'third_person_camera_rgb': third_person_camera_rgb.unsqueeze(1),
+            # 'third_person_camera_rgb': third_person_camera_rgb.unsqueeze(1),
             'arm2_pos': self._robot.data.joint_pos[:,self._robot.actuators["arm2"].joint_indices].unsqueeze(1),
             'arm2_vel': self._robot.data.joint_vel[:,self._robot.actuators["arm2"].joint_indices].unsqueeze(1),
             'hand2_pos': self._robot.data.joint_pos[:,self._robot.actuators["hand2"].joint_indices[:6]].unsqueeze(1), # type: ignore
@@ -275,6 +282,62 @@ class GraspBottleEnv(ILEnv):
         #
         super().reset()
 
+    def _quat_orientation_loss(self, quat_init: torch.Tensor, quat_current: torch.Tensor) -> torch.Tensor:
+        """
+        计算两个四元数之间的 pitch+roll 朝向偏差
+        
+        返回值 ∈ [0, 1]：
+        - 0: 朝向完全一致
+        - 1: 上下颠倒（180°偏差）
+        
+        Args:
+            quat_init: 初始四元数 [N, 4] (wxyz)
+            quat_current: 当前四元数 [N, 4] (wxyz)
+        Returns:
+            loss: 朝向偏差 [N]
+        """
+        # 四元数分量 (wxyz format)
+        aw, ax, ay, az = quat_init.unbind(-1)
+        bw, bx, by, bz = quat_current.unbind(-1)
+        
+        # 计算 conj(a)
+        cw, cx, cy, cz = aw, -ax, -ay, -az
+        
+        # 计算相对四元数 Δq = conj(a) ⊗ b
+        rw = cw * bw - cx * bx - cy * by - cz * bz
+        rx = cw * bx + cx * bw + cy * bz - cz * by
+        ry = cw * by - cx * bz + cy * bw + cz * bx
+        rz = cw * bz + cx * by - cy * bx + cz * bw
+        
+        # 归一化（数值安全）
+        norm = torch.sqrt(rw * rw + rx * rx + ry * ry + rz * rz) + 1e-8
+        rx, ry = rx / norm, ry / norm
+        
+        # pitch+roll 误差：sin²(θ_pr/2) ∈ [0,1]
+        loss = rx * rx + ry * ry
+        return loss
+
+    def _eval_success_with_orientation(self) -> torch.Tensor:
+        """
+        评估抓取是否成功（同时检查高度和朝向）
+        
+        成功条件：
+        1. 物体被抬起到目标高度附近（±5cm）
+        2. 物体朝向偏离初始朝向不超过阈值
+        """
+        # 1. 检查抬起高度（只需高于目标高度即可）
+        height_lift = self._target.data.root_pos_w[:, 2] - self._target_pos_init[:, 2]
+        height_check = height_lift >= (self.cfg.lift_height_desired * 0.8 )
+        
+        # 2. 检查朝向偏差
+        current_quat = self._target.data.root_quat_w  # 当前朝向 (wxyz)
+        orientation_loss = self._quat_orientation_loss(self._target_quat_init, current_quat)
+        orientation_check = orientation_loss < self.cfg.orientation_threshold
+        
+        # 综合判断：高度 AND 朝向
+        bsuccessed = height_check & orientation_check
+        
+        return bsuccessed
 
     def _get_dones(self) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         # 
@@ -283,11 +346,20 @@ class GraspBottleEnv(ILEnv):
         # task evalutation
         bfailed,self._has_contacted = eval_fail(self._target,self._contact_sensors, self._has_contacted) # type: ignore
         
-        # success eval
-        # bsuccessed= eval_success(self._target, self._contact_sensors,self.cfg.lift_height_desired) # type: ignore
-        bsuccessed = eval_success_only_height(self._target, self._target_pos_init, self.cfg.lift_height_desired)
+        # success eval（使用带朝向检查的函数）
+        bsuccessed = self._eval_success_with_orientation()
+        
+        # 记录成功环境的步数
+        success_indices = torch.nonzero(bsuccessed == True).squeeze(1).tolist()
+        if isinstance(success_indices, int):
+            success_indices = [success_indices]
+        for idx in success_indices:
+            # episode_length_buf 记录的是当前 episode 的步数
+            success_step = self.episode_length_buf[idx].item()
+            self._success_steps_list.append(int(success_step))
+        
         # update success number
-        self._episode_success_num+=len(torch.nonzero(bsuccessed==True).squeeze(1).tolist())
+        self._episode_success_num += len(success_indices)
 
         return bsuccessed, bfailed, time_out # type: ignore
     
@@ -321,6 +393,7 @@ class GraspBottleEnv(ILEnv):
         # variables used to store contact flag
         self._has_contacted[env_ids] = torch.zeros_like(self._has_contacted[env_ids],device=self.device, dtype=torch.bool) # type: ignore
         self._target_pos_init[env_ids,:]=self._target.data.root_link_pos_w[env_ids,:].clone()
+        self._target_quat_init[env_ids,:]=self._target.data.root_quat_w[env_ids,:].clone()  # 保存初始朝向
     def _log_info(self):
         # log policy evalutation result
         if self.cfg.enable_eval and self._episode_num > 0:
@@ -335,15 +408,33 @@ class GraspBottleEnv(ILEnv):
             # 只在达到打印间隔时输出日志
             if self._episode_num % log_interval == 0 or self._episode_num >= self.cfg.max_episode:
                 policy_success_rate = float(self._episode_success_num) / float(self._episode_num)
+                
+                # 计算测试时间和效率
+                test_time_sec = self._timer.run_time()
+                test_time_min = test_time_sec / 60.0
+                test_rate = self._episode_num / test_time_min if test_time_min > 0 else 0
+                
                 print(f"\n{'='*50}")
                 print(f"[Episode {self._episode_num}/{self.cfg.max_episode}] 评估统计")
                 print(f"  Policy成功率: {policy_success_rate * 100.0:.2f}%")
                 print(f"  成功次数/总次数: {self._episode_success_num}/{self._episode_num}")
                 
+                # 输出成功步数统计
+                if len(self._success_steps_list) > 0:
+                    avg_success_steps = sum(self._success_steps_list) / len(self._success_steps_list)
+                    min_steps = min(self._success_steps_list)
+                    max_steps = max(self._success_steps_list)
+                    print(f"  成功步数: 平均={avg_success_steps:.1f}, 最小={min_steps}, 最大={max_steps}")
+                    # 显示最近的成功步数（最多显示最近10个）
+                    recent_steps = self._success_steps_list[-10:] if len(self._success_steps_list) > 10 else self._success_steps_list
+                    print(f"  最近成功步数: {recent_steps}")
+                
+                print(f"  测试时间: {test_time_min:.2f} 分钟 ({test_time_sec:.1f} 秒)")
+                print(f"  测试效率: {test_rate:.2f} episode/分钟")
+                
                 if self.cfg.enable_output:
                     # compute data collect result
-                    record_time = self._timer.run_time() / 60.0
-                    record_rate = self._episode_success_num / record_time if record_time > 0 else 0
+                    record_rate = self._episode_success_num / test_time_min if test_time_min > 0 else 0
                     print(f"  采集效率: {record_rate:.2f} 条/分钟")
                 print(f"{'='*50}\n")
 

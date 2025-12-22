@@ -28,11 +28,11 @@ from psilab.eval.grasp_rigid import eval_fail,eval_success
 from psilab.utils.data_collect_utils import parse_data,save_data
 
 """ Local Modules """
-from ..config_loader import load_grasp_config
+from ..config_loader import load_grasp_config, load_grasp_points, get_grasp_point_by_index, get_available_grasp_points
 
 # ========== 任务配置（修改这里即可切换不同任务）==========
 # TARGET_OBJECT_NAME = "mortar"  # 目标物体名称，如 "mortar", "glass_beaker_100ml" 等
-TARGET_OBJECT_NAME = "glass_beaker_100ml"  # 目标物体名称，如 "mortar", "glass_beaker_100ml" 等
+TARGET_OBJECT_NAME = "erlenmeyer_flask"  # 目标物体名称，如 "mortar", "glass_beaker_100ml" 等
 # TARGET_OBJECT_NAME = "glass_beaker_500ml"  # 目标物体名称，如 "mortar", "glass_beaker_100ml" 等
 TASK_TYPE = "grasp"            # 任务类型：grasp, handover, pick_place, pour 等
 
@@ -51,7 +51,7 @@ class GraspBottleEnvCfg(MPEnvCfg):
     state_space = 130
 
     # 
-    episode_length_s = 8
+    episode_length_s = 2
     decimation = 4
     sample_step = 1
 
@@ -90,23 +90,41 @@ class GraspBottleEnvCfg(MPEnvCfg):
     grasp_euler_deg: list = None  # type: ignore
     
     # 抬起高度（单位：米）
-    lift_height_desired: float = 0.3
+    lift_height_desired: float = 0.25
     
     # 轨迹生成的时序参数
     phase_ratios: dict = None  # type: ignore
     
     # 手指闭合方式：True=平滑闭合，False=直接闭合（类似 create_trajectory）
     smooth_finger_close: bool = True
+    
+    # 手指抓取模式：
+    # - "all": 所有手指都闭合（默认）
+    # - "pinch": 只有拇指和食指闭合（对应索引 0,1 和 5）
+    finger_grasp_mode: str = "pinch"
 
     # 是否启用轨迹平滑
     enable_trajectory_smooth: bool = True
     
+    # 轨迹模式选择：
+    # - "default": 使用原始 create_trajectory（不平滑）
+    # - "smooth": 使用 create_trajectory_smooth（minimum jerk，有明显加减速）
+    # - "constant_velocity": 使用恒速轨迹（推荐用于 Diffusion Policy 训练）
+    # trajectory_mode: str = "constant_velocity"
+    trajectory_mode: str = "smooth"
+    
     # 成功判断：朝向偏差阈值（sin²(θ/2)，0=完全一致，1=上下颠倒）
     # 0.1 约等于 37° 的偏差，0.05 约等于 26° 的偏差
-    orientation_threshold: float = 0.05
+    orientation_threshold: float = 0.04
+    
+    # 目标成功次数：达到此数量后自动停止（设为 0 或 None 表示不限制）
+    target_success_count: int = 60
     
     # 输出文件夹：chembench/data/motion_plan/{任务类型}/{物体名称}
     output_folder: str = None  # type: ignore
+    
+    ##是否输出每一步末端执行器的位置和旋转
+    print_eef_pose: bool = False
     
     def __post_init__(self):
         """
@@ -114,9 +132,13 @@ class GraspBottleEnvCfg(MPEnvCfg):
         
         直接调用 config_loader 模块读取 JSON 配置文件
         
+        支持两种模式：
+        1. 单点模式（默认）：使用 grasp_offset 和 grasp_euler_deg
+        2. 多点模式：从 grasp_points_N 周期性读取抓取点
+        
         输出路径格式：chembench/data/motion_plan/{任务类型}/{物体名称}
         """
-        # 从 JSON 加载抓取配置
+        # 从 JSON 加载基础抓取配置
         grasp_config = load_grasp_config(self.target_object_name)
         
         # 设置抓取偏移（如果未手动指定）
@@ -156,7 +178,7 @@ class GraspBottleEnv(MPEnv):
         # instances in scene
         self._robot = self.scene.robots["robot"]
         self._target = self.scene.rigid_objects["bottle"]
-
+        # self._target = self.scene.articulated_objects["bottle"]
         # initialize contact sensor
         self._contact_sensors = {}
         for key in ["hand2_link_base",
@@ -238,7 +260,6 @@ class GraspBottleEnv(MPEnv):
         eff_offset = torch.tensor(grasp_offset, dtype=torch.float32, device=self.device).unsqueeze(0).repeat(env_len, 1)
         eff_quat = torch.tensor(eff_quat_wxyz, dtype=torch.float32, device=self.device).unsqueeze(0).repeat(env_len, 1)
         
-        
         target_position = self._target.data.root_pos_w[env_ids,:]-self._robot.data.root_link_pos_w[env_ids,:]
         
         eef_pose_target_1 = torch.cat((eff_offset+target_position,eff_quat),dim=1)
@@ -262,11 +283,11 @@ class GraspBottleEnv(MPEnv):
         self._hand_pos_target[env_ids,k1_step:,:] = hand_pos_target_2.unsqueeze(1).repeat(1,self.max_episode_length - k1_step,1)
 
         # 修改 eef 第一阶段轨迹
-        # delta_eef_pos = (1 / k1_step) * (eef_pose_target_1[:,:3] - self._robot.data.body_link_pos_w[env_ids,self._eef_link_index,:])
-        # delta_eef_quat = (1 / k1_step) * (eef_pose_target_1[:,3:7] - self._robot.data.body_link_quat_w[env_ids,self._eef_link_index,:])
+        delta_eef_pos = (1 / k1_step) * (eef_pose_target_1[:,:3] - self._robot.data.body_link_pos_w[env_ids,self._eef_link_index,:])
+        delta_eef_quat = (1 / k1_step) * (eef_pose_target_1[:,3:7] - self._robot.data.body_link_quat_w[env_ids,self._eef_link_index,:])
         # for i in range(int(k1_step * 0.3)):            
-        #     self._eef_pose_target[env_ids,i,:3] = self._robot.data.body_link_pos_w[env_ids,self._eef_link_index,:3] + i * delta_eef_pos[:,:3]
-        #     self._eef_pose_target[env_ids,i,3:7] = self._robot.data.body_link_quat_w[env_ids,self._eef_link_index,:] + i * delta_eef_quat[:,:]
+            # self._eef_pose_target[env_ids,i,:3] = self._robot.data.body_link_pos_w[env_ids,self._eef_link_index,:3] + i * delta_eef_pos[:,:3]
+            # self._eef_pose_target[env_ids,i,3:7] = self._robot.data.body_link_quat_w[env_ids,self._eef_link_index,:] + i * delta_eef_quat[:,:]
         # for i in range(int(k1_step * 0.3)):            
         #     self._eef_pose_target[env_ids,i,1] = self._robot.data.body_link_pos_w[env_ids,self._eef_link_index,1] + i * delta_eef_pos[:,1]
         #     self._eef_pose_target[env_ids,i,3:7] = self._robot.data.body_link_quat_w[env_ids,self._eef_link_index,:] + i * delta_eef_quat[:,:]
@@ -310,6 +331,76 @@ class GraspBottleEnv(MPEnv):
         """
         t = torch.clamp(t, 0.0, 1.0)
         return 35 * t**4 - 84 * t**5 + 70 * t**6 - 20 * t**7
+    
+    def _quasi_linear_interpolation(self, t: torch.Tensor, smooth_ratio: float = 0.05) -> torch.Tensor:
+        """
+        准线性插值函数 - 适合 Diffusion Policy 训练
+        
+        速度曲线近似梯形：
+        - 开头 smooth_ratio 时间：平滑加速（使用半个余弦）
+        - 中间 1-2*smooth_ratio 时间：恒定速度（线性）
+        - 结尾 smooth_ratio 时间：平滑减速（使用半个余弦）
+        
+        关键特性：
+        - 95% 时间保持恒定速度，数据分布均匀
+        - 首尾有微小平滑，避免速度突变（对 IK 求解友好）
+        - 速度变化很小，diffusion 模型容易拟合
+        
+        Args:
+            t: 归一化时间 [0, 1]，shape: (N,) 或标量
+            smooth_ratio: 首尾平滑区间占比，默认 0.05 (5%)
+        Returns:
+            插值系数，shape: 同输入
+        """
+        t = torch.clamp(t, 0.0, 1.0)
+        sr = smooth_ratio
+        
+        # 梯形速度曲线的位移计算
+        # 恒速段速度 v = 1 / (1 - sr)，这样总位移为 1
+        # 加速段位移 = sr * v / 2 = sr / (2 * (1 - sr))
+        # 匀速段位移 = (1 - 2*sr) * v = (1 - 2*sr) / (1 - sr)
+        # 减速段位移 = sr * v / 2 = sr / (2 * (1 - sr))
+        
+        v_const = 1.0 / (1.0 - sr)  # 恒速段速度
+        
+        # 分段计算
+        result = torch.zeros_like(t)
+        
+        # 加速段 [0, sr]：使用半个正弦实现平滑加速
+        mask_accel = t < sr
+        if mask_accel.any():
+            t_accel = t[mask_accel] / sr  # 归一化到 [0, 1]
+            # 位移 = 积分 v_const * sin(π*τ/2) dτ from 0 to t_accel
+            # = sr * v_const * (1 - cos(π*t_accel/2)) * 2/π
+            # 简化：使用 (1 - cos(π*t/2)) 形式，末端速度为 v_const
+            s_accel = sr * v_const * (1.0 - torch.cos(t_accel * torch.pi / 2)) * 2.0 / torch.pi
+            result[mask_accel] = s_accel
+        
+        # 匀速段 [sr, 1-sr]：线性插值
+        mask_const = (t >= sr) & (t < 1 - sr)
+        if mask_const.any():
+            t_const = t[mask_const]
+            # 加速段结束位置
+            s_accel_end = sr * v_const * 2.0 / torch.pi
+            # 匀速段位移
+            s_const = s_accel_end + v_const * (t_const - sr)
+            result[mask_const] = s_const
+        
+        # 减速段 [1-sr, 1]：使用半个余弦实现平滑减速
+        mask_decel = t >= 1 - sr
+        if mask_decel.any():
+            t_decel = (t[mask_decel] - (1 - sr)) / sr  # 归一化到 [0, 1]
+            # 减速段起始位置
+            s_accel_end = sr * v_const * 2.0 / torch.pi
+            s_const_end = s_accel_end + v_const * (1 - 2 * sr)
+            # 减速段位移（使用 sin 实现减速）
+            s_decel = s_const_end + sr * v_const * (torch.sin(t_decel * torch.pi / 2)) * 2.0 / torch.pi
+            result[mask_decel] = s_decel
+        
+        # 归一化到 [0, 1]（由于数值计算，末端可能不精确为 1）
+        result = result / (sr * v_const * 4.0 / torch.pi + v_const * (1 - 2 * sr))
+        
+        return torch.clamp(result, 0.0, 1.0)
     
     def _slerp_batch(self, q0: torch.Tensor, q1: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
         """
@@ -384,11 +475,11 @@ class GraspBottleEnv(MPEnv):
         grasp_total = cfg_ratios.get('grasp', 0.2)
         
         phase_ratios = {
-            'approach': approach_total * 0.5,    # 接近预抓取位置
+            'approach': approach_total * 0.4,    # 接近预抓取位置
             'descend': approach_total * 0.5,     # 下降到抓取位置
-            'dwell': approach_total * 0.00,       # 稳定等待（关键：让IK收敛）
+            'dwell': approach_total * 0.10,       # 稳定等待（关键：让IK收敛）
             'grasp': grasp_total,                # 手指闭合
-            'lift': cfg_ratios.get('lift', 0.4)  # 抬起阶段
+            'lift': cfg_ratios.get('lift', 0.2)  # 抬起阶段
         }
         
         approach_end = int(phase_ratios['approach'] * total_steps)
@@ -420,12 +511,12 @@ class GraspBottleEnv(MPEnv):
         # 预抓取位置（抓取点上方 + y轴负方向偏移，从侧上方接近）
 
         pre_grasp_height = 0.05   # z轴上方偏移 10cm
-        pre_grasp_y_offset = -0.10  # y轴负方向偏移 10cm（从侧面接近）
+        pre_grasp_y_offset = -0.03  # y轴负方向偏移 10cm（从侧面接近）
         pre_grasp_x_offset = -0.02  # y轴负方向偏移 10cm（从侧面接近）
 
-        pre_grasp_height = 0.1   # z轴上方偏移 10cm
-        pre_grasp_y_offset = 0.00  # y轴负方向偏移 10cm（从侧面接近）
-        pre_grasp_x_offset = 0.00  # y轴负方向偏移 10cm（从侧面接近）
+        # pre_grasp_height = 0.08   # z轴上方偏移 10cm
+        # pre_grasp_y_offset = 0.00  # y轴负方向偏移 10cm（从侧面接近）
+        # pre_grasp_x_offset = 0.00  # y轴负方向偏移 10cm（从侧面接近）
 
         pre_grasp_offset = torch.tensor([pre_grasp_x_offset, pre_grasp_y_offset, pre_grasp_height], device=self.device).unsqueeze(0).repeat(env_len, 1)
         pos_pre_grasp = eff_offset + target_position + pre_grasp_offset
@@ -443,6 +534,14 @@ class GraspBottleEnv(MPEnv):
         # 手指闭合位置
         hand_pos_closed = self._joint_limit_lower[env_ids, :][:, self._hand_joint_index]
         hand_pos_closed[:, 0] = self._joint_limit_upper[env_ids, :][:, self._hand_joint_index[0]]  # 拇指旋转取最大值
+        
+        # 根据抓取模式调整手指闭合
+        if self.cfg.finger_grasp_mode == "pinch":
+            # 只有拇指(0,1)和食指(5)闭合，其他手指保持打开
+            # 索引: 0=拇指旋转, 1=拇指弯曲, 2=中指, 3=无名指, 4=小指, 5=食指
+            hand_pos_closed[:, 2] = hand_pos_open[:, 2]  # 中指保持打开
+            hand_pos_closed[:, 3] = hand_pos_open[:, 3]  # 无名指保持打开
+            hand_pos_closed[:, 4] = hand_pos_open[:, 4]  # 小指保持打开
         
         # ========== 生成平滑轨迹 ==========
         for step in range(total_steps):
@@ -512,6 +611,148 @@ class GraspBottleEnv(MPEnv):
             self._eef_pose_target[env_ids, step, 3:7] = quat_interp
             self._hand_pos_target[env_ids, step, :] = hand_interp
 
+    def create_trajectory_constant_velocity(self, env_ids: torch.Tensor | None):
+        """
+        创建恒速抓取轨迹 - 专为 Diffusion Policy 训练优化
+        
+        设计原则：
+        1. 恒定速度运动 - 使用准线性插值，95%时间保持恒速
+        2. 手指闭合后再抬升 - 确保抓取稳固
+        3. 数据分布均匀 - 利于 diffusion 模型学习
+        
+        轨迹分为4个阶段（时间分配可配置）：
+        1. approach: 从当前位置移动到预抓取位置（手指打开）
+        2. descend: 从预抓取位置下降到抓取位置（手指打开）
+        3. grasp_close: 保持在抓取位置，手指渐进闭合（关键阶段）
+        4. lift: 手指完全闭合后，抬起物体
+        
+        时间分配：grasp 配置参数的 60% 分给 descend，40% 分给 grasp_close
+        """
+        env_len = env_ids.shape[0]
+        total_steps = self.max_episode_length
+        
+        # ========== 阶段时间分配（4阶段）==========
+        # 1. approach: 移动到预抓取位置
+        # 2. descend: 下降到抓取位置
+        # 3. grasp_close: 保持位置，手指闭合（关键：确保闭合完成再抬升）
+        # 4. lift: 抬起物体
+        cfg_ratios = self.cfg.phase_ratios
+        approach_ratio = cfg_ratios.get('approach', 0.35)
+        descend_ratio = cfg_ratios.get('grasp', 0.25) * 0.7  # grasp 的 60% 用于下降
+        grasp_close_ratio = cfg_ratios.get('grasp', 0.25) * 0.3  # grasp 的 40% 用于手指闭合
+        lift_ratio = cfg_ratios.get('lift', 0.25)
+        
+        # 归一化确保总和为1
+        total_ratio = approach_ratio + descend_ratio + grasp_close_ratio + lift_ratio
+        approach_ratio /= total_ratio
+        descend_ratio /= total_ratio
+        grasp_close_ratio /= total_ratio
+        lift_ratio /= total_ratio
+        
+        approach_end = int(approach_ratio * total_steps)
+        descend_end = approach_end + int(descend_ratio * total_steps)
+        grasp_close_end = descend_end + int(grasp_close_ratio * total_steps)
+        lift_end = total_steps
+        
+        # ========== 抓取姿态配置 ==========
+        grasp_euler_deg = self.cfg.grasp_euler_deg
+        grasp_offset = self.cfg.grasp_offset
+        
+        # 欧拉角转四元数 (scipy 返回 xyzw，需要转换为 wxyz)
+        quat_xyzw = R.from_euler('xyz', grasp_euler_deg, degrees=True).as_quat()
+        eff_quat_wxyz = [quat_xyzw[3], quat_xyzw[0], quat_xyzw[1], quat_xyzw[2]]
+        
+        # ========== 计算关键位置 ==========
+        target_position = self._target.data.root_pos_w[env_ids, :] - self._robot.data.root_link_pos_w[env_ids, :]
+        eff_offset = torch.tensor(grasp_offset, dtype=torch.float32, device=self.device).unsqueeze(0).repeat(env_len, 1)
+        eff_quat = torch.tensor(eff_quat_wxyz, dtype=torch.float32, device=self.device).unsqueeze(0).repeat(env_len, 1)
+        
+        # 当前末端执行器位姿
+        eef_pos_current = self._robot.data.body_link_pos_w[env_ids, self._eef_link_index, :] - self._robot.data.root_link_pos_w[env_ids, :]
+        eef_quat_current = self._robot.data.body_link_quat_w[env_ids, self._eef_link_index, :]
+        
+        # 预抓取位置（从上方接近）
+        pre_grasp_height = 0.1
+        pre_grasp_offset = torch.tensor([0.0, 0.0, pre_grasp_height], device=self.device).unsqueeze(0).repeat(env_len, 1)
+        pos_pre_grasp = eff_offset + target_position + pre_grasp_offset
+        
+        # 抓取位置
+        pos_grasp = eff_offset + target_position
+        
+        # 抬起位置
+        lift_offset = torch.tensor([0, 0, self.cfg.lift_height_desired], device=self.device).unsqueeze(0).repeat(env_len, 1)
+        pos_lift = pos_grasp + lift_offset
+        
+        # ========== 手指位置 ==========
+        hand_pos_open = self._joint_limit_upper[env_ids, :][:, self._hand_joint_index]
+        hand_pos_closed = self._joint_limit_lower[env_ids, :][:, self._hand_joint_index]
+        hand_pos_closed[:, 0] = self._joint_limit_upper[env_ids, :][:, self._hand_joint_index[0]]
+        
+        # 根据抓取模式调整手指闭合
+        if self.cfg.finger_grasp_mode == "pinch":
+            # 只有拇指(0,1)和食指(5)闭合，其他手指保持打开
+            hand_pos_closed[:, 2] = hand_pos_open[:, 2]  # 中指保持打开
+            hand_pos_closed[:, 3] = hand_pos_open[:, 3]  # 无名指保持打开
+            hand_pos_closed[:, 4] = hand_pos_open[:, 4]  # 小指保持打开
+        
+        # ========== 生成轨迹（4阶段）==========
+        for step in range(total_steps):
+            
+            # === 阶段1: 接近 - 移动到预抓取位置 ===
+            if step < approach_end:
+                t_normalized = step / max(approach_end, 1)
+                t_interp = self._quasi_linear_interpolation(torch.tensor(t_normalized, device=self.device))
+                
+                pos_interp = eef_pos_current + t_interp * (pos_pre_grasp - eef_pos_current)
+                
+                # 姿态插值
+                t_batch = torch.full((env_len,), t_interp.item(), device=self.device)
+                quat_interp = self._slerp_batch(eef_quat_current, eff_quat, t_batch)
+                
+                # 手指保持打开
+                hand_interp = hand_pos_open
+                
+            # === 阶段2: 下降 - 从预抓取位置下降到抓取位置 ===
+            elif step < descend_end:
+                t_normalized = (step - approach_end) / max(descend_end - approach_end, 1)
+                t_interp = self._quasi_linear_interpolation(torch.tensor(t_normalized, device=self.device))
+                
+                pos_interp = pos_pre_grasp + t_interp * (pos_grasp - pos_pre_grasp)
+                quat_interp = eff_quat
+                
+                # 手指保持打开
+                hand_interp = hand_pos_open
+                
+            # === 阶段3: 手指闭合 - 保持在抓取位置，手指渐进闭合 ===
+            elif step < grasp_close_end:
+                # 位置保持在抓取位置
+                pos_interp = pos_grasp
+                quat_interp = eff_quat
+                
+                # 手指渐进闭合（使用准线性插值，速度均匀）
+                t_finger = (step - descend_end) / max(grasp_close_end - descend_end, 1)
+                t_finger_interp = self._quasi_linear_interpolation(
+                    torch.tensor(t_finger, device=self.device), 
+                    smooth_ratio=0.08  # 手指用稍大的平滑比例，更柔和
+                )
+                hand_interp = hand_pos_open + t_finger_interp * (hand_pos_closed - hand_pos_open)
+                
+            # === 阶段4: 抬起 - 手指已闭合，从抓取位置抬起 ===
+            else:
+                t_normalized = (step - grasp_close_end) / max(lift_end - grasp_close_end, 1)
+                t_interp = self._quasi_linear_interpolation(torch.tensor(t_normalized, device=self.device))
+                
+                pos_interp = pos_grasp + t_interp * (pos_lift - pos_grasp)
+                quat_interp = eff_quat
+                
+                # 手指保持完全闭合
+                hand_interp = hand_pos_closed
+            
+            # 存储轨迹点
+            self._eef_pose_target[env_ids, step, :3] = pos_interp
+            self._eef_pose_target[env_ids, step, 3:7] = quat_interp
+            self._hand_pos_target[env_ids, step, :] = hand_interp
+
     def step(self,actions):
         
         # set target
@@ -524,6 +765,30 @@ class GraspBottleEnv(MPEnv):
 
         self._robot.set_ik_command({"arm2":eef_pose_target})
         self._robot.set_joint_position_target(hand_pos_target,self._robot.actuators["hand2"].joint_indices[:6]) # type: ignore
+
+        if self.cfg.print_eef_pose:
+            # ========== 输出末端执行器位置和旋转 ==========
+            # 获取当前末端执行器位姿（世界坐标系）
+            eef_pos_w = self._robot.data.body_link_pos_w[:, self._eef_link_index, :]
+            eef_quat_w = self._robot.data.body_link_quat_w[:, self._eef_link_index, :]
+            # 获取物体位置
+            object_pos_w = self._target.data.root_pos_w
+            # 计算相对位置（EEF相对于物体）
+            eef_pos_rel = eef_pos_w - object_pos_w
+            # 打印第一个环境的信息（避免输出过多）
+            pos_rel = eef_pos_rel[0].cpu().numpy()
+            quat = eef_quat_w[0].cpu().numpy()  # wxyz 格式
+            target_pos = eef_pose_target[0, :3].cpu().numpy()
+            target_quat = eef_pose_target[0, 3:7].cpu().numpy()
+            step = self._episode_step[0].item()
+            # 四元数转欧拉角 (wxyz -> xyzw for scipy, then to degrees)
+            quat_xyzw = [quat[1], quat[2], quat[3], quat[0]]  # wxyz -> xyzw
+            euler_deg = R.from_quat(quat_xyzw).as_euler('xyz', degrees=True)
+            target_quat_xyzw = [target_quat[1], target_quat[2], target_quat[3], target_quat[0]]
+            target_euler_deg = R.from_quat(target_quat_xyzw).as_euler('xyz', degrees=True)
+            print(f"[Step {step:3d}] EEF相对物体: [{pos_rel[0]:7.4f}, {pos_rel[1]:7.4f}, {pos_rel[2]:7.4f}] | "
+                f"目标: [{target_pos[0]:7.4f}, {target_pos[1]:7.4f}, {target_pos[2]:7.4f}] | "
+                f"角度(xyz): [{euler_deg[0]:7.2f}°, {euler_deg[1]:7.2f}°, {euler_deg[2]:7.2f}°]")
 
         # self._target_dof_vel = (self._curr_targets[:, self._robot_index]- self._robot.data.joint_pos[:, self._robot_index]) / self.cfg.sim.dt
         # self._robot.set_joint_position_target(self._curr_targets[:, self._arm_joint_index], joint_ids=self._arm_joint_index)
@@ -634,16 +899,16 @@ class GraspBottleEnv(MPEnv):
         2. 物体与机器人保持接触
         3. 物体朝向偏离初始朝向不超过阈值
         """
-        # 1. 检查抬起高度
+        # 1. 检查抬起高度（只需高于目标高度即可）
         height_lift = self._target.data.root_pos_w[:, 2] - self._target_pos_init[:, 2]
-        height_check = torch.abs(height_lift - self.cfg.lift_height_desired) <= 0.05
+        height_check = height_lift >= (self.cfg.lift_height_desired * 0.8 )
         
         # 2. 检查接触状态
-        contact_force_num = torch.zeros(self.num_envs, dtype=torch.int8, device=self.device)
-        for sensor_name, contact_sensor in self._contact_sensors.items():
-            forces = torch.sum(contact_sensor.data.net_forces_w, dim=[1, 2])
-            contact_force_num = torch.where(forces > 0.0, contact_force_num + 1, contact_force_num)
-        contacting = contact_force_num > 0
+        # contact_force_num = torch.zeros(self.num_envs, dtype=torch.int8, device=self.device)
+        # for sensor_name, contact_sensor in self._contact_sensors.items():
+        #     forces = torch.sum(contact_sensor.data.net_forces_w, dim=[1, 2])
+        #     contact_force_num = torch.where(forces > 0.0, contact_force_num + 1, contact_force_num)
+        # contacting = contact_force_num > 0
         
         # 3. 检查朝向偏差
         current_quat = self._target.data.root_quat_w  # 当前朝向 (wxyz)
@@ -651,7 +916,7 @@ class GraspBottleEnv(MPEnv):
         orientation_check = orientation_loss < self.cfg.orientation_threshold
         
         # 综合判断：高度 AND 接触 AND 朝向
-        bsuccessed = height_check & contacting & orientation_check
+        bsuccessed = height_check  & orientation_check
         
         return bsuccessed
 
@@ -701,9 +966,17 @@ class GraspBottleEnv(MPEnv):
             self._log_info()
         
 
-        if self.cfg.enable_trajectory_smooth:
+        # 根据配置选择轨迹生成模式
+        trajectory_mode = getattr(self.cfg, 'trajectory_mode', 'smooth')
+        
+        if trajectory_mode == "constant_velocity":
+            # 恒速轨迹 - 推荐用于 Diffusion Policy 训练
+            self.create_trajectory_constant_velocity(env_ids)
+        elif trajectory_mode == "smooth" or self.cfg.enable_trajectory_smooth:
+            # 平滑轨迹 - 使用 minimum jerk，有明显加减速
             self.create_trajectory_smooth(env_ids)
         else:
+            # 原始轨迹
             self.create_trajectory(env_ids)
 
 
@@ -726,4 +999,29 @@ class GraspBottleEnv(MPEnv):
                 record_time = self._timer.run_time() /60.0
                 record_rate = self._episode_success_num / record_time
                 info += f"采集效率: {record_rate:.2f} 条/分钟"
+            # 显示目标进度（如果设置了目标）
+            if self.cfg.target_success_count and self.cfg.target_success_count > 0:
+                info += f" | 目标: {self._episode_success_num}/{self.cfg.target_success_count}"
             print(info, end='\r')
+        
+        # 检查是否达到目标成功次数
+        self._check_target_reached()
+    
+    def _check_target_reached(self):
+        """检查是否达到目标成功次数，如果达到则停止程序"""
+        if self.cfg.target_success_count and self.cfg.target_success_count > 0:
+            if self._episode_success_num >= self.cfg.target_success_count:
+                print(f"\n\n{'='*60}")
+                print(f"🎉 已达到目标成功次数: {self._episode_success_num}/{self.cfg.target_success_count}")
+                if self._episode_num > 0:
+                    success_rate = float(self._episode_success_num) / float(self._episode_num) * 100
+                    print(f"📊 最终成功率: {success_rate:.2f}%")
+                if self.cfg.enable_output:
+                    record_time = self._timer.run_time() / 60.0
+                    print(f"⏱️  总耗时: {record_time:.2f} 分钟")
+                    if record_time > 0:
+                        print(f"📈 采集效率: {self._episode_success_num / record_time:.2f} 条/分钟")
+                print(f"{'='*60}\n")
+                # 退出程序
+                import sys
+                sys.exit(0)

@@ -15,6 +15,7 @@ import numcodecs
 import numpy as np
 from functools import cached_property
 import cv2
+from datetime import datetime
 
 # add argparse arguments
 parser = argparse.ArgumentParser(description="Convert HDF5 data to Zarr format for diffusion policy training.")
@@ -22,6 +23,12 @@ parser.add_argument("--h5_dir", type=str, default="", help="Directory containing
 parser.add_argument("--zarr_dir", type=str, default="", help="Output directory for Zarr files.")
 parser.add_argument("--mode", type=str, default="state", choices=["state", "rgb"], 
                     help="Conversion mode: 'state' for pure state-based, 'rgb' for state + camera images.")
+parser.add_argument("--with_mask", action="store_true", 
+                    help="Whether to concatenate mask channel to RGB images (4 channels: RGBM).")
+parser.add_argument("--save_rgb_separate", action="store_true",
+                    help="Whether to save RGB images as separate 3-channel datasets for inspection.")
+parser.add_argument("--save_mask_separate", action="store_true",
+                    help="Whether to save mask images as separate 1-channel datasets for inspection.")
 
 def check_chunks_compatible(chunks: tuple, shape: tuple):
     assert len(shape) == len(chunks)
@@ -644,7 +651,8 @@ def convert_state_based(h5_file, h5_temp) -> dict:
     return episode
 
 
-def convert_rgb_based(h5_file, h5_temp, image_size: int = 224) -> dict:
+def convert_rgb_based(h5_file, h5_temp, image_size: int = 224, with_mask: bool = False, 
+                       save_rgb_separate: bool = False, save_mask_separate: bool = False) -> dict:
     """
     RGB图像 + 状态模式转换
     
@@ -658,9 +666,17 @@ def convert_rgb_based(h5_file, h5_temp, image_size: int = 224) -> dict:
     - arm2_eef_pos: 末端执行器位置(3)
     - arm2_eef_quat: 末端执行器四元数(4)
     - target_pose: 目标物体位姿(7)
-    - head_camera_rgb: 头部相机RGB图像 (N, 224, 224, 3)
-    - chest_camera_rgb: 胸部相机RGB图像 (N, 224, 224, 3)
+    - head_camera_rgb: 头部相机RGB图像 (N, 224, 224, 3) 或 RGBM图像 (N, 224, 224, 4)
+    - chest_camera_rgb: 胸部相机RGB图像 (N, 224, 224, 3) 或 RGBM图像 (N, 224, 224, 4)
     - third_person_camera_rgb: 第三人称相机RGB图像 (N, 224, 224, 3)
+    
+    Args:
+        h5_file: HDF5文件对象
+        h5_temp: 临时HDF5文件对象
+        image_size: 输出图像尺寸
+        with_mask: 是否将mask通道拼接到RGB图像后（变成4通道RGBM）
+        save_rgb_separate: 是否单独存储RGB图像（用于检测）
+        save_mask_separate: 是否单独存储mask图像（用于检测）
     """
     episode = dict()
     
@@ -685,27 +701,92 @@ def convert_rgb_based(h5_file, h5_temp, image_size: int = 224) -> dict:
     episode['target_pose'] = h5_file["rigid_objects"]["bottle"][:, :7]
     
     # 处理相机图像
-    camera_names = ["head_camera.rgb", "chest_camera.rgb", "third_person_camera.rgb"]
-    output_names = ["head_camera_rgb", "chest_camera_rgb", "third_person_camera_rgb"]
+    # camera_names = ["head_camera.rgb", "chest_camera.rgb", "third_person_camera.rgb"]
+    # output_names = ["head_camera_rgb", "chest_camera_rgb", "third_person_camera_rgb"]
+    camera_names = ["head_camera.rgb", "chest_camera.rgb"]
+    mask_names = ["head_camera.instance_segmentation_fast", "chest_camera.instance_segmentation_fast"]
+    output_names = ["head_camera_rgb", "chest_camera_rgb"]
+    mask_output_names = ["head_camera_mask", "chest_camera_mask"]
+    rgb_only_output_names = ["head_camera_rgb_only", "chest_camera_rgb_only"]
     
-    for cam_name, out_name in zip(camera_names, output_names):
-        cam_key = f"robots/robot/{cam_name}"
+    for cam_name, mask_name, out_name, mask_out_name, rgb_only_out_name in zip(
+            camera_names, mask_names, output_names, mask_output_names, rgb_only_output_names):
         if cam_name in h5_file["robots"]["robot"]:
             image_array = np.array(h5_file["robots"]["robot"][cam_name])
-            image_array_resize = np.zeros((image_array.shape[0], image_size, image_size, 3), dtype=image_array.dtype)
+            
+            # 确定输出通道数
+            num_channels = 4 if with_mask else 3
+            image_array_resize = np.zeros((image_array.shape[0], image_size, image_size, num_channels), dtype=image_array.dtype)
+            
+            # 单独存储mask的数组
+            mask_array_resize = None
+            
+            # 单独存储RGB的数组（3通道）
+            rgb_only_array_resize = None
+            if save_rgb_separate:
+                rgb_only_array_resize = np.zeros((image_array.shape[0], image_size, image_size, 3), dtype=image_array.dtype)
+            
+            # 读取mask数据（如果需要）
+            mask_array = None
+            if with_mask and mask_name in h5_file["robots"]["robot"]:
+                mask_array = (np.array(h5_file["robots"]["robot"][mask_name]))[:,:,:,0]
+                if save_mask_separate:
+                    mask_array_resize = np.zeros((image_array.shape[0], image_size, image_size), dtype=np.uint8)
             
             for i in range(image_array.shape[0]):
                 img_bgr = cv2.cvtColor(image_array[i], cv2.COLOR_RGB2BGR)
                 img_bgr = cv2.resize(img_bgr, (image_size, image_size))
-                image_array_resize[i] = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+                img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+                
+                # 单独存储RGB（如果需要）
+                if save_rgb_separate and rgb_only_array_resize is not None:
+                    rgb_only_array_resize[i] = img_rgb
+                
+                if with_mask and mask_array is not None:
+                    # 处理mask：将多通道mask转为单通道二值mask
+                    mask = mask_array[i]
+                    if len(mask.shape) == 3:
+                        # 如果mask是多通道的，取第一个通道或转为灰度
+                        mask = mask[:, :, 0] if mask.shape[2] >= 1 else mask
+                    # 将mask转为二值图（非零值为255）
+                    mask_binary = (mask > 0).astype(np.uint8) * 255
+                    mask_resized = cv2.resize(mask_binary, (image_size, image_size), interpolation=cv2.INTER_NEAREST)
+                    # 拼接RGB和Mask为4通道
+                    image_array_resize[i, :, :, :3] = img_rgb
+                    image_array_resize[i, :, :, 3] = mask_resized
+                    # 单独存储mask（如果需要）
+                    if save_mask_separate and mask_array_resize is not None:
+                        mask_array_resize[i] = mask_resized
+                else:
+                    image_array_resize[i] = img_rgb
             
             h5_temp.create_dataset(
                 out_name,
-                shape=(image_array.shape[0], image_size, image_size, 3),
+                shape=(image_array.shape[0], image_size, image_size, num_channels),
                 dtype=image_array.dtype,
                 data=image_array_resize
             )
             episode[out_name] = h5_temp[out_name]
+            
+            # 单独存储RGB到episode（方便查看）
+            if save_rgb_separate and rgb_only_array_resize is not None:
+                h5_temp.create_dataset(
+                    rgb_only_out_name,
+                    shape=(image_array.shape[0], image_size, image_size, 3),
+                    dtype=image_array.dtype,
+                    data=rgb_only_array_resize
+                )
+                episode[rgb_only_out_name] = h5_temp[rgb_only_out_name]
+            
+            # 单独存储mask到episode（方便查看）
+            if save_mask_separate and mask_array_resize is not None:
+                h5_temp.create_dataset(
+                    mask_out_name,
+                    shape=(image_array.shape[0], image_size, image_size),
+                    dtype=np.uint8,
+                    data=mask_array_resize
+                )
+                episode[mask_out_name] = h5_temp[mask_out_name]
     
     return episode
 
@@ -748,14 +829,18 @@ if __name__ == "__main__":
     h5_dir = args.h5_dir
     zarr_dir = args.zarr_dir
     mode = args.mode
+    with_mask = args.with_mask
+    save_rgb_separate = args.save_rgb_separate
+    save_mask_separate = args.save_mask_separate
 
     # 提取输入路径的结构
     path_structure = extract_path_structure(h5_dir)
     
-    # 构建输出路径：zarr_dir/motion_plan/task_type/object_name.zarr
-    # 例如：zarr_state/motion_plan/grasp/100ml玻璃烧杯.zarr
+    # 构建输出路径：zarr_dir/motion_plan/task_type/object_name_timestamp.zarr
+    # 例如：zarr_state/motion_plan/grasp/100ml玻璃烧杯_20251220_123045.zarr
     zarr_subdir = os.path.join(zarr_dir, *path_structure[:-1]) if len(path_structure) > 1 else zarr_dir
-    zarr_filename = path_structure[-1] if path_structure else "output"
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    zarr_filename = (path_structure[-1] if path_structure else "output") + "_" + timestamp
     zarr_path = os.path.join(zarr_subdir, zarr_filename + ".zarr")
     
     # 确保输出目录存在
@@ -766,6 +851,10 @@ if __name__ == "__main__":
     print(f"HDF5 to Zarr 转换器")
     print(f"=" * 60)
     print(f"模式: {mode}")
+    if mode == "rgb":
+        print(f"包含Mask: {'是 (4通道 RGBM)' if with_mask else '否 (3通道 RGB)'}")
+        print(f"单独存储RGB: {'是' if save_rgb_separate else '否'}")
+        print(f"单独存储Mask: {'是' if save_mask_separate else '否'}")
     print(f"输入目录: {h5_dir}")
     print(f"路径结构: {'/'.join(path_structure)}")
     print(f"输出路径: {zarr_path}")
@@ -785,6 +874,7 @@ if __name__ == "__main__":
     print(f"找到 {len(h5_file_names)} 个 HDF5 文件")
     
     h5_temp = h5py.File(os.path.join(h5_dir, "temp"), 'w')
+    episode_lengths = []
 
     for idx, h5_file_name in enumerate(h5_file_names):
         h5_temp.clear()
@@ -795,8 +885,12 @@ if __name__ == "__main__":
         if mode == "state":
             episode = convert_state_based(h5_file, h5_temp)
         else:  # mode == "rgb"
-            episode = convert_rgb_based(h5_file, h5_temp)
+            episode = convert_rgb_based(h5_file, h5_temp, with_mask=with_mask,
+                                        save_rgb_separate=save_rgb_separate,
+                                        save_mask_separate=save_mask_separate)
         
+        # 记录长度
+        episode_lengths.append(episode['timestamps'].shape[0])
         replay_buffer.add_episode(episode, compressors="disk")
         h5_file.close()
 
@@ -805,5 +899,10 @@ if __name__ == "__main__":
     
     print(f"=" * 60)
     print(f"转换完成！共处理 {len(h5_file_names)} 个文件")
+    if episode_lengths:
+        print(f"数据统计:")
+        print(f"  - 平均长度: {sum(episode_lengths) / len(episode_lengths):.2f}")
+        print(f"  - 最大长度: {max(episode_lengths)}")
+        print(f"  - 最短长度: {min(episode_lengths)}")
     print(f"输出路径: {zarr_path}")
     print(f"=" * 60)

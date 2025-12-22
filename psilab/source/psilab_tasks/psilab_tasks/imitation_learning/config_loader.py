@@ -125,6 +125,130 @@ def load_grasp_config(object_name: str) -> dict[str, Any]:
     }
 
 
+def get_available_grasp_points(object_name: str) -> list[int]:
+    """
+    获取物体可用的多抓取点配置数量列表
+    
+    Args:
+        object_name: 物体名称
+        
+    Returns:
+        可用的抓取点数量列表，如 [4, 8, 12]
+    """
+    obj_info = get_object_info(object_name)
+    
+    if obj_info is None or "grasp" not in obj_info:
+        return []
+    
+    grasp = obj_info["grasp"]
+    available = []
+    
+    # 查找所有 grasp_points_N 配置
+    for key in grasp.keys():
+        if key.startswith("grasp_points_"):
+            try:
+                num_points = int(key.split("_")[-1])
+                available.append(num_points)
+            except ValueError:
+                continue
+    
+    return sorted(available)
+
+
+def load_grasp_points(object_name: str, num_points: int) -> dict[str, Any]:
+    """
+    加载物体的多抓取点配置
+    
+    Args:
+        object_name: 物体名称
+        num_points: 抓取点数量（如 4, 6, 8, 12）
+        
+    Returns:
+        多抓取点配置字典，包含:
+        - num_points: 抓取点数量
+        - rotation_axis: 旋转轴
+        - points: 抓取点列表，每个点包含 index, angle_deg, grasp_offset, grasp_euler_deg
+        - lift_height: 抬起高度
+        - timing: 时序参数
+        - name_cn: 物体中文名称
+        
+    Raises:
+        ValueError: 如果物体不存在或没有指定数量的抓取点配置
+    """
+    obj_info = get_object_info(object_name)
+    
+    if obj_info is None:
+        raise ValueError(f"物体 '{object_name}' 不存在于配置文件中")
+    
+    if "grasp" not in obj_info:
+        raise ValueError(f"物体 '{object_name}' 不支持抓取(grasp)操作")
+    
+    grasp = obj_info["grasp"]
+    key = f"grasp_points_{num_points}"
+    
+    if key not in grasp:
+        available = get_available_grasp_points(object_name)
+        raise ValueError(
+            f"物体 '{object_name}' 没有 {num_points} 点抓取配置。"
+            f"可用配置: {available if available else '无'}"
+        )
+    
+    grasp_points_config = grasp[key]
+    
+    return {
+        "num_points": grasp_points_config.get("num_points", num_points),
+        "rotation_axis": grasp_points_config.get("rotation_axis", "z"),
+        "points": grasp_points_config.get("points", []),
+        "lift_height": grasp.get("lift_height", 0.3),
+        "timing": grasp.get("timing", {
+            "approach_ratio": 0.4,
+            "grasp_ratio": 0.2,
+            "lift_ratio": 0.4
+        }),
+        "name_cn": obj_info.get("name_cn", object_name),
+    }
+
+
+def get_grasp_point_by_index(object_name: str, num_points: int, point_index: int) -> dict[str, Any]:
+    """
+    获取指定索引的单个抓取点配置
+    
+    Args:
+        object_name: 物体名称
+        num_points: 抓取点总数（配置版本）
+        point_index: 抓取点索引（0 到 num_points-1）
+        
+    Returns:
+        单个抓取点配置:
+        - grasp_offset: [x, y, z]
+        - grasp_euler_deg: [roll, pitch, yaw]
+        - angle_deg: 旋转角度
+        - index: 点索引
+        - lift_height: 抬起高度
+        - timing: 时序参数
+        - name_cn: 物体中文名称
+    """
+    config = load_grasp_points(object_name, num_points)
+    points = config["points"]
+    
+    if not points:
+        raise ValueError(f"物体 '{object_name}' 的 {num_points} 点配置为空")
+    
+    # 使用取模实现周期性索引
+    actual_index = point_index % len(points)
+    point = points[actual_index]
+    
+    return {
+        "grasp_offset": point["grasp_offset"],
+        "grasp_euler_deg": point["grasp_euler_deg"],
+        "angle_deg": point["angle_deg"],
+        "index": point["index"],
+        "lift_height": config["lift_height"],
+        "timing": config["timing"],
+        "name_cn": config["name_cn"],
+    }
+
+
 def load_handover_config(object_name: str) -> dict[str, Any]:
     """
     加载物体的双手交接(handover)配置

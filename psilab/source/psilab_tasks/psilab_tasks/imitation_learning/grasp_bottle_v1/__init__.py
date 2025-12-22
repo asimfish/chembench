@@ -61,34 +61,45 @@ gym.register(
 
 
 gym.register(
-    id="Psi-MP-Grasp-Beaker-003-v1",
-    entry_point=f"{__name__}.grasp_beaker_003_mp:GraspBottleEnv",
+    id="Psi-MP-Grasp-v1",
+    entry_point=f"{__name__}.grasp_mp:GraspBottleEnv",
     disable_env_checker=True,
     kwargs={
-        "env_cfg_entry_point": f"{__name__}.grasp_beaker_003_mp:GraspBottleEnvCfg",
-        "scene_cfg_entry_point":f"{scenes.__name__}.room_cfg:PSI_DC_Beaker_003_CFG",
+        "env_cfg_entry_point": f"{__name__}.grasp_mp:GraspBottleEnvCfg",
+        "scene_cfg_entry_point":f"{scenes.__name__}.room_cfg:PSI_DC_Grasp_CFG",
     },
 )
 
 gym.register(
-    id="Psi-IL-Grasp-Beaker-003-v1",
-    entry_point=f"{__name__}.grasp_beaker_003_il:GraspBottleEnv",
+    id="Psi-MP-Grasp-Art-v1",
+    entry_point=f"{__name__}.grasp_mp_art:GraspBottleEnv",
     disable_env_checker=True,
     kwargs={
-        "env_cfg_entry_point": f"{__name__}.grasp_beaker_003_il:GraspBottleEnvCfg",
-        "scene_cfg_entry_point":f"{scenes.__name__}.room_cfg:PSI_DC_Beaker_003_CFG",
+        "env_cfg_entry_point": f"{__name__}.grasp_mp_art:GraspBottleEnvCfg",
+        "scene_cfg_entry_point":f"{scenes.__name__}.room_cfg:PSI_DC_Grasp_Art_CFG",
     },
 )
 
+
 gym.register(
-    id="Psi-MP-Grasp-Beaker-003-Art-v1",
-    entry_point=f"{__name__}.grasp_beaker_003_art_mp:GraspBottleEnv",
+    id="Psi-IL-Grasp-v1",
+    entry_point=f"{__name__}.grasp_il:GraspBottleEnv",
     disable_env_checker=True,
     kwargs={
-        "env_cfg_entry_point": f"{__name__}.grasp_beaker_003_art_mp:GraspBottleEnvCfg",
-        "scene_cfg_entry_point":f"{scenes.__name__}.room_cfg:PSI_DC_Beaker_003_Art_CFG",
+        "env_cfg_entry_point": f"{__name__}.grasp_il:GraspBottleEnvCfg",
+        "scene_cfg_entry_point":f"{scenes.__name__}.room_cfg:PSI_DC_Grasp_CFG",
     },
 )
+
+# gym.register(
+#     id="Psi-MP-Grasp-Beaker-003-Art-v1",
+#     entry_point=f"{__name__}.grasp_beaker_003_art_mp:GraspBottleEnv",
+#     disable_env_checker=True,
+#     kwargs={
+#         "env_cfg_entry_point": f"{__name__}.grasp_beaker_003_art_mp:GraspBottleEnvCfg",
+#         "scene_cfg_entry_point":f"{scenes.__name__}.room_cfg:PSI_DC_Beaker_003_Art_CFG",
+#     },
+# )
 
 
 gym.register(

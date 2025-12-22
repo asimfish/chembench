@@ -237,26 +237,27 @@
         // },
         // // 旧版RGB测试（保留）
         {
-            "name": "IL-Grasp-Beaker-003-v1:Play",
+            "name": "IL-Grasp-v1:Play",
             "type": "debugpy",
             "request": "launch",
             "args": [
                 "--task",
-                "Psi-IL-Grasp-Beaker-003-v1",
+                "Psi-IL-Grasp-v1",
                 "--num_envs",
                 "1",
                 "--seed",
                 "17",
                 "--scene",
-                "room_cfg:PSI_DC_Beaker_003_CFG",
+                "room_cfg:PSI_DC_Grasp_CFG",
                 "--enable_cameras",
                 "--async_reset",
+                // "--headless",
                 "--checkpoint",
-                "/home/psibot/chembench/data/outputs/2025.12.18/03.37.22_train_diffusion_transformer_timm_dex_image_single_demo/checkpoints/epoch=0300-train_loss=0.007.ckpt",
+                "/home/psibot/chembench/data/outputs/download/grasp_rgb/坩埚_smooth插值/20251221_024703_n50/checkpoints/epoch=4370-train_loss=0.003.ckpt",
                 "--max_step",
                 "500",
                 "--max_episode",
-                "200",
+                "100",
                 "--enable_eval",
             ],
             "program": "${workspaceFolder}/psilab/scripts_psi/workflows/imitation_learning/play.py",
@@ -268,18 +269,18 @@
         // Motion Planning 数据收集配置
         // ============================================
         {
-            "name": "MP-Grasp-Beaker-003-v1:DataCollect",
+            "name": "MP-Grasp-v1:DataCollect",
             "type": "debugpy",
             "request": "launch",
             "args": [
                 "--task",
-                "Psi-MP-Grasp-Beaker-003-v1",
+                "Psi-MP-Grasp-v1",
                 "--num_envs",
-                "20",
+                "30",
                 "--seed",
                 "17",
                 "--scene",
-                "room_cfg:PSI_DC_Beaker_003_CFG",
+                "room_cfg:PSI_DC_Grasp_CFG",
                 "--enable_cameras",
                 "--enable_output",
                 "--enable_random",
@@ -288,17 +289,56 @@
                 "--sample_step",
                 "4",
                 "--max_episode",
-                "100",
+                "500",
             ],
             "program": "${workspaceFolder}/psilab/scripts_psi/workflows/motion_planning/play.py",
             "console": "integratedTerminal",
             "justMyCode": false
         },
     
-
+        {
+            "name": "MP-Grasp-Art-v1:DataCollect",
+            "type": "debugpy",
+            "request": "launch",
+            "args": [
+                "--task",
+                "Psi-MP-Grasp-Art-v1",
+                "--num_envs",
+                "1",
+                "--seed",
+                "17",
+                "--scene",
+                "room_cfg:PSI_DC_Grasp_Art_CFG",
+                "--enable_cameras",
+                "--enable_output",
+                "--enable_random",
+                "--enable_eval",
+                "--async_reset",
+                "--sample_step",
+                "4",
+                "--max_episode",
+                "500",
+            ],
+            "program": "${workspaceFolder}/psilab/scripts_psi/workflows/motion_planning/play.py",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
         // ============================================
         // 数据处理工具
         // ============================================
+        // Zarr 数据分析（生成可视化曲线图）
+        {
+            "name": "Analyze Zarr Data",
+            "type": "debugpy",
+            "request": "launch",
+            "args": [
+                "--path",
+                "${workspaceFolder}/data/zarr_rgbm/motion_plan/grasp/坩埚_20251221_165118.zarr"
+            ],
+            "program": "${workspaceFolder}/analyze_zarr.py",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
         {
             "name": "Replay",
             "type": "debugpy",
@@ -306,7 +346,7 @@
             "args": [
                 "--enable_cameras",
                 "--hdf5_file_folder",
-                "${workspaceFolder}/psilab/outputs/Mp_grasp/Beaker_003/20251217_161148",
+                "${workspaceFolder}/data/motion_plan/grasp/20ml玻璃试管/20251221_214855",
                 "--enable_state"
             ],
             "program": "${workspaceFolder}/psilab/scripts_psi/workflows/replay/replay.py",
@@ -343,7 +383,8 @@
             "request": "launch",
             "args": [
                 "--h5_dir",
-                "${workspaceFolder}/data/motion_plan/grasp/100ml玻璃烧杯/20251218_215604",
+                // "${workspaceFolder}/data/motion_plan/grasp/250ml玻璃烧杯/20251219_030556",
+                "${workspaceFolder}/data/motion_plan/grasp/100ml玻璃烧杯/20251220_201605",
                 "--zarr_dir",
                 "${workspaceFolder}/data/zarr_state",
                 "--mode",
@@ -359,13 +400,109 @@
             "request": "launch",
             "args": [
                 "--h5_dir",
-                "${workspaceFolder}/data/motion_plan/grasp/100ml玻璃烧杯/20251218_215604",
+                "${workspaceFolder}/data/motion_plan/grasp/20ml玻璃试管/20251221_223531",
                 "--zarr_dir",
                 "${workspaceFolder}/data/zarr_rgb",
                 "--mode",
                 "rgb"
             ],
             "program": "${workspaceFolder}/psilab/source/psilab/psilab/utils/zarr_utils.py",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
+            "name": "HDF5 to Zarr (RGB+Mask)",
+            "type": "debugpy",
+            "request": "launch",
+            "args": [
+                "--h5_dir",
+                "${workspaceFolder}/data/motion_plan/grasp/锥形瓶/20251222_002110",
+                "--zarr_dir",
+                "${workspaceFolder}/data/zarr_rgbm",
+                "--mode",
+                "rgb",
+                "--with_mask",
+                // "--save_rgb_separate",
+                // "--save_mask_separate"
+            ],
+            "program": "${workspaceFolder}/psilab/source/psilab/psilab/utils/zarr_utils.py",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+
+        // ============================================
+        // 抓取点生成器
+        // 使用说明：
+        //   - 修改 --object 为物体ID (如 glass_beaker_100ml)
+        //   - 修改 --task 为任务类型 (grasp/handover/pour 等)
+        //   - 修改 --num_points 为要生成的点数 (4/6/8/12)
+        //   - 使用 --all 生成所有变体
+        //   - 使用 --debug 显示可视化
+        //   - 使用 --dry_run 预览不写入
+        // ============================================
+        // 生成单个点数配置
+        {
+            "name": "GraspPoints: Generate",
+            "type": "debugpy",
+            "request": "launch",
+            "args": [
+                "--object",
+                "glass_beaker_100ml",  // 物体ID，可选: glass_beaker_250ml, glass_beaker_500ml 等
+                "--task",
+                "grasp",               // 任务类型
+                "--num_points",
+                "4",                   // 生成的点数
+                "--debug"              // 显示可视化
+            ],
+            "program": "${workspaceFolder}/psilab/source/psilab_tasks/psilab_tasks/imitation_learning/grasp_point_generator.py",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        // 生成所有变体 (4/6/8/12点)
+        // {
+        //     "name": "GraspPoints: Generate All",
+        //     "type": "debugpy",
+        //     "request": "launch",
+        //     "args": [
+        //         "--object",
+        //         "glass_beaker_100ml",  // 物体ID
+        //         "--task",
+        //         "grasp",               // 任务类型
+        //         "--all",               // 生成所有变体
+        //         "--debug"              // 显示可视化
+        //     ],
+        //     "program": "${workspaceFolder}/psilab/source/psilab_tasks/psilab_tasks/imitation_learning/grasp_point_generator.py",
+        //     "console": "integratedTerminal",
+        //     "justMyCode": false
+        // },
+        // 预览模式（不写入文件）
+        // {
+        //     "name": "GraspPoints: Preview (Dry Run)",
+        //     "type": "debugpy",
+        //     "request": "launch",
+        //     "args": [
+        //         "--object",
+        //         "glass_beaker_100ml",
+        //         "--task",
+        //         "grasp",
+        //         "--num_points",
+        //         "8",
+        //         "--debug",
+        //         "--dry_run"            // 预览模式，不写入文件
+        //     ],
+        //     "program": "${workspaceFolder}/psilab/source/psilab_tasks/psilab_tasks/imitation_learning/grasp_point_generator.py",
+        //     "console": "integratedTerminal",
+        //     "justMyCode": false
+        // },
+        // 列出所有物体
+        {
+            "name": "GraspPoints: List Objects",
+            "type": "debugpy",
+            "request": "launch",
+            "args": [
+                "--list_objects"
+            ],
+            "program": "${workspaceFolder}/psilab/source/psilab_tasks/psilab_tasks/imitation_learning/grasp_point_generator.py",
             "console": "integratedTerminal",
             "justMyCode": false
         }

@@ -207,14 +207,14 @@
       },
       "grasp": {
         "grasp_offset": [
-          -0.14,
-          -0.06,
-          0.001
+          -0.0653,
+          -0.13,
+          0.06
         ],
         "grasp_euler_deg": [
-          -90.0,
-          0.0,
-          -90.0
+          -109.31,
+          -40.39,
+          -38.28
         ],
         "lift_height": 0.3,
         "timing": {
@@ -223,9 +223,9 @@
             "grasp",
             "lift"
           ],
-          "approach_ratio": 0.4,
+          "approach_ratio": 0.3,
           "grasp_ratio": 0.2,
-          "lift_ratio": 0.4
+          "lift_ratio": 0.5
         }
       },
       "handover": {
@@ -457,9 +457,191 @@
             "grasp",
             "lift"
           ],
-          "approach_ratio": 0.5,
-          "grasp_ratio": 0.2,
-          "lift_ratio": 0.3
+          "approach_ratio": 0.2,
+          "grasp_ratio": 0.3,
+          "lift_ratio": 0.5
+        },
+        "grasp_points_8": {
+          "num_points": 8,
+          "rotation_axis": "z",
+          "generated_at": "2025-12-19 16:36:12",
+          "points": [
+            {
+              "index": 0,
+              "angle_deg": 0.0,
+              "grasp_offset": [
+                -0.14,
+                -0.06,
+                0.001
+              ],
+              "grasp_euler_deg": [
+                -90.0,
+                0.0,
+                -90.0
+              ]
+            },
+            {
+              "index": 1,
+              "angle_deg": 45.0,
+              "grasp_offset": [
+                -0.056569,
+                -0.141421,
+                0.001
+              ],
+              "grasp_euler_deg": [
+                -90.0,
+                0.0,
+                -45.0
+              ]
+            },
+            {
+              "index": 2,
+              "angle_deg": 90.0,
+              "grasp_offset": [
+                0.06,
+                -0.14,
+                0.001
+              ],
+              "grasp_euler_deg": [
+                -90.0,
+                0.0,
+                0.0
+              ]
+            },
+            {
+              "index": 3,
+              "angle_deg": 135.0,
+              "grasp_offset": [
+                0.141421,
+                -0.056569,
+                0.001
+              ],
+              "grasp_euler_deg": [
+                -90.0,
+                0.0,
+                45.0
+              ]
+            },
+            {
+              "index": 4,
+              "angle_deg": 180.0,
+              "grasp_offset": [
+                0.14,
+                0.06,
+                0.001
+              ],
+              "grasp_euler_deg": [
+                -90.0,
+                0.0,
+                90.0
+              ]
+            },
+            {
+              "index": 5,
+              "angle_deg": 225.0,
+              "grasp_offset": [
+                0.056569,
+                0.141421,
+                0.001
+              ],
+              "grasp_euler_deg": [
+                -90.0,
+                0.0,
+                135.0
+              ]
+            },
+            {
+              "index": 6,
+              "angle_deg": 270.0,
+              "grasp_offset": [
+                -0.06,
+                0.14,
+                0.001
+              ],
+              "grasp_euler_deg": [
+                -90.0,
+                0.0,
+                180.0
+              ]
+            },
+            {
+              "index": 7,
+              "angle_deg": 315.0,
+              "grasp_offset": [
+                -0.141421,
+                0.056569,
+                0.001
+              ],
+              "grasp_euler_deg": [
+                -90.0,
+                0.0,
+                -135.0
+              ]
+            }
+          ]
+        },
+        "grasp_points_4": {
+          "num_points": 4,
+          "rotation_axis": "z",
+          "generated_at": "2025-12-19 16:38:36",
+          "points": [
+            {
+              "index": 0,
+              "angle_deg": 0.0,
+              "grasp_offset": [
+                -0.14,
+                -0.06,
+                0.001
+              ],
+              "grasp_euler_deg": [
+                -90.0,
+                0.0,
+                -90.0
+              ]
+            },
+            {
+              "index": 1,
+              "angle_deg": 90.0,
+              "grasp_offset": [
+                0.06,
+                -0.14,
+                0.001
+              ],
+              "grasp_euler_deg": [
+                -90.0,
+                0.0,
+                0.0
+              ]
+            },
+            {
+              "index": 2,
+              "angle_deg": 180.0,
+              "grasp_offset": [
+                0.14,
+                0.06,
+                0.001
+              ],
+              "grasp_euler_deg": [
+                -90.0,
+                0.0,
+                90.0
+              ]
+            },
+            {
+              "index": 3,
+              "angle_deg": 270.0,
+              "grasp_offset": [
+                -0.06,
+                0.14,
+                0.001
+              ],
+              "grasp_euler_deg": [
+                -90.0,
+                0.0,
+                180.0
+              ]
+            }
+          ]
         }
       },
       "handover": {
@@ -675,7 +857,7 @@
       },
       "grasp": {
         "grasp_offset": [
-          -0.14,
+          -0.15,
           -0.06,
           0.001
         ],
@@ -691,9 +873,9 @@
             "grasp",
             "lift"
           ],
-          "approach_ratio": 0.4,
+          "approach_ratio": 0.3,
           "grasp_ratio": 0.2,
-          "lift_ratio": 0.4
+          "lift_ratio": 0.5
         }
       },
       "handover": {
@@ -909,7 +1091,7 @@
       },
       "grasp": {
         "grasp_offset": [
-          -0.14,
+          -0.15,
           -0.06,
           0.001
         ],
@@ -1307,13 +1489,13 @@
       },
       "grasp": {
         "grasp_offset": [
-          -0.01,
-          -0.15,
-          0.03
+          -0.11,
+          -0.027,
+          0.02
         ],
         "grasp_euler_deg": [
-          180.0,
-          80.0,
+          -90.0,
+          0.0,
           -90.0
         ],
         "lift_height": 0.3,
@@ -1323,9 +1505,9 @@
             "grasp",
             "lift"
           ],
-          "approach_ratio": 0.4,
+          "approach_ratio": 0.3,
           "grasp_ratio": 0.2,
-          "lift_ratio": 0.4
+          "lift_ratio": 0.5
         }
       },
       "handover": {
@@ -1597,13 +1779,13 @@
       },
       "grasp": {
         "grasp_offset": [
-          -0.01,
-          -0.16,
+          -0.148,
+          -0.07,
           0.04
         ],
         "grasp_euler_deg": [
-          180.0,
-          80.0,
+          -90.0,
+          -20.0,
           -90.0
         ],
         "lift_height": 0.3,
@@ -1613,9 +1795,9 @@
             "grasp",
             "lift"
           ],
-          "approach_ratio": 0.4,
+          "approach_ratio": 0.3,
           "grasp_ratio": 0.2,
-          "lift_ratio": 0.4
+          "lift_ratio": 0.5
         }
       },
       "handover": {
@@ -1884,14 +2066,14 @@
       },
       "grasp": {
         "grasp_offset": [
-          -0.02,
-          -0.2,
-          0.06
+          -0.14,
+          -0.06,
+          0.001
         ],
         "grasp_euler_deg": [
-          160.0,
-          75.0,
-          -150.0
+          -90.0,
+          0.0,
+          -90.0
         ],
         "lift_height": 0.3,
         "timing": {
@@ -1900,9 +2082,9 @@
             "grasp",
             "lift"
           ],
-          "approach_ratio": 0.4,
+          "approach_ratio": 0.3,
           "grasp_ratio": 0.2,
-          "lift_ratio": 0.4
+          "lift_ratio": 0.5
         }
       },
       "handover": null,
@@ -2049,14 +2231,14 @@
       },
       "grasp": {
         "grasp_offset": [
-          -0.02,
-          -0.18,
-          0.05
+          -0.1326,
+          -0.0395,
+          0.0130
         ],
         "grasp_euler_deg": [
-          157.43,
-          69.16,
-          -154.0
+          -90.0,
+          0.0,
+          -88.0
         ],
         "lift_height": 0.3,
         "timing": {
@@ -3677,16 +3859,16 @@
           0.06
         ]
       },
-      "grasp": {
+      "grasp": {  
         "grasp_offset": [
-          -0.02,
-          -0.2,
-          0.06
+          -0.1082,
+          -0.0483,
+          -0.0407
         ],
         "grasp_euler_deg": [
-          157.43,
-          69.16,
-          -154.0
+          -90.0,
+          0.0,
+          -90.0
         ],
         "lift_height": 0.3,
         "timing": {
@@ -3844,14 +4026,14 @@
       },
       "grasp": {
         "grasp_offset": [
-          -0.03,
-          -0.22,
-          0.06
+          -0.1326,
+          -0.0395,
+          0.0130
         ],
         "grasp_euler_deg": [
-          157.43,
-          69.16,
-          -154.0
+          -90.0,
+          0.0,
+          -88.0
         ],
         "lift_height": 0.3,
         "timing": {
@@ -3860,9 +4042,9 @@
             "grasp",
             "lift"
           ],
-          "approach_ratio": 0.4,
+          "approach_ratio": 0.3,
           "grasp_ratio": 0.2,
-          "lift_ratio": 0.4
+          "lift_ratio": 0.5
         }
       },
       "handover": null,
@@ -4119,14 +4301,14 @@
       },
       "grasp": {
         "grasp_offset": [
-          -0.02,
-          -0.18,
-          0.05
+          -0.1326,
+          -0.0395,
+          0.0130
         ],
         "grasp_euler_deg": [
-          157.43,
-          69.16,
-          -154.0
+          -90.0,
+          0.0,
+          -88.0
         ],
         "lift_height": 0.3,
         "timing": {
@@ -4135,9 +4317,9 @@
             "grasp",
             "lift"
           ],
-          "approach_ratio": 0.4,
+          "approach_ratio": 0.3,
           "grasp_ratio": 0.2,
-          "lift_ratio": 0.4
+          "lift_ratio": 0.5
         }
       },
       "handover": null,
@@ -4394,14 +4576,14 @@
       },
       "grasp": {
         "grasp_offset": [
-          -0.03,
-          -0.22,
-          0.06
+          -0.1326,
+          -0.0395,
+          0.0130
         ],
         "grasp_euler_deg": [
-          157.43,
-          69.16,
-          -154.0
+          -90.0,
+          0.0,
+          -88.0
         ],
         "lift_height": 0.3,
         "timing": {
@@ -4410,9 +4592,9 @@
             "grasp",
             "lift"
           ],
-          "approach_ratio": 0.4,
+          "approach_ratio": 0.3,
           "grasp_ratio": 0.2,
-          "lift_ratio": 0.4
+          "lift_ratio": 0.5
         }
       },
       "handover": null,
@@ -4669,14 +4851,14 @@
       },
       "grasp": {
         "grasp_offset": [
-          -0.02,
-          -0.2,
-          0.06
+          -0.1313,
+          -0.0639,
+          0.032
         ],
         "grasp_euler_deg": [
-          160.0,
-          70.0,
-          -150.0
+          -90.45,
+          -0.59,
+          -90.18
         ],
         "lift_height": 0.3,
         "timing": {
@@ -4685,9 +4867,9 @@
             "grasp",
             "lift"
           ],
-          "approach_ratio": 0.4,
+          "approach_ratio": 0.3,
           "grasp_ratio": 0.2,
-          "lift_ratio": 0.4
+          "lift_ratio": 0.5
         }
       },
       "handover": {
@@ -5064,14 +5246,14 @@
       },
       "grasp": {
         "grasp_offset": [
-          -0.02,
-          -0.18,
-          0.1
+          -0.1674,
+          -0.0988,
+          0.0666
         ],
         "grasp_euler_deg": [
-          180.0,
-          85.0,
-          -90.0
+          -90.43,
+          -95.0,
+          -40.42
         ],
         "lift_height": 0.3,
         "timing": {
@@ -5552,14 +5734,14 @@
       },
       "grasp": {
         "grasp_offset": [
-          -0.02,
-          -0.18,
-          0.1
+          -0.128,
+          -0.10,
+          0.01
         ],
         "grasp_euler_deg": [
-          160.0,
-          70.0,
-          -150.0
+          -90.0,
+          0.0,
+          -90.0
         ],
         "lift_height": 0.3,
         "timing": {
@@ -5871,16 +6053,16 @@
           0.025
         ]
       },
-      "grasp": {
+      "grasp": { 
         "grasp_offset": [
-          -0.02,
-          -0.16,
-          0.05
+          -0.1074,
+          -0.1388,
+          0.0266
         ],
         "grasp_euler_deg": [
-          170.0,
-          75.0,
-          -140.0
+          -92.0,
+          -30.63,
+          -50.42
         ],
         "lift_height": 0.3,
         "timing": {
@@ -5889,9 +6071,9 @@
             "grasp",
             "lift"
           ],
-          "approach_ratio": 0.4,
+          "approach_ratio": 0.3,
           "grasp_ratio": 0.2,
-          "lift_ratio": 0.4
+          "lift_ratio": 0.5
         }
       },
       "handover": null,
@@ -5978,7 +6160,7 @@
           0.0175
         ]
       },
-      "grasp": {       
+      "grasp": {
         "grasp_offset": [
           -0.0574,
           -0.1388,
@@ -5994,12 +6176,13 @@
           "phases": [
             "approach",
             "grasp",
-            "lift"
+            "lift"          
           ],
-          "approach_ratio": 0.65,
-          "grasp_ratio": 0.1,
-          "lift_ratio": 0.25
-        }
+
+          "approach_ratio": 0.2,
+          "grasp_ratio": 0.3,
+          "lift_ratio": 0.5
+        }          
       },
       "handover": null,
       "pick_place": {
