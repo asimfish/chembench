@@ -10,7 +10,7 @@ task_name: ${task.name}
 shape_meta: ${task.shape_meta}
 exp_name: "default"
 
-n_action_steps: 8
+n_action_steps: 4
 n_obs_steps: 1
 n_emb: 768
 n_latency_steps: 0
@@ -118,7 +118,7 @@ dataloader:
   # batch_size: 64
   # num_workers: 16
 
-  batch_size: 32
+  batch_size: 128
   num_workers: 8
   shuffle: True
   pin_memory: True

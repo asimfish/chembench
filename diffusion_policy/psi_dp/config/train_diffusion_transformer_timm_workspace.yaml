@@ -13,7 +13,7 @@ exp_name: "default"
 object_name: ${task.object_name}
 num_demos: ${task.num_demos}
 
-n_action_steps: 8
+n_action_steps: 4
 n_obs_steps: 1
 n_emb: 768
 n_latency_steps: 0
@@ -70,15 +70,15 @@ ema:
   max_value: 0.9999
 
 dataloader:
-  batch_size: 32
-  num_workers: 8
+  batch_size: 256
+  num_workers: 12
   shuffle: True
   pin_memory: True
   persistent_workers: True
 
 val_dataloader:
-  batch_size: 2
-  num_workers: 8
+  batch_size: 256
+  num_workers: 12
   shuffle: False
   pin_memory: True
   persistent_workers: True
@@ -115,7 +115,7 @@ training:
 # name: 物体名称_n数据条数_时间戳
 # tags: 包含随机化设置、数据类型、超参数等信息
 logging:
-  project: DP_${task.name}
+  project: DP_并行实验1222_${task.name}
   resume: False
   mode: online
   name: ${object_name}_n${num_demos}_${now:%Y%m%d_%H%M%S}
