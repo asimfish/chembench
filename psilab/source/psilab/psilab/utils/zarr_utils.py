@@ -671,12 +671,11 @@ def convert_rgb_based(h5_file, h5_temp, image_size: int = 224, with_mask: bool =
     - arm2_eef_pos: 末端执行器位置(3)
     - arm2_eef_quat: 末端执行器四元数(4)
     - target_pose: 目标物体位姿(7)
-    - head_camera_rgb: 头部相机RGB图像 (N, 224, 224, 3)
-    - chest_camera_rgb: 胸部相机RGB图像 (N, 224, 224, 3)
-    - third_camera_rgb: 第三相机RGB图像 (N, 224, 224, 3)
-    - (可选) head_camera_mask, chest_camera_mask, third_camera_mask (N, 224, 224) uint8
-    - (可选) head_camera_depth, chest_camera_depth, third_camera_depth (N, 224, 224, 1) uint16
-    - (可选) head_camera_normals, chest_camera_normals, third_camera_normals (N, 224, 224, 3) uint8
+    - head_camera_rgb: 头部相机RGB图像 (N, 224, 224, 3) 或 RGBM图像 (N, 224, 224, 4)
+    - chest_camera_rgb: 胸部相机RGB图像 (N, 224, 224, 3) 或 RGBM图像 (N, 224, 224, 4)
+    - (可选) head_camera_depth, chest_camera_depth
+    - (可选) head_camera_normals, chest_camera_normals
+    - third_person_camera_rgb: 第三人称相机RGB图像 (N, 224, 224, 3)
     
     Args:
         h5_file: HDF5文件对象
@@ -710,9 +709,9 @@ def convert_rgb_based(h5_file, h5_temp, image_size: int = 224, with_mask: bool =
     episode['arm2_eef_quat'] = h5_file["robots"]["robot"]["arm2_eef_pose"][:, 3:]
     episode['target_pose'] = h5_file["rigid_objects"]["bottle"][:, :7]
     
-    # 处理相机图像（包括第三个相机）
-    camera_names = ["head_camera.rgb", "chest_camera.rgb", "third_camera.rgb"]
-    mask_names = ["head_camera.instance_segmentation_fast", "chest_camera.instance_segmentation_fast", "third_camera.instance_segmentation_fast"]
+    # 处理相机图像
+    camera_names = ["head_camera.rgb", "chest_camera.rgb"]
+    mask_names = ["head_camera.instance_segmentation_fast", "chest_camera.instance_segmentation_fast"]
     
     for cam_name, mask_name in zip(camera_names, mask_names):
         if cam_name in h5_file["robots"]["robot"]:

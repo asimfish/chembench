@@ -1,15 +1,18 @@
 name: grasp_rgbm
+# name: pick_place_rgbm
 
 # ==================== 数据集配置（需要修改的部分）====================
 # 物体名称 - 用于输出文件夹命名和wandb记录
-object_name: "100ml玻璃量筒_smooth_rgbm_batch${dataloader.batch_size}_action${n_action_steps}"
-# 数据条数 - 用于输出文件夹命名和wandb记录（0表示自动从数据集读取）
+# object_name: "RBG6_第一批_250ml玻璃烧杯_带第三人称相机"
+# object_name: "100ml玻璃烧杯_黑色_无速度_rgb+normal+depth_batch${dataloader.batch_size}_action${n_action_steps}"
+object_name: "Grasp_RGBM_第二批_250ml透明容量瓶"
 num_demos: 50  # 修改这里：数据条数，0表示自动检测
 
 # 数据集根目录
 data_root: /share_data/liyufeng/code/chembench/data/zarr_rgbm/motion_plan/grasp
 # 完整数据集路径 = data_root / object_name.zarr
-dataset_path: "/share_data/liyufeng/code/chembench/data/zarr_rgbm/motion_plan/grasp/100ml玻璃量筒_smooth_rgbm.zarr"
+dataset_path: "/share_data/liyufeng/code/chembench/data/final_real/data/grasp/part2/250ml透明容量瓶.zarr"
+
 # ==================== 数据采集时的随机化配置 ====================
 # 这些配置用于记录数据采集时的随机化设置，便于实验对比
 randomization:
@@ -28,55 +31,84 @@ randomization:
   texture: false            # 纹理随机化
 
 # ==================== 观测配置开关 ====================
-# 设置为 true/false 来控制是否使用对应的观测
+# 【重要】修改 obs_mode 后，需要同步修改下方的 image_channels！
+# 
+# 图像观测模式对照表:
+#   obs_mode           image_channels    描述
+#   ---------------    --------------    ----
+#   "rgb"              3                 纯 RGB 3通道
+#   "rgbm"             4                 RGB + Mask 4通道
+#   "rgb_masked"       3                 RGB * Mask 3通道 (背景置黑)
+#   "rgb_masked_rgb"   6                 RGB + RGB*Mask 6通道 (原始RGB + 背景置黑RGB)
+#   "nd"               4                 Normal + Depth 4通道
+#   "rgbnd"            7                 RGB + Normal + Depth 7通道
+#
 obs_config:
-  use_velocity: True  # 是否使用速度观测 (arm2_vel, hand2_vel)
+  obs_mode: "rgb_masked_rgb"       # 选择: rgb, rgbm, rgb_masked, rgb_masked_rgb, nd, rgbnd
+  use_velocity: false   # 是否使用速度观测 (arm2_vel, hand2_vel)
+  use_third_camera: true  # 是否使用第三人称相机
 
 # ==================== 数据信息 ====================
 data_info:
-  obs_type: "rgbm"           # 观测类型: state, rgb, rgbm
-  # 根据 use_velocity 选择不同的 obs_keys
+  obs_type: ${task.obs_config.obs_mode}  # 从 obs_config 继承
+  # 根据 use_velocity 和 use_third_camera 选择不同的 obs_keys
   # obs_keys: ["chest_camera_rgb", "head_camera_rgb", "arm2_pos", "hand2_pos", "arm2_eef_pos", "arm2_eef_quat", "target_pose"]
-  # 如果 use_velocity=true，使用下面这行（手动切换）
-  obs_keys: ["chest_camera_rgb", "head_camera_rgb", "arm2_pos", "arm2_vel", "hand2_pos", "hand2_vel", "arm2_eef_pos", "arm2_eef_quat", "target_pose"]
+  # 如果 use_velocity=true，添加速度观测（手动切换）
+  # obs_keys: ["chest_camera_rgb", "head_camera_rgb", "arm2_pos", "arm2_vel", "hand2_pos", "hand2_vel", "arm2_eef_pos", "arm2_eef_quat", "target_pose"]
+  # 如果 use_third_camera=true，添加第三人称相机（手动切换）
+  obs_keys: ["chest_camera_rgb", "head_camera_rgb", "third_camera_rgb", "arm2_pos", "hand2_pos", "arm2_eef_pos", "arm2_eef_quat", "target_pose"]
   action_dim: 13             # 动作维度: arm(7) + hand(6)
   image_size: 224            # 图像尺寸
 
-# ==================== 以下配置通常不需要修改 ====================
-# RGBM: 4通道 = RGB(3) + Mask(1)
-image_shape: [4, 224, 224]
+# ==================== 图像通道配置 ====================
+# 根据 obs_mode 设置图像通道数和图像形状
+# rgb: 3通道, rgbm: 4通道, rgb_masked: 3通道, rgb_masked_rgb: 6通道, nd: 4通道, rgbnd: 7通道
+# 【重要】修改 obs_mode 后需要同步修改 image_channels 和 image_shape 的第一个值！
+image_channels: 6  # rgb=3, rgbm=4, rgb_masked=3, rgb_masked_rgb=6, nd=4, rgbnd=7
 
-# ==================== 不使用速度的观测配置 ====================
+# 当前使用的图像形状 [channels, height, width]
+image_shape:
+  - 6    # 通道数: rgb=3, rgbm=4, rgb_masked=3, rgb_masked_rgb=6, nd=4, rgbnd=7
+  - 224  # 高度
+  - 224  # 宽度
+
+# ==================== 形状元数据配置 ====================
 shape_meta: &shape_meta
-  # acceptable types: rgb, rgbm, low_dim
+  # acceptable types: rgb, rgbm, rgb_masked, rgb_masked_rgb, nd, rgbnd, low_dim
   obs:
-    # 胸部相机 RGBM (4通道: RGB + Mask)
+    # 胸部相机图像 (通道数根据 obs_mode 变化)
     chest_camera_rgb:
       shape: ${task.image_shape}
-      type: rgbm
+      type: ${task.obs_config.obs_mode}
       horizon: ${n_obs_steps}
-    # 头部相机 RGBM (4通道: RGB + Mask)
+    # 头部相机图像 (通道数根据 obs_mode 变化)
     head_camera_rgb:
       shape: ${task.image_shape}
-      type: rgbm
+      type: ${task.obs_config.obs_mode}
+      horizon: ${n_obs_steps}
+    # 第三人称相机图像 (可选，通道数根据 obs_mode 变化)
+    # 注意：只有当 use_third_camera=true 时才启用，需要手动取消注释
+    third_camera_rgb:
+      shape: ${task.image_shape}
+      type: ${task.obs_config.obs_mode}
       horizon: ${n_obs_steps}
     arm2_pos:
       shape: [7]
       type: low_dim 
       horizon: ${n_obs_steps} 
-    # ===== 速度观测（取消注释以启用）=====
-    arm2_vel:
-      shape: [7]
-      type: low_dim 
-      horizon: ${n_obs_steps} 
+    # ===== 速度观测（根据 use_velocity 配置）=====
+    # arm2_vel:
+    #   shape: [7]
+    #   type: low_dim 
+    #   horizon: ${n_obs_steps} 
     hand2_pos:
       shape: [6]
       type: low_dim
       horizon: ${n_obs_steps}
-    hand2_vel:
-      shape: [6]
-      type: low_dim
-      horizon: ${n_obs_steps}
+    # hand2_vel:
+    #   shape: [6]
+    #   type: low_dim
+    #   horizon: ${n_obs_steps}
     # ===== 速度观测结束 =====
     arm2_eef_pos:
       shape: [3]
@@ -98,14 +130,15 @@ shape_meta: &shape_meta
 env_runner:
   _target_: diffusion_policy.env_runner.real_pusht_image_runner.RealPushTImageRunner
 
-# 使用 RGBM 专用数据集
+# 使用多模式图像数据集
 dataset:
-  _target_: psi_dp.dataset.rgbm_image_dataset.RGBMImageDataset
+  _target_: psi_dp.dataset.multi_modal_image_dataset.MultiModalImageDataset
   zarr_path: ${task.dataset_path}
   horizon: ${n_action_steps}
   pad_before: ${eval:'${n_obs_steps}-1+${n_latency_steps}'}
   pad_after: ${eval:'${n_action_steps}-1'}
   seed: 42
   val_ratio: 0
+  obs_mode: ${task.obs_config.obs_mode}      # 图像观测模式
   use_velocity: ${task.obs_config.use_velocity}  # 是否使用速度观测
-
+  use_third_camera: ${task.obs_config.use_third_camera}  # 是否使用第三人称相机

@@ -2,15 +2,15 @@ name: grasp_state
 
 # ==================== 数据集配置（需要修改的部分）====================
 # 物体名称 - 用于输出文件夹命名和wandb记录
-object_name: "100ml玻璃烧杯"  # 修改这里：物体名称
+object_name: "100ml玻璃烧杯_state_based无速度_120条"  # 修改这里：物体名称
 # 数据条数 - 用于输出文件夹命名和wandb记录（0表示自动从数据集读取）
-num_demos: 48  # 修改这里：数据条数，0表示自动检测
+num_demos: 120  # 修改这里：数据条数，0表示自动检测
 
 # 数据集根目录
 data_root: /home/psibot/chembench/data/zarr_state/motion_plan/grasp
 # 完整数据集路径 = data_root / object_name.zarr
 # dataset_path: ${task.data_root}/${task.object_name}.zarr
-dataset_path: "/share_data/liyufeng/code/chembench/data/zarr_state/motion_plan/grasp2/100ml玻璃烧杯.zarr"
+dataset_path: "/share_data/liyufeng/code/chembench/data/100ml玻璃烧杯_120.zarr"
 
 # ==================== 数据采集时的随机化配置 ====================
 # 这些配置用于记录数据采集时的随机化设置，便于实验对比
@@ -18,8 +18,8 @@ randomization:
   # 位置随机化
   position:
     enabled: true
-    x_range: [-0.02, 0.02]  # X轴随机范围(米)
-    y_range: [-0.02, 0.02]  # Y轴随机范围(米)
+    x_range: [-0.00, 0.00]  # X轴随机范围(米)
+    y_range: [-0.00, 0.00]  # Y轴随机范围(米)
     z_range: [0.0, 0.0]   # Z轴随机范围(米)
   # 旋转随机化
   rotation:
@@ -29,19 +29,56 @@ randomization:
   lighting: false         # 光照随机化
   texture: false          # 纹理随机化
 
+# ==================== 观测配置开关 ====================
+obs_config:
+  use_velocity: False   # 是否使用速度观测 (arm2_vel, hand2_vel)
+
 # ==================== 数据信息 ====================
 data_info:
   obs_type: "state"       # 观测类型: state, rgb, rgbd
-  obs_keys: ["state"]     # 观测包含的字段
   action_dim: 13          # 动作维度: arm(7) + hand(6)
-  state_dim: 20           # 状态维度: object_pose(7) + arm(7) + hand(6)
-
-# ==================== 以下配置通常不需要修改 ====================
+  # State 总维度 (用于日志记录)
+  # 无速度: target_pose(7) + arm2_pos(7) + hand2_pos(6) + arm2_eef_pos(3) + arm2_eef_quat(4) = 27
+  # 有速度: 上述 + arm2_vel(7) + hand2_vel(6) = 40
+  # state_dim: 27           # 状态总维度: 无速度=27, 有速度=40
+  state_dim: 27           # 状态总维度: 无速度=27, 有速度=40
+# ==================== Shape Meta 配置 ====================
 shape_meta: &shape_meta
-  # acceptable types: rgb, low_dim
+  # acceptable types: low_dim
   obs:
-    state:
-      shape: [20]
+    # 目标物体位姿
+    target_pose:
+      shape: [7]
+      type: low_dim
+      horizon: ${n_obs_steps}
+    # 机械臂关节位置
+    arm2_pos:
+      shape: [7]
+      type: low_dim 
+      horizon: ${n_obs_steps}
+    # ===== 速度观测（根据 use_velocity 配置）=====
+    # arm2_vel:
+    #   shape: [7]
+    #   type: low_dim 
+    #   horizon: ${n_obs_steps}
+    # 机械手关节位置
+    hand2_pos:
+      shape: [6]
+      type: low_dim
+      horizon: ${n_obs_steps}
+    # hand2_vel:
+    #   shape: [6]
+    #   type: low_dim
+    #   horizon: ${n_obs_steps}
+    # ===== 速度观测结束 =====
+    # 末端执行器位置
+    arm2_eef_pos:
+      shape: [3]
+      type: low_dim
+      horizon: ${n_obs_steps}
+    # 末端执行器四元数
+    arm2_eef_quat:
+      shape: [4]
       type: low_dim
       horizon: ${n_obs_steps}
   action:
@@ -52,10 +89,11 @@ env_runner:
   _target_: diffusion_policy.env_runner.real_pusht_image_runner.RealPushTImageRunner
 
 dataset:
-  _target_: psi_dp.dataset.grasp_lego_dataset.GraspLowdimDataset
+  _target_: psi_dp.dataset.grasp_state_dataset.GraspStateDataset
   zarr_path: ${task.dataset_path}
   horizon: ${n_action_steps}
   pad_before: ${eval:'${n_obs_steps}-1+${n_latency_steps}'}
   pad_after: ${eval:'${n_action_steps}-1'}
   seed: 42
   val_ratio: 0
+  use_velocity: ${task.obs_config.use_velocity}  # 是否使用速度观测

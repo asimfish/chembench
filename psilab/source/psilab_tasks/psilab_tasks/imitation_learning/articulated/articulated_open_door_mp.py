@@ -32,9 +32,7 @@ from ..config_loader import load_grasp_config, load_grasp_points, get_grasp_poin
 
 # ========== 任务配置（修改这里即可切换不同任务）==========
 # TARGET_OBJECT_NAME = "mortar"  # 目标物体名称，如 "mortar", "glass_beaker_100ml" 等
-# glass_graduated_cylinder_500ml
-# plastic_graduated_cylinder_500ml
-TARGET_OBJECT_NAME = "glass_beaker_100ml"  # 目标物体名称
+TARGET_OBJECT_NAME = "erlenmeyer_flask"  # 目标物体名称，如 "mortar", "glass_beaker_100ml" 等
 # TARGET_OBJECT_NAME = "glass_beaker_500ml"  # 目标物体名称，如 "mortar", "glass_beaker_100ml" 等
 TASK_TYPE = "grasp"            # 任务类型：grasp, handover, pick_place, pour 等
 
@@ -43,7 +41,7 @@ DATA_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..
 
 
 @configclass
-class ArticulatedEnvCfg(MPEnvCfg):
+class GraspBottleEnvCfg(MPEnvCfg):
     """Configuration for Rl environment."""
 
     # fake params - These parameters are placeholders for episode length, action and observation spaces
@@ -77,14 +75,10 @@ class ArticulatedEnvCfg(MPEnvCfg):
         ),
         render=RenderCfg(
             enable_translucency=True,
-            # rendering_mode="quality",
-            # antialiasing_mode="TAA",
         ),
 
     )
-    sim.render.rendering_mode = "quality"
-    sim.render.antialiasing_mode = "TAA"
-
+    
     # ========== 物体抓取配置参数（从 object_config.json 加载）==========
     # 目标物体名称（使用文件顶部定义的 TARGET_OBJECT_NAME）
     target_object_name: str = TARGET_OBJECT_NAME
@@ -96,7 +90,7 @@ class ArticulatedEnvCfg(MPEnvCfg):
     grasp_euler_deg: list = None  # type: ignore
     
     # 抬起高度（单位：米）
-    lift_height_desired: float = 0.2
+    lift_height_desired: float = 0.25
     
     # 轨迹生成的时序参数
     phase_ratios: dict = None  # type: ignore
@@ -107,24 +101,7 @@ class ArticulatedEnvCfg(MPEnvCfg):
     # 手指抓取模式：
     # - "all": 所有手指都闭合（默认）
     # - "pinch": 只有拇指和食指闭合（对应索引 0,1 和 5）
-    finger_grasp_mode: str = "all"
-    
-    # 预抓取位置偏移（相对于抓取点的偏移，用于从侧上方接近）
-    # normal
-    # pre_grasp_height: float = 0.05      # z轴上方偏移（单位：米，默认8cm）
-    # pre_grasp_y_offset: float = -0.02   # y轴偏移（单位：米，默认-2cm，从侧面接近）
-    # pre_grasp_x_offset: float = -0.02   # x轴偏移（单位：米，默认-2cm）
- 
-    #250ml容量瓶 500ml容量瓶 透明试剂瓶大
-    # pre_grasp_height = 0.02   # z轴上方偏移 10cm
-    # pre_grasp_y_offset = 0.00  # y轴负方向偏移 10cm（从侧面接近）
-    # pre_grasp_x_offset = -0.095  # y轴负方向偏移 10cm（从侧面接近）
-
-    ##500 ml量筒
-    pre_grasp_height: float = 0.02      # z轴上方偏移（单位：米，默认8cm）
-    pre_grasp_y_offset: float = -0.01   # y轴偏移（单位：米，默认-2cm，从侧面接近）
-    pre_grasp_x_offset: float = -0.095   # x轴偏移（单位：米，默认-2cm）
-    
+    finger_grasp_mode: str = "pinch"
 
     # 是否启用轨迹平滑
     enable_trajectory_smooth: bool = True
@@ -138,10 +115,10 @@ class ArticulatedEnvCfg(MPEnvCfg):
     
     # 成功判断：朝向偏差阈值（sin²(θ/2)，0=完全一致，1=上下颠倒）
     # 0.1 约等于 37° 的偏差，0.05 约等于 26° 的偏差
-    orientation_threshold: float = 0.05
+    orientation_threshold: float = 0.04
     
     # 目标成功次数：达到此数量后自动停止（设为 0 或 None 表示不限制）
-    target_success_count: int = 50
+    target_success_count: int = 60
     
     # 输出文件夹：chembench/data/motion_plan/{任务类型}/{物体名称}
     output_folder: str = None  # type: ignore
@@ -173,8 +150,8 @@ class ArticulatedEnvCfg(MPEnvCfg):
             self.grasp_euler_deg = grasp_config["grasp_euler_deg"]
         
         # 设置抬起高度（如果使用默认值）
-        # if self.lift_height_desired == 0.3:
-        #     self.lift_height_desired = grasp_config["lift_height"]
+        if self.lift_height_desired == 0.3:
+            self.lift_height_desired = grasp_config["lift_height"]
         
         # 设置轨迹时序参数（如果未手动指定）
         if self.phase_ratios is None:
@@ -190,11 +167,11 @@ class ArticulatedEnvCfg(MPEnvCfg):
             object_name = grasp_config.get("name_cn", self.target_object_name)
             self.output_folder = os.path.join(DATA_ROOT, "motion_plan", TASK_TYPE, object_name)
 
-class ArticulatedEnv(MPEnv):
+class GraspBottleEnv(MPEnv):
 
-    cfg: ArticulatedEnvCfg
+    cfg: GraspBottleEnvCfg
 
-    def __init__(self, cfg: ArticulatedEnvCfg, render_mode: str | None = None, **kwargs):
+    def __init__(self, cfg: GraspBottleEnvCfg, render_mode: str | None = None, **kwargs):
 
         super().__init__(cfg, render_mode, **kwargs)
 
@@ -246,16 +223,7 @@ class ArticulatedEnv(MPEnv):
         import carb
         carb_settings_iface = carb.settings.get_settings()
         carb_settings_iface.set_bool("/rtx/raytracing/fractionalCutoutOpacity", True)
-        # 3. 可选：确保透明物体参与 Primary Ray Hit
-        carb_settings_iface.set_bool("/rtx/hydra/segmentation/includeTransparent", True)
-
-        # self.sim.render.rendering_mode = "quality"
-        # self.sim.render.antialiasing_mode = "TAA"
-
-        # 可选：设置分割的透明度阈值
-        # carb_settings_iface.set_float("/rtx/hydra/segmentation/opacityThreshold", 1.0)
-
-
+        
         # ========== 启用 Interactive Path Tracing 模式 ==========
         # rendermode: 0 = RaytracedLighting, 1 = PathTracing, 2 = InteractivePathTracing (即 Realtime)
         # carb_settings_iface.set_int("/rtx/rendermode", 1)  # 1 = Path Tracing
@@ -540,12 +508,17 @@ class ArticulatedEnv(MPEnv):
         eef_pos_current = self._robot.data.body_link_pos_w[env_ids, self._eef_link_index, :] - self._robot.data.root_link_pos_w[env_ids, :]
         eef_quat_current = self._robot.data.body_link_quat_w[env_ids, self._eef_link_index, :]
         
-        # 预抓取位置（抓取点上方 + 侧面偏移，从侧上方接近）
-        # 从配置参数读取偏移量
-        pre_grasp_offset = torch.tensor(
-            [self.cfg.pre_grasp_x_offset, self.cfg.pre_grasp_y_offset, self.cfg.pre_grasp_height], 
-            device=self.device
-        ).unsqueeze(0).repeat(env_len, 1)
+        # 预抓取位置（抓取点上方 + y轴负方向偏移，从侧上方接近）
+
+        pre_grasp_height = 0.05   # z轴上方偏移 10cm
+        pre_grasp_y_offset = -0.03  # y轴负方向偏移 10cm（从侧面接近）
+        pre_grasp_x_offset = -0.02  # y轴负方向偏移 10cm（从侧面接近）
+
+        # pre_grasp_height = 0.08   # z轴上方偏移 10cm
+        # pre_grasp_y_offset = 0.00  # y轴负方向偏移 10cm（从侧面接近）
+        # pre_grasp_x_offset = 0.00  # y轴负方向偏移 10cm（从侧面接近）
+
+        pre_grasp_offset = torch.tensor([pre_grasp_x_offset, pre_grasp_y_offset, pre_grasp_height], device=self.device).unsqueeze(0).repeat(env_len, 1)
         pos_pre_grasp = eff_offset + target_position + pre_grasp_offset
         
         # 抓取位置（精确位置）
@@ -852,26 +825,6 @@ class ArticulatedEnv(MPEnv):
                 scene = self.scene
             )
 
-
-        ##是否实时查看mask图片
-        # import matplotlib.pyplot as plt
-        # head_camera_mask = self._robot.tiled_cameras["chest_camera"].data.output["instance_segmentation_fast"][0,:,:,:].cpu().numpy()
-        # # head_camera_mask = self._robot.tiled_cameras["chest_camera"].data.output["instance_segmentation_fast"][0,:,:,:].cpu().numpy()
-        # # head_camera_depth = self._robot.tiled_cameras["chest_camera"].data.output["depth"][0,:,:,:].cpu().numpy()
-        # # head_camera_normal = self._robot.tiled_cameras["chest_camera"].data.output["normals"][0,:,:,:].cpu().numpy()
-       
-        # # plt.figure(figsize=(10, 10))
-        # plt.imshow(head_camera_mask)
-        # # plt.subplot(1, 3, 2)
-        # # plt.imshow(head_camera_depth)
-        # # plt.subplot(1, 3, 3)
-        # # plt.imshow(head_camera_normal)
-        # plt.show()
-        # import time
-        # time.sleep(0.1)
-
-
-        # chest_camera_mask = self._robot.tiled_cameras["chest_camera"].data.output["instance_segmentation_fast"]
         # get dones
         success, fail, time_out = self._get_dones()
         reset = (success | fail | time_out)
@@ -901,29 +854,6 @@ class ArticulatedEnv(MPEnv):
 
         #
         super().reset()
-
-    def _eval_fail_moved_without_contact(self) -> torch.Tensor:
-        """
-        评估物体在未接触时是否被移动（被推动/碰撞）
-        
-        失败条件：物体未被接触，但 z 方向位移超过 2cm
-        
-        Returns:
-            bfailed: 失败标志 [N]
-        """
-        # 检查物体是否未被接触
-        not_contacted = ~self._has_contacted
-        
-        # 计算 z 方向位移
-        current_z = self._target.data.root_pos_w[:, 2]
-        height_diff = current_z - self._target_pos_init[:, 2]
-        
-        # 物体未被接触但 z 方向移动超过 2cm，判定为失败
-        moved_too_much = height_diff > 0.02
-        
-        bfailed = not_contacted & moved_too_much
-        
-        return bfailed
 
     def _quat_orientation_loss(self, quat_init: torch.Tensor, quat_current: torch.Tensor) -> torch.Tensor:
         """
@@ -995,12 +925,6 @@ class ArticulatedEnv(MPEnv):
         time_out = self.episode_length_buf >= self.max_episode_length - 1
         # task evalutation
         bfailed, self._has_contacted = eval_fail(self._target, self._contact_sensors, self._has_contacted)  # type: ignore
-        
-        # 新增：检测物体在未接触时被移动（被推动/碰撞）
-        bfailed_moved = self._eval_fail_moved_without_contact()
-        # bfailed = bfailed | bfailed_moved
-        bfailed = bfailed_moved
-        
         # success eval（使用新的带朝向检查的函数）
         bsuccessed = self._eval_success_with_orientation()
      
@@ -1018,21 +942,6 @@ class ArticulatedEnv(MPEnv):
         if success_ids is None:
             success_ids=[]
         
-        # 截断 logic: 确保保存的数据不超过 target_success_count
-        ids_to_save = success_ids
-        if self.cfg.enable_output and self.cfg.target_success_count and self.cfg.target_success_count > 0:
-            # 注意: _get_dones 已经更新了 _episode_success_num，包含了当前 batch
-            current_total = self._episode_success_num
-            batch_size = len(success_ids)
-            prev_total = current_total - batch_size
-            
-            if prev_total < self.cfg.target_success_count:
-                needed = self.cfg.target_success_count - prev_total
-                if batch_size > needed:
-                    ids_to_save = success_ids[:needed]
-            else:
-                ids_to_save = []
-
         # output data
         if self.cfg.enable_output:
             # 记录保存前的时间戳，用于推断文件路径
@@ -1041,13 +950,13 @@ class ArticulatedEnv(MPEnv):
                 data=self._data,
                 cfg=self.cfg,
                 scene=self.scene,
-                env_indexs=ids_to_save,
+                env_indexs=success_ids,
                 reset_env_indexs=env_ids.tolist(),
             )
             # 打印保存的文件路径
-            if ids_to_save:
+            if success_ids:
                 saved_path = f"{self.cfg.output_folder}/{timestamp}_data.hdf5"
-                print(f"[DATA] 已保存数据: {saved_path} (成功轨迹数: {len(ids_to_save)})")
+                print(f"[DATA] 已保存数据: {saved_path} (成功轨迹数: {len(success_ids)})")
 
 
         super()._reset_idx(env_ids)   
