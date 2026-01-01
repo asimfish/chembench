@@ -257,7 +257,17 @@ def load_handover_config(object_name: str) -> dict[str, Any]:
         object_name: 物体名称
         
     Returns:
-        交接配置字典
+        交接配置字典，包含:
+        - right_grasp_offset: 右手抓取偏移（从handover.right_grasp_offset读取）
+        - right_grasp_euler_deg: 右手抓取角度（从handover.right_grasp_euler_deg读取）
+        - right_handover_offset: 右手在交接位置的偏移
+        - right_handover_euler_deg: 右手在交接位置的角度
+        - handover_position: 传递位置
+        - left_grasp_offset: 左手抓取偏移
+        - left_grasp_euler_deg: 左手抓取角度
+        - lift_height: 抬起到传递位置的高度
+        - timing: 时序参数
+        - name_cn: 物体中文名称
         
     Raises:
         ValueError: 如果物体不存在或不支持交接操作
@@ -271,19 +281,38 @@ def load_handover_config(object_name: str) -> dict[str, Any]:
         raise ValueError(f"物体 '{object_name}' 不支持交接(handover)操作")
     
     handover = obj_info["handover"]
+    grasp = obj_info.get("grasp", {})
     
     return {
-        "right_grasp_offset": handover.get("right_grasp_offset", [0, 0, 0]),
-        "right_grasp_euler_deg": handover.get("right_grasp_euler_deg", [0, 0, 0]),
+        # 右手抓取参数（从handover配置中读取）
+        "right_grasp_offset": handover.get("right_grasp_offset", grasp.get("grasp_offset", [0, 0, 0])),
+        "right_grasp_euler_deg": handover.get("right_grasp_euler_deg", grasp.get("grasp_euler_deg", [0, 0, 0])),
+        
+        # 右手在交接位置的参数（类似 pick_place 的 place_offset 和 place_euler_deg）
+        "right_handover_offset": handover.get("right_handover_offset", [0, 0, 0]),
+        "right_handover_euler_deg": handover.get("right_handover_euler_deg", handover.get("right_grasp_euler_deg", grasp.get("grasp_euler_deg", [0, 0, 0]))),
+        
+        # 传递位置
         "handover_position": handover.get("handover_position", [0.4, 0.0, 1.0]),
-        "right_handover_euler_deg": handover.get("right_handover_euler_deg", [90, 45, 0]),
+        
+        # 左手抓取参数
         "left_grasp_offset": handover.get("left_grasp_offset", [0, 0, 0]),
         "left_grasp_euler_deg": handover.get("left_grasp_euler_deg", [-90, 45, 0]),
-        "left_target_position": handover.get("left_target_position", [0.4, 0.25, 0.95]),
-        "left_target_euler_deg": handover.get("left_target_euler_deg", [-90, 45, 0]),
-        "right_reset_position": handover.get("right_reset_position", [0.4, 0.25, 0.95]),
-        "right_reset_euler_deg": handover.get("right_reset_euler_deg", [-90, 45, 0]),
-        "timing": handover.get("timing", {}),
+        
+        # 抬起高度
+        "lift_height": handover.get("lift_height") or grasp.get("lift_height", 0.15),
+        
+        # 时序参数
+        "timing": handover.get("timing", {
+            "right_approach": 0.12,
+            "right_grasp": 0.10,
+            "right_lift": 0.15,
+            "left_approach": 0.18,
+            "left_grasp": 0.10,
+            "right_release": 0.08,
+            "right_retreat": 0.27
+        }),
+        
         "name_cn": obj_info.get("name_cn", object_name),
     }
 
@@ -292,33 +321,55 @@ def load_pick_place_config(object_name: str) -> dict[str, Any]:
     """
     加载物体的抓放(pick_place)配置
     
+    简化版：只需要抓取配置 + 抬高高度 + 放置偏移/角度 + timing
+    
     Args:
         object_name: 物体名称
         
     Returns:
-        抓放配置字典
+        抓放配置字典，包含:
+        - grasp_offset: 抓取位置偏移（继承自 grasp）
+        - grasp_euler_deg: 抓取角度（继承自 grasp）
+        - lift_height: 抬高到中间点的高度
+        - place_offset: 放置位置相对于最终位置的偏移
+        - place_euler_deg: 放置时的角度
+        - timing: 6个阶段的时间比例字典
+        - name_cn: 物体中文名称
         
     Raises:
-        ValueError: 如果物体不存在或不支持抓放操作
+        ValueError: 如果物体不存在
     """
     obj_info = get_object_info(object_name)
     
     if obj_info is None:
         raise ValueError(f"物体 '{object_name}' 不存在于配置文件中")
     
-    if "pick_place" not in obj_info:
-        raise ValueError(f"物体 '{object_name}' 不支持抓放(pick_place)操作")
-    
-    pick_place = obj_info["pick_place"]
+    # 优先从 pick_place 读取，如果不存在则从 grasp 读取默认值
+    pick_place = obj_info.get("pick_place", {})
+    grasp = obj_info.get("grasp", {})
     
     return {
-        "right_grasp_offset": pick_place.get("right_grasp_offset", [0, 0, 0]),
-        "right_grasp_euler_deg": pick_place.get("right_grasp_euler_deg", [0, 0, 0]),
-        "place_offset": pick_place.get("place_offset", [0, 0, 0]),
-        "place_euler_deg": pick_place.get("place_euler_deg", [0, 0, 0]),
-        "right_reset_position": pick_place.get("right_reset_position", [0.4, 0.25, 0.95]),
-        "right_reset_euler_deg": pick_place.get("right_reset_euler_deg", [-90, 45, 0]),
-        "timing": pick_place.get("timing", {}),
+        # 抓取参数（优先用 pick_place，否则用 grasp）
+        "grasp_offset": pick_place.get("grasp_offset") or grasp.get("grasp_offset", [0, 0, 0]),
+        "grasp_euler_deg": pick_place.get("grasp_euler_deg") or grasp.get("grasp_euler_deg", [0, 0, 0]),
+        
+        # 抬高高度（中间点高度）
+        "lift_height": pick_place.get("lift_height") or grasp.get("lift_height", 0.25),
+        
+        # 放置参数
+        "place_offset": pick_place.get("place_offset", [0, 0, 0.02]),  # 默认抬高2cm
+        "place_euler_deg": pick_place.get("place_euler_deg") or pick_place.get("grasp_euler_deg") or grasp.get("grasp_euler_deg", [0, 0, 0]),
+        
+        # 时序参数
+        "timing": pick_place.get("timing", {
+            "approach": 0.15,
+            "grasp": 0.10,
+            "lift": 0.15,
+            "transport": 0.15,
+            "release": 0.10,
+            "retreat": 0.35
+        }),
+        
         "name_cn": obj_info.get("name_cn", object_name),
     }
 

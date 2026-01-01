@@ -22,12 +22,21 @@ rad.json
 TestResults.xml
 
 ### Custom Ignores ###
-# Python compiled files
+# Python compiled files and cache
 *.pyc
 *.pyo
 *.pyd
 __pycache__/
+*.py[cod]
+*$py.class
 
+# Backup files
+*.backup
+*.backup_*
+*backup*
+
+# Compressed files
+*.zip
 # Assets folder
 psilab/assets/
 

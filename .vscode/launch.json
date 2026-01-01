@@ -14,48 +14,62 @@
             "program": "${file}",
             "console": "integratedTerminal"
         },
+        
+        {
+            "name": "Image Diff Analysis",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/analyze_diff.py",
+            "console": "integratedTerminal",
+            "args": [
+                "/home/psibot/chembench/analysis_results/透明试剂瓶(大)_可见/chest_camera_depth/depth_frame_0000.png",
+                "/home/psibot/chembench/analysis_results/透明试剂瓶(大)_不可见/chest_camera_depth/depth_frame_0000.png",
+                "--output",
+                "diff_result.png"
+            ]
+        },
 
         // ============================================
         // Diffusion Policy 训练配置（新版）
         // 使用说明：修改 task/*.yaml 中的 object_name 和 num_demos
         // ============================================
-        // RGB任务训练 - 使用图像输入（修改 task/grasp_rgb.yaml）
-        {
-            "name": "DP:Train-Grasp-RGB",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/diffusion_policy/train.py",
-            "console": "integratedTerminal",
-            "args": [
-                "--config-name",
-                "train_diffusion_transformer_timm_workspace",
-                "task=grasp_rgb"
-            ],
-            "env": {
-                "CUDA_VISIBLE_DEVICES": "0"
-            },
-            "justMyCode": false
-        },
-        // State任务训练 - 仅使用状态输入（修改 task/grasp_state.yaml）
-        {
-            "name": "DP:Train-Grasp-State",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/diffusion_policy/train.py",
-            "console": "integratedTerminal",
-            "args": [
-                "--config-name",
-                "train_diffusion_transformer_state_workspace",
-                "task=grasp_state"
-            ],
-            "env": {
-                "CUDA_VISIBLE_DEVICES": "1"
-            },
-            "justMyCode": false
-        },
-        // Handover RGB训练（修改 task/handover_rgb.yaml）
+        // // RGB任务训练 - 使用图像输入（修改 task/grasp_rgb.yaml）
         // {
-        //     "name": "DP:Train-Handover-RGB",
+        //     "name": "DP:Train-Grasp-RGB",
+        //     "type": "debugpy",
+        //     "request": "launch",
+        //     "program": "${workspaceFolder}/diffusion_policy/train.py",
+        //     "console": "integratedTerminal",
+        //     "args": [
+        //         "--config-name",
+        //         "train_diffusion_transformer_timm_workspace",
+        //         "task=grasp_rgb"
+        //     ],
+        //     "env": {
+        //         "CUDA_VISIBLE_DEVICES": "0"
+        //     },
+        //     "justMyCode": false
+        // },
+        // // State任务训练 - 仅使用状态输入（修改 task/grasp_state.yaml）
+        // {
+        //     "name": "DP:Train-Grasp-State",
+        //     "type": "debugpy",
+        //     "request": "launch",
+        //     "program": "${workspaceFolder}/diffusion_policy/train.py",
+        //     "console": "integratedTerminal",
+        //     "args": [
+        //         "--config-name",
+        //         "train_diffusion_transformer_state_workspace",
+        //         "task=grasp_state"
+        //     ],
+        //     "env": {
+        //         "CUDA_VISIBLE_DEVICES": "1"
+        //     },
+        //     "justMyCode": false
+        // },
+        // // Handover RGB训练（修改 task/handover_rgb.yaml）
+        // // {
+        // //     "name": "DP:Train-Handover-RGB",
         //     "type": "debugpy",
         //     "request": "launch",
         //     "program": "${workspaceFolder}/diffusion_policy/train.py",
@@ -145,7 +159,7 @@
                 "--seed",
                 "17",
                 "--scene",
-                "room_cfg:PSI_DC_Beaker_003_CFG",
+                "room_cfg:PSI_DC_Grasp_CFG",
                 "--enable_cameras",
                 "--enable_output",
                 "--enable_random",
@@ -164,13 +178,13 @@
         // ============================================
         // Diffusion Policy 批量评估
         // 使用说明：编辑 eval_configs.yaml 配置要测试的模型
-        // ============================================
-        {
-            "name": "IL-Batch-Eval",
-            "type": "node-terminal",
-            "request": "launch",
-            "command": "cd ${workspaceFolder}/psilab/scripts_psi/workflows/imitation_learning && bash batch_eval_yaml.sh"
-        },
+        // // ============================================
+        // {
+        //     "name": "IL-Batch-Eval",
+        //     "type": "node-terminal",
+        //     "request": "launch",
+        //     "command": "cd ${workspaceFolder}/psilab/scripts_psi/workflows/imitation_learning && bash batch_eval_yaml.sh"
+        // },
 
         // ============================================
         // Diffusion Policy 单次测试配置
@@ -236,6 +250,148 @@
         //     "justMyCode": false
         // },
         // // 旧版RGB测试（保留）
+        // {
+        //     "name": "IL-Grasp-v1:Play",
+        //     "type": "debugpy",
+        //     "request": "launch",
+        //     "args": [
+        //         "--task",
+        //         "Psi-IL-Grasp-v1",
+        //         "--num_envs",
+        //         "1",
+        //         "--seed",
+        //         "17",
+        //         "--scene",
+        //         "room_cfg:PSI_DC_Grasp_CFG",
+        //         "--enable_cameras",
+        //         "--async_reset",
+        //         // "--headless",
+        //         "--checkpoint",
+        //         // "/home/psibot/chembench/data/outputs/download/grasp_rgb/100ml玻璃透明_state/epoch=4990-train_loss=0.003.ckpt",
+        //         // "/home/psibot/chembench/data/outputs/download/grasp_rgb/1225/100ml玻璃烧杯_黑色_无速度_rgb+normal+depth/20251224_170156_n50_rgbnd/checkpoints/epoch=4130-train_loss=0.003.ckpt",
+        //         // "/home/psibot/chembench/data/outputs/download/grasp_rgb/1225/100ml玻璃烧杯_无速度_normal+depth/20251224_181826_n50_nd/checkpoints/epoch=4290-train_loss=0.002.ckpt",
+        //         "/home/psibot/chembench/data/outputs/download/1227maskrgb/棕色试剂瓶大_无速度_rgb_masked/20251226_225828_n50_rgb_masked/checkpoints/epoch=5920-train_loss=0.002.ckpt",
+        //         // "/home/psibot/chembench/data/outputs/download/grasp_rgb/1225_rbg/black_beaker_rgb_no_vel.ckpt",
+        //         // "/home/psibot/chembench/data/outputs/download/grasp_rgb/采集/烧杯纯图/epoch=4910-train_loss=0.002.ckpt",
+        //         "--max_step",
+        //         "500",
+        //         "--max_episode",
+        //         "100",
+        //         "--enable_eval",
+        //     ],
+        //     "program": "${workspaceFolder}/psilab/scripts_psi/workflows/imitation_learning/play.py",
+        //     "console": "integratedTerminal",
+        //     "justMyCode": false
+        // },
+
+        // ============================================
+        // Motion Planning 数据收集配置
+        // ============================================
+    
+        // {
+        //     "name": "MP-Grasp-Art-v1:DataCollect",
+        //     "type": "debugpy",
+        //     "request": "launch",
+        //     "args": [
+        //         "--task",
+        //         "Psi-MP-Grasp-Art-v1",
+        //         "--num_envs",
+        //         "1",
+        //         "--seed",
+        //         "17",
+        //         "--scene",
+        //         "room_cfg:PSI_DC_Grasp_Art_CFG",
+        //         "--enable_cameras",
+        //         "--enable_output",
+        //         "--enable_random",
+        //         "--enable_eval",
+        //         "--async_reset",
+        //         "--sample_step",
+        //         "4",
+        //         "--max_episode",
+        //         "500",
+        //     ],
+        //     "program": "${workspaceFolder}/psilab/scripts_psi/workflows/motion_planning/play.py",
+        //     "console": "integratedTerminal",
+        //     "justMyCode": false
+        // },
+        // // ============================================
+        // 数据处理工具
+        // ============================================
+        {
+            "name": "MP-Handover-v1:DataCollect",
+            "type": "debugpy",
+            "request": "launch",
+            "args": [
+                "--task",
+                "Psi-MP-Handover-v1",
+                "--num_envs",
+                "1",
+                "--seed",
+                "17",
+                "--scene",
+                "room_cfg:PSI_DC_Handover_CFG",
+                "--enable_cameras",
+                "--enable_output",
+                "--enable_random",
+                "--enable_eval",
+                "--enable_marker",
+                "--async_reset",
+                "--sample_step",
+                "4",
+                "--max_episode",
+                "500",
+            ],
+            "program": "${workspaceFolder}/psilab/scripts_psi/workflows/motion_planning/play.py",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+
+
+
+
+        {
+            "name": "MP-PickPlace-v1:DataCollect",
+            "type": "debugpy",
+            "request": "launch",
+            "args": [
+                "--task",
+                "Psi-MP-PickPlace-v1",
+                "--num_envs",
+                "1",
+                "--seed",
+                "17",
+                "--scene",
+                "room_cfg:PSI_DC_PickPlace_CFG",
+                "--enable_cameras",
+                "--enable_output",
+                "--enable_random",
+                "--enable_eval",
+                "--enable_marker",
+                "--async_reset",
+                "--sample_step",
+                "4",
+                "--max_episode",
+                "500",
+            ],
+            "program": "${workspaceFolder}/psilab/scripts_psi/workflows/motion_planning/play.py",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+
+        // Zarr 数据分析（生成可视化曲线图）
+        {
+            "name": "Analyze Zarr Data",
+            "type": "debugpy",
+            "request": "launch",
+            "args": [
+                "--path",
+                "/home/psibot/chembench/data/zarr_final/motion_plan/grasp/100ml玻璃烧杯_20251231_150804.zarr"
+            ],
+            "program": "${workspaceFolder}/analyze_zarr.py",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
         {
             "name": "IL-Grasp-v1:Play",
             "type": "debugpy",
@@ -244,16 +400,24 @@
                 "--task",
                 "Psi-IL-Grasp-v1",
                 "--num_envs",
-                "1",
+                "30",
                 "--seed",
                 "17",
                 "--scene",
                 "room_cfg:PSI_DC_Grasp_CFG",
                 "--enable_cameras",
                 "--async_reset",
+                "--enable_eval",
+                "--enable_random",
                 // "--headless",
                 "--checkpoint",
-                "/home/psibot/chembench/data/outputs/download/grasp_rgb/坩埚_smooth插值/20251221_024703_n50/checkpoints/epoch=4370-train_loss=0.003.ckpt",
+                
+                // "/home/psibot/chembench/data/outputs/download/grasp_rgb/100ml玻璃透明_state/epoch=4990-train_loss=0.003.ckpt",
+                // "/home/psibot/chembench/data/outputs/download/grasp_rgb/1225/100ml玻璃烧杯_黑色_无速度_rgb+normal+depth/20251224_170156_n50_rgbnd/checkpoints/epoch=4130-train_loss=0.003.ckpt",
+                // "/home/psibot/chembench/data/outputs/download/grasp_rgb/1225/100ml玻璃烧杯_无速度_normal+depth/20251224_181826_n50_nd/checkpoints/epoch=4290-train_loss=0.002.ckpt",
+                "/home/psibot/chembench/data/tmp/100ml烧杯_nd.ckpt",
+                // "/home/psibot/chembench/data/outputs/download/grasp_rgb/1225_rbg/black_beaker_rgb_no_vel.ckpt",
+                // "/home/psibot/chembench/data/outputs/download/grasp_rgb/采集/烧杯纯图/epoch=4910-train_loss=0.002.ckpt",
                 "--max_step",
                 "500",
                 "--max_episode",
@@ -265,9 +429,6 @@
             "justMyCode": false
         },
 
-        // ============================================
-        // Motion Planning 数据收集配置
-        // ============================================
         {
             "name": "MP-Grasp-v1:DataCollect",
             "type": "debugpy",
@@ -276,7 +437,7 @@
                 "--task",
                 "Psi-MP-Grasp-v1",
                 "--num_envs",
-                "30",
+                "1",
                 "--seed",
                 "17",
                 "--scene",
@@ -295,50 +456,7 @@
             "console": "integratedTerminal",
             "justMyCode": false
         },
-    
-        {
-            "name": "MP-Grasp-Art-v1:DataCollect",
-            "type": "debugpy",
-            "request": "launch",
-            "args": [
-                "--task",
-                "Psi-MP-Grasp-Art-v1",
-                "--num_envs",
-                "1",
-                "--seed",
-                "17",
-                "--scene",
-                "room_cfg:PSI_DC_Grasp_Art_CFG",
-                "--enable_cameras",
-                "--enable_output",
-                "--enable_random",
-                "--enable_eval",
-                "--async_reset",
-                "--sample_step",
-                "4",
-                "--max_episode",
-                "500",
-            ],
-            "program": "${workspaceFolder}/psilab/scripts_psi/workflows/motion_planning/play.py",
-            "console": "integratedTerminal",
-            "justMyCode": false
-        },
-        // ============================================
-        // 数据处理工具
-        // ============================================
-        // Zarr 数据分析（生成可视化曲线图）
-        {
-            "name": "Analyze Zarr Data",
-            "type": "debugpy",
-            "request": "launch",
-            "args": [
-                "--path",
-                "${workspaceFolder}/data/zarr_rgbm/motion_plan/grasp/坩埚_20251221_165118.zarr"
-            ],
-            "program": "${workspaceFolder}/analyze_zarr.py",
-            "console": "integratedTerminal",
-            "justMyCode": false
-        },
+
         {
             "name": "Replay",
             "type": "debugpy",
@@ -346,7 +464,7 @@
             "args": [
                 "--enable_cameras",
                 "--hdf5_file_folder",
-                "${workspaceFolder}/data/motion_plan/grasp/20ml玻璃试管/20251221_214855",
+                "/home/psibot/chembench/data/motion_plan/pick_place/坩埚/20251231_225007",
                 "--enable_state"
             ],
             "program": "${workspaceFolder}/psilab/scripts_psi/workflows/replay/replay.py",
@@ -354,74 +472,36 @@
             "justMyCode": false
         },
         
-        {
-            "name": "HDF5 Convert",
-            "type": "debugpy",
-            "request": "launch",
-            "args": [
-                "--source",
-                "${workspaceFolder}/psilab/outputs/source_data",
-                "--destination",
-                "${workspaceFolder}/psilab/outputs/converted_data",
-            ],
-            "program": "${workspaceFolder}/psilab/scripts_psi/tools/hdf5/convert_hdf5.py",
-            "console": "integratedTerminal",
-            "justMyCode": false
-        },
-        // ============================================
+        // {
+        //     "name": "HDF5 Convert",
+        //     "type": "debugpy",
+        //     "request": "launch",
+        //     "args": [
+        //         "--source",
+        //         "${workspaceFolder}/psilab/outputs/source_data",
+        //         "--destination",
+        //         "${workspaceFolder}/psilab/outputs/converted_data",
+        //     ],
+        //     "program": "${workspaceFolder}/psilab/scripts_psi/tools/hdf5/convert_hdf5.py",
+        //     "console": "integratedTerminal",
+        //     "justMyCode": false
+        // },
+        // // ============================================
         // HDF5 to Zarr 数据转换
-        // 使用说明：
-        // 1. 修改 --h5_dir 为你的原始数据目录
-        // 2. 输出会自动按照路径结构生成，如：
-        //    输入: data/motion_plan/grasp/100ml玻璃烧杯/20251218_215604
-        //    State输出: data/zarr_state/motion_plan/grasp/100ml玻璃烧杯.zarr
-        //    RGB输出: data/zarr_rgb/motion_plan/grasp/100ml玻璃烧杯.zarr
-        // ============================================
-        {
-            "name": "HDF5 to Zarr (State-Based)",
-            "type": "debugpy",
-            "request": "launch",
-            "args": [
-                "--h5_dir",
-                // "${workspaceFolder}/data/motion_plan/grasp/250ml玻璃烧杯/20251219_030556",
-                "${workspaceFolder}/data/motion_plan/grasp/100ml玻璃烧杯/20251220_201605",
-                "--zarr_dir",
-                "${workspaceFolder}/data/zarr_state",
-                "--mode",
-                "state"
-            ],
-            "program": "${workspaceFolder}/psilab/source/psilab/psilab/utils/zarr_utils.py",
-            "console": "integratedTerminal",
-            "justMyCode": false
-        },
-        {
-            "name": "HDF5 to Zarr (RGB-Based)",
-            "type": "debugpy",
-            "request": "launch",
-            "args": [
-                "--h5_dir",
-                "${workspaceFolder}/data/motion_plan/grasp/20ml玻璃试管/20251221_223531",
-                "--zarr_dir",
-                "${workspaceFolder}/data/zarr_rgb",
-                "--mode",
-                "rgb"
-            ],
-            "program": "${workspaceFolder}/psilab/source/psilab/psilab/utils/zarr_utils.py",
-            "console": "integratedTerminal",
-            "justMyCode": false
-        },
         {
             "name": "HDF5 to Zarr (RGB+Mask)",
             "type": "debugpy",
             "request": "launch",
             "args": [
                 "--h5_dir",
-                "${workspaceFolder}/data/motion_plan/grasp/锥形瓶/20251222_002110",
+                "/home/psibot/chembench/data/motion_plan/grasp/100ml玻璃烧杯/20251231_150714",
                 "--zarr_dir",
-                "${workspaceFolder}/data/zarr_rgbm",
+                "${workspaceFolder}/data/zarr_final",
                 "--mode",
                 "rgb",
                 "--with_mask",
+                "--with_depth",
+                "--with_normals"
                 // "--save_rgb_separate",
                 // "--save_mask_separate"
             ],
@@ -495,16 +575,115 @@
         //     "justMyCode": false
         // },
         // 列出所有物体
+        // {
+        //     "name": "GraspPoints: List Objects",
+        //     "type": "debugpy",
+        //     "request": "launch",
+        //     "args": [
+        //         "--list_objects"
+        //     ],
+        //     "program": "${workspaceFolder}/psilab/source/psilab_tasks/psilab_tasks/imitation_learning/grasp_point_generator.py",
+        //     "console": "integratedTerminal",
+        //     "justMyCode": false
+        // },
+
+        // ============================================
+        // 批量数据采集配置
+        // ============================================
         {
-            "name": "GraspPoints: List Objects",
+            "name": "Batch Data Collection: Grasp (专用脚本)",
             "type": "debugpy",
             "request": "launch",
             "args": [
-                "--list_objects"
+                "--config",
+                "${workspaceFolder}/collect/objects_config.yaml"
+                // "--no-headless",  // 取消注释以显示 GUI
+                // "--wait-time", "15",  // 取消注释以自定义等待时间
             ],
-            "program": "${workspaceFolder}/psilab/source/psilab_tasks/psilab_tasks/imitation_learning/grasp_point_generator.py",
+            "program": "${workspaceFolder}/collect/batch_data_collection.py",
             "console": "integratedTerminal",
             "justMyCode": false
-        }
+        },
+
+        {
+            "name": "Batch Data Collection: Pick & Place",
+            "type": "debugpy",
+            "request": "launch",
+            "args": [
+                "--task",
+                "pick_place",
+                "--config",
+                "${workspaceFolder}/collect/objects_config_pick_place.yaml",
+                "--wait-time",
+                "25"
+                // "--objects", "mortar", "glass_beaker_100ml",  // 取消注释以只采集特定物体
+                // "--no-cleanup",  // 取消注释以禁用自动清理（调试用）
+                // "--dry-run",  // 取消注释以只显示计划不执行
+            ],
+            "program": "${workspaceFolder}/collect/batch_data_collection_universal.py",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+
+        {
+            "name": "Batch Data Collection: Grasp (通用脚本)",
+            "type": "debugpy",
+            "request": "launch",
+            "args": [
+                "--task",
+                "grasp",
+                "--config",
+                "${workspaceFolder}/collect/objects_config.yaml",
+                "--wait-time",
+                "20"
+                // "--objects", "mortar",  // 取消注释以只采集特定物体
+                // "--no-cleanup",  // 取消注释以禁用自动清理（调试用）
+            ],
+            "program": "${workspaceFolder}/collect/batch_data_collection_universal.py",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+
+        {
+            "name": "Batch Data Collection: Handover",
+            "type": "debugpy",
+            "request": "launch",
+            "args": [
+                "--task",
+                "handover",
+                "--config",
+                "${workspaceFolder}/collect/objects_config_handover.yaml",
+                "--wait-time",
+                "30",
+                // "--no-headless",  // 取消注释以显示 GUI
+                // "--objects", "clear_volumetric_flask_500ml",  // 取消注释以只采集特定物体
+                // "--no-cleanup",  // 取消注释以禁用自动清理（调试用）
+                // "--dry-run",  // 取消注释以只显示计划不执行
+            ],
+            "program": "${workspaceFolder}/collect/batch_data_collection_universal.py",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+
+        // ============================================
+        // 批量测试配置
+        // ============================================
+        {
+            "name": "Batch-Test-Universal",
+            "type": "debugpy",
+            "request": "launch",
+            "args": [
+                "--config",
+                "${workspaceFolder}/test/test_config.yaml",
+                // "--tasks", "100ml_beaker_nd",  // 取消注释以只测试特定任务
+                // "--no-cleanup",  // 取消注释以禁用自动清理（调试用）
+                // "--wait-time", "15",  // 取消注释以修改任务间等待时间
+                // "--dry-run",  // 取消注释以只显示计划不执行
+            ],
+            "program": "${workspaceFolder}/test/batch_test_universal.py",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+
     ]
 }

@@ -25,6 +25,10 @@ parser.add_argument("--mode", type=str, default="state", choices=["state", "rgb"
                     help="Conversion mode: 'state' for pure state-based, 'rgb' for state + camera images.")
 parser.add_argument("--with_mask", action="store_true", 
                     help="Whether to concatenate mask channel to RGB images (4 channels: RGBM).")
+parser.add_argument("--with_depth", action="store_true", 
+                    help="Whether to include depth images.")
+parser.add_argument("--with_normals", action="store_true", 
+                    help="Whether to include normal images.")
 parser.add_argument("--save_rgb_separate", action="store_true",
                     help="Whether to save RGB images as separate 3-channel datasets for inspection.")
 parser.add_argument("--save_mask_separate", action="store_true",
@@ -652,6 +656,7 @@ def convert_state_based(h5_file, h5_temp) -> dict:
 
 
 def convert_rgb_based(h5_file, h5_temp, image_size: int = 224, with_mask: bool = False, 
+                       with_depth: bool = False, with_normals: bool = False,
                        save_rgb_separate: bool = False, save_mask_separate: bool = False) -> dict:
     """
     RGB图像 + 状态模式转换
@@ -666,15 +671,20 @@ def convert_rgb_based(h5_file, h5_temp, image_size: int = 224, with_mask: bool =
     - arm2_eef_pos: 末端执行器位置(3)
     - arm2_eef_quat: 末端执行器四元数(4)
     - target_pose: 目标物体位姿(7)
-    - head_camera_rgb: 头部相机RGB图像 (N, 224, 224, 3) 或 RGBM图像 (N, 224, 224, 4)
-    - chest_camera_rgb: 胸部相机RGB图像 (N, 224, 224, 3) 或 RGBM图像 (N, 224, 224, 4)
-    - third_person_camera_rgb: 第三人称相机RGB图像 (N, 224, 224, 3)
+    - head_camera_rgb: 头部相机RGB图像 (N, 224, 224, 3)
+    - chest_camera_rgb: 胸部相机RGB图像 (N, 224, 224, 3)
+    - third_camera_rgb: 第三相机RGB图像 (N, 224, 224, 3)
+    - (可选) head_camera_mask, chest_camera_mask, third_camera_mask (N, 224, 224) uint8
+    - (可选) head_camera_depth, chest_camera_depth, third_camera_depth (N, 224, 224, 1) uint16
+    - (可选) head_camera_normals, chest_camera_normals, third_camera_normals (N, 224, 224, 3) uint8
     
     Args:
         h5_file: HDF5文件对象
         h5_temp: 临时HDF5文件对象
         image_size: 输出图像尺寸
         with_mask: 是否将mask通道拼接到RGB图像后（变成4通道RGBM）
+        with_depth: 是否存储深度图
+        with_normals: 是否存储法线图
         save_rgb_separate: 是否单独存储RGB图像（用于检测）
         save_mask_separate: 是否单独存储mask图像（用于检测）
     """
@@ -700,93 +710,123 @@ def convert_rgb_based(h5_file, h5_temp, image_size: int = 224, with_mask: bool =
     episode['arm2_eef_quat'] = h5_file["robots"]["robot"]["arm2_eef_pose"][:, 3:]
     episode['target_pose'] = h5_file["rigid_objects"]["bottle"][:, :7]
     
-    # 处理相机图像
-    # camera_names = ["head_camera.rgb", "chest_camera.rgb", "third_person_camera.rgb"]
-    # output_names = ["head_camera_rgb", "chest_camera_rgb", "third_person_camera_rgb"]
-    camera_names = ["head_camera.rgb", "chest_camera.rgb"]
-    mask_names = ["head_camera.instance_segmentation_fast", "chest_camera.instance_segmentation_fast"]
-    output_names = ["head_camera_rgb", "chest_camera_rgb"]
-    mask_output_names = ["head_camera_mask", "chest_camera_mask"]
-    rgb_only_output_names = ["head_camera_rgb_only", "chest_camera_rgb_only"]
+    # 处理相机图像（包括第三个相机）
+    camera_names = ["head_camera.rgb", "chest_camera.rgb", "third_camera.rgb"]
+    mask_names = ["head_camera.instance_segmentation_fast", "chest_camera.instance_segmentation_fast", "third_camera.instance_segmentation_fast"]
     
-    for cam_name, mask_name, out_name, mask_out_name, rgb_only_out_name in zip(
-            camera_names, mask_names, output_names, mask_output_names, rgb_only_output_names):
+    for cam_name, mask_name in zip(camera_names, mask_names):
         if cam_name in h5_file["robots"]["robot"]:
-            image_array = np.array(h5_file["robots"]["robot"][cam_name])
+            base_name = cam_name.replace(".rgb", "")
             
-            # 确定输出通道数
-            num_channels = 4 if with_mask else 3
-            image_array_resize = np.zeros((image_array.shape[0], image_size, image_size, num_channels), dtype=image_array.dtype)
+            # --- 1. 读取原始 RGB ---
+            rgb_data = np.array(h5_file["robots"]["robot"][cam_name])
             
-            # 单独存储mask的数组
-            mask_array_resize = None
+            # 准备数据容器
+            rgb_resized = np.zeros((rgb_data.shape[0], image_size, image_size, 3), dtype=np.uint8)
+            mask_resized = None
+            depth_resized = None # uint16
+            normals_resized = None # uint8
+            # depth_raw_resized = None # float32 - 移除
+            # normals_raw_resized = None # float32 - 移除
             
-            # 单独存储RGB的数组（3通道）
-            rgb_only_array_resize = None
-            if save_rgb_separate:
-                rgb_only_array_resize = np.zeros((image_array.shape[0], image_size, image_size, 3), dtype=image_array.dtype)
-            
-            # 读取mask数据（如果需要）
-            mask_array = None
+            # Resize RGB
+            for i in range(rgb_data.shape[0]):
+                img = rgb_data[i]
+                img_bgr = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+                img_res_bgr = cv2.resize(img_bgr, (image_size, image_size))
+                img_res_rgb = cv2.cvtColor(img_res_bgr, cv2.COLOR_BGR2RGB)
+                rgb_resized[i] = img_res_rgb
+
+            # --- 2. 处理 Mask ---
             if with_mask and mask_name in h5_file["robots"]["robot"]:
-                mask_array = (np.array(h5_file["robots"]["robot"][mask_name]))[:,:,:,0]
-                if save_mask_separate:
-                    mask_array_resize = np.zeros((image_array.shape[0], image_size, image_size), dtype=np.uint8)
-            
-            for i in range(image_array.shape[0]):
-                img_bgr = cv2.cvtColor(image_array[i], cv2.COLOR_RGB2BGR)
-                img_bgr = cv2.resize(img_bgr, (image_size, image_size))
-                img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
-                
-                # 单独存储RGB（如果需要）
-                if save_rgb_separate and rgb_only_array_resize is not None:
-                    rgb_only_array_resize[i] = img_rgb
-                
-                if with_mask and mask_array is not None:
-                    # 处理mask：将多通道mask转为单通道二值mask
-                    mask = mask_array[i]
-                    if len(mask.shape) == 3:
-                        # 如果mask是多通道的，取第一个通道或转为灰度
-                        mask = mask[:, :, 0] if mask.shape[2] >= 1 else mask
-                    # 将mask转为二值图（非零值为255）
-                    mask_binary = (mask > 0).astype(np.uint8) * 255
-                    mask_resized = cv2.resize(mask_binary, (image_size, image_size), interpolation=cv2.INTER_NEAREST)
-                    # 拼接RGB和Mask为4通道
-                    image_array_resize[i, :, :, :3] = img_rgb
-                    image_array_resize[i, :, :, 3] = mask_resized
-                    # 单独存储mask（如果需要）
-                    if save_mask_separate and mask_array_resize is not None:
-                        mask_array_resize[i] = mask_resized
+                mask_data = np.array(h5_file["robots"]["robot"][mask_name])
+                mask_resized = np.zeros((rgb_data.shape[0], image_size, image_size), dtype=np.uint8)
+                for i in range(mask_data.shape[0]):
+                    m = mask_data[i]
+                    if m.ndim == 3: m = m[:,:,0]
+                    m_bin = (m > 0).astype(np.uint8) * 255
+                    m_res = cv2.resize(m_bin, (image_size, image_size), interpolation=cv2.INTER_NEAREST)
+                    mask_resized[i] = m_res
+
+            # --- 3. 处理 Depth ---
+            if with_depth:
+                depth_key = cam_name.replace(".rgb", ".depth")
+                if depth_key in h5_file["robots"]["robot"]:
+                    depth_data = np.array(h5_file["robots"]["robot"][depth_key])
+                    depth_resized = np.zeros((rgb_data.shape[0], image_size, image_size), dtype=np.uint16)
+                    # depth_raw_resized = np.zeros((rgb_data.shape[0], image_size, image_size), dtype=np.float32)
+                    
+                    near, far = 0.2, 1.8
+                    for i in range(depth_data.shape[0]):
+                        d = depth_data[i]
+                        d = d.squeeze()
+                        
+                        # 原始 Resize (已移除组合逻辑，无需保留 raw)
+                        # d_res_raw = cv2.resize(d, (image_size, image_size), interpolation=cv2.INTER_NEAREST)
+                        # depth_raw_resized[i] = d_res_raw
+                        
+                        # 压缩存储 (uint16)
+                        d_valid = np.isfinite(d) & (d > 0)
+                        d_u16 = np.zeros_like(d, dtype=np.uint16)
+                        if np.sum(d_valid) > 0:
+                            d_clip = np.clip(d[d_valid], near, far)
+                            d_norm = (d_clip - near) / (far - near)
+                            d_u16[d_valid] = (d_norm * 65534.0 + 1.0 + 0.5).astype(np.uint16)
+                        
+                        d_res_u16 = cv2.resize(d_u16, (image_size, image_size), interpolation=cv2.INTER_NEAREST)
+                        depth_resized[i] = d_res_u16
                 else:
-                    image_array_resize[i] = img_rgb
+                    print(f"Warning: Depth requested but {depth_key} not found.")
+
+            # --- 4. 处理 Normals ---
+            if with_normals:
+                normals_key = cam_name.replace(".rgb", ".normals")
+                if normals_key in h5_file["robots"]["robot"]:
+                    normals_data = np.array(h5_file["robots"]["robot"][normals_key])
+                    normals_resized = np.zeros((rgb_data.shape[0], image_size, image_size, 3), dtype=np.uint8)
+                    # normals_raw_resized = np.zeros((rgb_data.shape[0], image_size, image_size, 3), dtype=np.float32)
+                    
+                    for i in range(normals_data.shape[0]):
+                        n = normals_data[i]
+                        
+                        # 原始 Resize (已移除组合逻辑，无需保留 raw)
+                        # n_res_raw = cv2.resize(n, (image_size, image_size), interpolation=cv2.INTER_LINEAR)
+                        # normals_raw_resized[i] = n_res_raw
+                        
+                        # 压缩存储 (uint8)
+                        n_map = (n + 1.0) / 2.0
+                        n_map = np.clip(n_map, 0.0, 1.0)
+                        n_u8 = (n_map * 255.0 + 0.5).astype(np.uint8)
+                        n_res_u8 = cv2.resize(n_u8, (image_size, image_size), interpolation=cv2.INTER_LINEAR)
+                        normals_resized[i] = n_res_u8
+                else:
+                    print(f"Warning: Normals requested but {normals_key} not found.")
+
+            # ================= 存储 Dataset =================
             
-            h5_temp.create_dataset(
-                out_name,
-                shape=(image_array.shape[0], image_size, image_size, num_channels),
-                dtype=image_array.dtype,
-                data=image_array_resize
-            )
-            episode[out_name] = h5_temp[out_name]
-            
-            # 单独存储RGB到episode（方便查看）
-            if save_rgb_separate and rgb_only_array_resize is not None:
-                h5_temp.create_dataset(
-                    rgb_only_out_name,
-                    shape=(image_array.shape[0], image_size, image_size, 3),
-                    dtype=image_array.dtype,
-                    data=rgb_only_array_resize
-                )
-                episode[rgb_only_out_name] = h5_temp[rgb_only_out_name]
-            
-            # 单独存储mask到episode（方便查看）
-            if save_mask_separate and mask_array_resize is not None:
-                h5_temp.create_dataset(
-                    mask_out_name,
-                    shape=(image_array.shape[0], image_size, image_size),
-                    dtype=np.uint8,
-                    data=mask_array_resize
-                )
-                episode[mask_out_name] = h5_temp[mask_out_name]
+            # 1. RGB (主要输出)
+            key = f"{base_name}_rgb"
+            h5_temp.create_dataset(key, data=rgb_resized)
+            episode[key] = h5_temp[key]
+                
+            # 2. Mask (单独)
+            if with_mask and mask_resized is not None:
+                key = f"{base_name}_mask"
+                h5_temp.create_dataset(key, data=mask_resized)
+                episode[key] = h5_temp[key]
+                
+            # 3. Depth (单独 uint16)
+            if with_depth and depth_resized is not None:
+                key = f"{base_name}_depth"
+                data = depth_resized[..., None]
+                h5_temp.create_dataset(key, data=data)
+                episode[key] = h5_temp[key]
+                
+            # 4. Normals (单独 uint8)
+            if with_normals and normals_resized is not None:
+                key = f"{base_name}_normals"
+                h5_temp.create_dataset(key, data=normals_resized)
+                episode[key] = h5_temp[key]
     
     return episode
 
@@ -830,6 +870,8 @@ if __name__ == "__main__":
     zarr_dir = args.zarr_dir
     mode = args.mode
     with_mask = args.with_mask
+    with_depth = args.with_depth
+    with_normals = args.with_normals
     save_rgb_separate = args.save_rgb_separate
     save_mask_separate = args.save_mask_separate
 
@@ -853,6 +895,8 @@ if __name__ == "__main__":
     print(f"模式: {mode}")
     if mode == "rgb":
         print(f"包含Mask: {'是 (4通道 RGBM)' if with_mask else '否 (3通道 RGB)'}")
+        print(f"包含Depth: {'是' if with_depth else '否'}")
+        print(f"包含Normals: {'是' if with_normals else '否'}")
         print(f"单独存储RGB: {'是' if save_rgb_separate else '否'}")
         print(f"单独存储Mask: {'是' if save_mask_separate else '否'}")
     print(f"输入目录: {h5_dir}")
@@ -886,6 +930,7 @@ if __name__ == "__main__":
             episode = convert_state_based(h5_file, h5_temp)
         else:  # mode == "rgb"
             episode = convert_rgb_based(h5_file, h5_temp, with_mask=with_mask,
+                                        with_depth=with_depth, with_normals=with_normals,
                                         save_rgb_separate=save_rgb_separate,
                                         save_mask_separate=save_mask_separate)
         

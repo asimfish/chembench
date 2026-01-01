@@ -1,0 +1,75 @@
+# 物体配置文件示例
+# 展示如何使用手指抓取模式和预抓取偏移参数
+
+# 数据采集参数
+data_collection:
+  num_envs: 30
+  seed: 17
+  sample_step: 4
+  max_episode: 500
+  headless: true
+
+# 数据转换参数
+zarr_conversion:
+  mode: "rgb"
+  with_mask: true
+  with_depth: true
+  with_normals: true
+
+# 物体配置列表
+objects:
+  # 示例1: 默认抓取模式（所有手指闭合）
+  - target_object_name: "glass_beaker_100ml"
+    usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_100ml/Beaker003.usd"
+    chinese_name: "100ml玻璃烧杯"
+    # 不指定 finger_grasp_mode 和 pre_grasp_offset，使用默认值
+
+  # 示例2: 使用 pinch 模式（只有拇指和食指闭合）
+  - target_object_name: "glass_beaker_50ml"
+    usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_50ml/Beaker002.usd"
+    chinese_name: "50ml玻璃烧杯"
+    finger_grasp_mode: "pinch"  # 只有拇指和食指闭合
+    pre_grasp_offset: [-0.02, -0.02, 0.05]  # [x, y, z] 预抓取偏移（单位：米）
+
+  # 示例3: 使用 no_thumb 模式（其他手指闭合，大拇指不闭合）
+  - target_object_name: "alcohol_lamp"
+    usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets_new/Alcohol_Lamp/AlcoholLamp001.usd"
+    chinese_name: "酒精灯"
+    finger_grasp_mode: "no_thumb"  # 其他手指闭合，大拇指不闭合
+    pre_grasp_offset: [-0.095, -0.01, 0.02]  # 特殊偏移，适合酒精灯
+
+  # 示例4: 使用 all 模式（所有手指都闭合）+ 自定义偏移
+  - target_object_name: "clear_volumetric_flask_250ml"
+    usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/clear_volumetric_flask_250ml/VolumetricFlask002.usd"
+    chinese_name: "250ml透明容量瓶"
+    finger_grasp_mode: "all"  # 所有手指都闭合
+    pre_grasp_offset: [-0.095, 0.00, 0.03]  # 大瓶子需要不同的接近偏移
+
+  # 示例5: 只指定偏移，使用默认抓取模式
+  - target_object_name: "clear_reagent_bottle_large"
+    usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/clear_reagent_bottle_large/ReagentBottle002.usd"
+    chinese_name: "透明试剂瓶(大)"
+    # 不指定 finger_grasp_mode，使用默认值
+    pre_grasp_offset: [-0.095, 0.00, 0.03]  # 从侧上方接近
+
+# ========== 参数说明 ==========
+# 
+# finger_grasp_mode (可选):
+#   - "all": 所有手指都闭合（默认）
+#   - "pinch": 只有拇指和食指闭合（适合小物体）
+#   - "no_thumb": 其他手指闭合，大拇指不闭合（适合特殊形状物体）
+#
+# pre_grasp_offset (可选): [x, y, z]
+#   预抓取位置偏移，单位为米
+#   - x: 前后偏移（负值向后）
+#   - y: 左右偏移（负值向左）
+#   - z: 上下偏移（正值向上）
+#   
+#   常用值：
+#   - 默认: [-0.02, -0.02, 0.05]  # 适合大多数小型物体
+#   - 大瓶子: [-0.095, 0.00, 0.03]  # 从侧上方接近
+#   - 酒精灯/量筒: [-0.095, -0.01, 0.02]  # 特殊形状物体
+
+
+
+

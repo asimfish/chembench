@@ -230,54 +230,34 @@
       },
       "handover": {
         "right_grasp_offset": [
-          -0.02,
-          -0.18,
-          0.04
+          -0.0653,
+          -0.13,
+          0.06
         ],
         "right_grasp_euler_deg": [
-          157.43,
-          69.16,
-          -154.0
-        ],
-        "handover_position": [
-          0.4,
-          0.0,
-          1.0
-        ],
-        "right_handover_euler_deg": [
-          90.0,
-          45.0,
-          0.0
+          -109.31,
+          -40.39,
+          -38.28
         ],
         "left_grasp_offset": [
-          0.02,
-          0.14,
-          0.04
+          -0.12,
+          0.09,
+          0.02
         ],
         "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
           -90.0,
-          45.0,
-          0.0
-        ],
-        "left_target_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "left_target_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
-        ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
+          0.0,
+          -90.0
         ],
         "timing": {
           "phases": [
@@ -287,61 +267,36 @@
             "left_approach",
             "left_grasp",
             "right_release",
-            "left_move_right_reset"
+            "right_retreat"
           ],
-          "right_approach_ratio": 0.12,
-          "right_grasp_ratio": 0.08,
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
           "right_to_handover_ratio": 0.15,
-          "left_approach_ratio": 0.12,
-          "left_grasp_ratio": 0.08,
-          "right_release_ratio": 0.05,
-          "left_move_right_reset_ratio": 0.3
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
         }
       },
       "pick_place": {
-        "right_grasp_offset": [
-          -0.02,
-          -0.18,
-          0.04
-        ],
-        "right_grasp_euler_deg": [
-          157.43,
-          69.16,
-          -154.0
-        ],
-        "place_offset": [
-          0.0,
-          0.0,
-          0.02
+      "place_offset": [
+          -0.05,
+          -0.13,
+          0.06
         ],
         "place_euler_deg": [
-          157.43,
-          69.16,
-          -154.0
+          -109.31,
+          -40.39,
+          -38.28
         ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
-        ],
+        "lift_height": 0.3,
         "timing": {
-          "phases": [
-            "right_approach",
-            "right_grasp",
-            "right_to_target",
-            "right_release",
-            "right_reset"
-          ],
-          "right_approach_ratio": 0.25,
-          "right_grasp_ratio": 0.1,
-          "right_to_target_ratio": 0.3,
-          "right_release_ratio": 0.1,
-          "right_reset_ratio": 0.25
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
         }
       },
       "pour": {
@@ -450,250 +405,48 @@
           0.0,
           -90.0
         ],
-        "lift_height": 0.3,
+        "lift_height": 0.15,
         "timing": {
           "phases": [
             "approach",
             "grasp",
             "lift"
           ],
-          "approach_ratio": 0.2,
-          "grasp_ratio": 0.3,
+          "approach_ratio": 0.3,
+          "grasp_ratio": 0.2,
           "lift_ratio": 0.5
-        },
-        "grasp_points_8": {
-          "num_points": 8,
-          "rotation_axis": "z",
-          "generated_at": "2025-12-19 16:36:12",
-          "points": [
-            {
-              "index": 0,
-              "angle_deg": 0.0,
-              "grasp_offset": [
-                -0.14,
-                -0.06,
-                0.001
-              ],
-              "grasp_euler_deg": [
-                -90.0,
-                0.0,
-                -90.0
-              ]
-            },
-            {
-              "index": 1,
-              "angle_deg": 45.0,
-              "grasp_offset": [
-                -0.056569,
-                -0.141421,
-                0.001
-              ],
-              "grasp_euler_deg": [
-                -90.0,
-                0.0,
-                -45.0
-              ]
-            },
-            {
-              "index": 2,
-              "angle_deg": 90.0,
-              "grasp_offset": [
-                0.06,
-                -0.14,
-                0.001
-              ],
-              "grasp_euler_deg": [
-                -90.0,
-                0.0,
-                0.0
-              ]
-            },
-            {
-              "index": 3,
-              "angle_deg": 135.0,
-              "grasp_offset": [
-                0.141421,
-                -0.056569,
-                0.001
-              ],
-              "grasp_euler_deg": [
-                -90.0,
-                0.0,
-                45.0
-              ]
-            },
-            {
-              "index": 4,
-              "angle_deg": 180.0,
-              "grasp_offset": [
-                0.14,
-                0.06,
-                0.001
-              ],
-              "grasp_euler_deg": [
-                -90.0,
-                0.0,
-                90.0
-              ]
-            },
-            {
-              "index": 5,
-              "angle_deg": 225.0,
-              "grasp_offset": [
-                0.056569,
-                0.141421,
-                0.001
-              ],
-              "grasp_euler_deg": [
-                -90.0,
-                0.0,
-                135.0
-              ]
-            },
-            {
-              "index": 6,
-              "angle_deg": 270.0,
-              "grasp_offset": [
-                -0.06,
-                0.14,
-                0.001
-              ],
-              "grasp_euler_deg": [
-                -90.0,
-                0.0,
-                180.0
-              ]
-            },
-            {
-              "index": 7,
-              "angle_deg": 315.0,
-              "grasp_offset": [
-                -0.141421,
-                0.056569,
-                0.001
-              ],
-              "grasp_euler_deg": [
-                -90.0,
-                0.0,
-                -135.0
-              ]
-            }
-          ]
-        },
-        "grasp_points_4": {
-          "num_points": 4,
-          "rotation_axis": "z",
-          "generated_at": "2025-12-19 16:38:36",
-          "points": [
-            {
-              "index": 0,
-              "angle_deg": 0.0,
-              "grasp_offset": [
-                -0.14,
-                -0.06,
-                0.001
-              ],
-              "grasp_euler_deg": [
-                -90.0,
-                0.0,
-                -90.0
-              ]
-            },
-            {
-              "index": 1,
-              "angle_deg": 90.0,
-              "grasp_offset": [
-                0.06,
-                -0.14,
-                0.001
-              ],
-              "grasp_euler_deg": [
-                -90.0,
-                0.0,
-                0.0
-              ]
-            },
-            {
-              "index": 2,
-              "angle_deg": 180.0,
-              "grasp_offset": [
-                0.14,
-                0.06,
-                0.001
-              ],
-              "grasp_euler_deg": [
-                -90.0,
-                0.0,
-                90.0
-              ]
-            },
-            {
-              "index": 3,
-              "angle_deg": 270.0,
-              "grasp_offset": [
-                -0.06,
-                0.14,
-                0.001
-              ],
-              "grasp_euler_deg": [
-                -90.0,
-                0.0,
-                180.0
-              ]
-            }
-          ]
         }
       },
       "handover": {
         "right_grasp_offset": [
-          -0.02,
-          -0.19,
-          0.05
+          -0.14,
+          -0.06,
+          0.001
         ],
         "right_grasp_euler_deg": [
-          157.43,
-          80.16,
-          -154.0
-        ],
-        "handover_position": [
-          0.4,
+          -90.0,
           0.0,
-          1.0
-        ],
-        "right_handover_euler_deg": [
-          90.0,
-          45.0,
-          0.0
+          -90.0
         ],
         "left_grasp_offset": [
-          0.02,
-          0.15,
-          0.05
+          -0.12,
+          0.09,
+          0.02
         ],
         "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
           -90.0,
-          45.0,
-          0.0
-        ],
-        "left_target_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "left_target_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
-        ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
+          0.0,
+          -90.0
         ],
         "timing": {
           "phases": [
@@ -703,61 +456,36 @@
             "left_approach",
             "left_grasp",
             "right_release",
-            "left_move_right_reset"
+            "right_retreat"
           ],
-          "right_approach_ratio": 0.12,
-          "right_grasp_ratio": 0.08,
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
           "right_to_handover_ratio": 0.15,
-          "left_approach_ratio": 0.12,
-          "left_grasp_ratio": 0.08,
-          "right_release_ratio": 0.05,
-          "left_move_right_reset_ratio": 0.3
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
         }
       },
       "pick_place": {
-        "right_grasp_offset": [
-          -0.02,
-          -0.19,
-          0.05
-        ],
-        "right_grasp_euler_deg": [
-          157.43,
-          80.16,
-          -154.0
-        ],
-        "place_offset": [
-          0.0,
-          0.0,
-          0.02
+      "place_offset": [
+          -0.13,
+          -0.07,
+          -0.01
         ],
         "place_euler_deg": [
-          157.43,
-          80.16,
-          -154.0
-        ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
           -90.0,
-          45.0,
-          0.0
+          0.0,
+          -90.0
         ],
+        "lift_height": 0.12,
         "timing": {
-          "phases": [
-            "right_approach",
-            "right_grasp",
-            "right_to_target",
-            "right_release",
-            "right_reset"
-          ],
-          "right_approach_ratio": 0.25,
-          "right_grasp_ratio": 0.1,
-          "right_to_target_ratio": 0.3,
-          "right_release_ratio": 0.1,
-          "right_reset_ratio": 0.25
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
         }
       },
       "pour": {
@@ -857,8 +585,8 @@
       },
       "grasp": {
         "grasp_offset": [
-          -0.15,
-          -0.06,
+          -0.14,
+          -0.05,
           0.001
         ],
         "grasp_euler_deg": [
@@ -866,7 +594,7 @@
           0.0,
           -90.0
         ],
-        "lift_height": 0.3,
+        "lift_height": 0.15,
         "timing": {
           "phases": [
             "approach",
@@ -878,56 +606,36 @@
           "lift_ratio": 0.5
         }
       },
-      "handover": {
+"handover": {
         "right_grasp_offset": [
-          -0.03,
-          -0.22,
-          0.06
+          -0.145,
+          -0.055,
+          0.001
         ],
         "right_grasp_euler_deg": [
-          160.0,
-          70.0,
-          -150.0
-        ],
-        "handover_position": [
-          0.4,
+          -90.0,
           0.0,
-          1.05
-        ],
-        "right_handover_euler_deg": [
-          90.0,
-          45.0,
-          0.0
+          -90.0
         ],
         "left_grasp_offset": [
-          0.03,
-          0.18,
-          0.06
+          -0.1537,
+          0.0715,
+          -0.0255
         ],
         "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.145,
+          -0.055,
+          0.001
+        ],
+        "right_handover_euler_deg": [
           -90.0,
-          45.0,
-          0.0
-        ],
-        "left_target_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "left_target_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
-        ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
+          0.0,
+          -90.0
         ],
         "timing": {
           "phases": [
@@ -937,61 +645,36 @@
             "left_approach",
             "left_grasp",
             "right_release",
-            "left_move_right_reset"
+            "right_retreat"
           ],
-          "right_approach_ratio": 0.12,
-          "right_grasp_ratio": 0.08,
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
           "right_to_handover_ratio": 0.15,
-          "left_approach_ratio": 0.12,
-          "left_grasp_ratio": 0.08,
-          "right_release_ratio": 0.05,
-          "left_move_right_reset_ratio": 0.3
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
         }
       },
       "pick_place": {
-        "right_grasp_offset": [
-          -0.03,
-          -0.22,
-          0.06
-        ],
-        "right_grasp_euler_deg": [
-          160.0,
-          70.0,
-          -150.0
-        ],
-        "place_offset": [
-          0.0,
-          0.0,
-          0.02
+      "place_offset": [
+          -0.13,
+          -0.06,
+          0.001
         ],
         "place_euler_deg": [
-          160.0,
-          70.0,
-          -150.0
-        ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
           -90.0,
-          45.0,
-          0.0
+          0.0,
+          -90.0
         ],
+        "lift_height": 0.25,
         "timing": {
-          "phases": [
-            "right_approach",
-            "right_grasp",
-            "right_to_target",
-            "right_release",
-            "right_reset"
-          ],
-          "right_approach_ratio": 0.25,
-          "right_grasp_ratio": 0.1,
-          "right_to_target_ratio": 0.3,
-          "right_release_ratio": 0.1,
-          "right_reset_ratio": 0.25
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
         }
       },
       "pour": {
@@ -1107,61 +790,41 @@
             "grasp",
             "lift"
           ],
-          "approach_ratio": 0.4,
+          "approach_ratio": 0.3,
           "grasp_ratio": 0.2,
-          "lift_ratio": 0.4
+          "lift_ratio": 0.5
         }
       },
       "handover": {
         "right_grasp_offset": [
-          -0.04,
-          -0.25,
-          0.08
+          -0.145,
+          -0.045,
+          0.001
         ],
         "right_grasp_euler_deg": [
-          160.0,
-          70.0,
-          -150.0
-        ],
-        "handover_position": [
-          0.4,
+          -90.0,
           0.0,
-          1.1
-        ],
-        "right_handover_euler_deg": [
-          90.0,
-          45.0,
-          0.0
+          -90.0
         ],
         "left_grasp_offset": [
-          0.04,
-          0.21,
-          0.08
+          -0.1537,
+          0.0715,
+          -0.0455
         ],
         "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.145,
+          -0.045,
+          0.001
+        ],
+        "right_handover_euler_deg": [
           -90.0,
-          45.0,
-          0.0
-        ],
-        "left_target_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "left_target_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
-        ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
+          0.0,
+          -90.0
         ],
         "timing": {
           "phases": [
@@ -1171,28 +834,18 @@
             "left_approach",
             "left_grasp",
             "right_release",
-            "left_move_right_reset"
+            "right_retreat"
           ],
-          "right_approach_ratio": 0.12,
-          "right_grasp_ratio": 0.08,
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
           "right_to_handover_ratio": 0.15,
-          "left_approach_ratio": 0.12,
-          "left_grasp_ratio": 0.08,
-          "right_release_ratio": 0.05,
-          "left_move_right_reset_ratio": 0.3
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
         }
       },
       "pick_place": {
-        "right_grasp_offset": [
-          -0.04,
-          -0.25,
-          0.08
-        ],
-        "right_grasp_euler_deg": [
-          160.0,
-          70.0,
-          -150.0
-        ],
         "place_offset": [
           0.0,
           0.0,
@@ -1203,29 +856,14 @@
           70.0,
           -150.0
         ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
-        ],
+        "lift_height": 0.3,
         "timing": {
-          "phases": [
-            "right_approach",
-            "right_grasp",
-            "right_to_target",
-            "right_release",
-            "right_reset"
-          ],
-          "right_approach_ratio": 0.25,
-          "right_grasp_ratio": 0.1,
-          "right_to_target_ratio": 0.3,
-          "right_release_ratio": 0.1,
-          "right_reset_ratio": 0.25
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
         }
       },
       "pour": {
@@ -1344,18 +982,57 @@
           "lift_ratio": 0.4
         }
       },
-      "handover": null,
-      "pick_place": {
+      "handover": {
         "right_grasp_offset": [
-          -0.02,
-          -0.18,
-          0.04
+          -0.14,
+          -0.06,
+          0.001
         ],
         "right_grasp_euler_deg": [
-          157.43,
-          69.16,
-          -154.0
+          -90.0,
+          0.0,
+          -90.0
         ],
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
+          0.02
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
         "place_offset": [
           0.0,
           0.0,
@@ -1366,29 +1043,14 @@
           69.16,
           -154.0
         ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
-        ],
+        "lift_height": 0.3,
         "timing": {
-          "phases": [
-            "right_approach",
-            "right_grasp",
-            "right_to_target",
-            "right_release",
-            "right_reset"
-          ],
-          "right_approach_ratio": 0.25,
-          "right_grasp_ratio": 0.1,
-          "right_to_target_ratio": 0.3,
-          "right_release_ratio": 0.1,
-          "right_reset_ratio": 0.25
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
         }
       },
       "pour": {
@@ -1512,54 +1174,34 @@
       },
       "handover": {
         "right_grasp_offset": [
-          -0.01,
-          -0.15,
-          0.03
+          -0.11,
+          -0.027,
+          0.02
         ],
         "right_grasp_euler_deg": [
-          180.0,
-          80.0,
+          -90.0,
+          0.0,
           -90.0
         ],
-        "handover_position": [
-          0.4,
-          0.0,
-          0.95
-        ],
-        "right_handover_euler_deg": [
-          90.0,
-          60.0,
-          0.0
-        ],
         "left_grasp_offset": [
-          0.01,
-          0.11,
-          0.03
+          -0.12,
+          0.09,
+          0.02
         ],
         "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
           -90.0,
-          60.0,
-          0.0
-        ],
-        "left_target_position": [
-          0.4,
-          0.25,
-          0.9
-        ],
-        "left_target_euler_deg": [
-          -90.0,
-          60.0,
-          0.0
-        ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
+          0.0,
+          -90.0
         ],
         "timing": {
           "phases": [
@@ -1569,28 +1211,18 @@
             "left_approach",
             "left_grasp",
             "right_release",
-            "left_move_right_reset"
+            "right_retreat"
           ],
-          "right_approach_ratio": 0.12,
-          "right_grasp_ratio": 0.08,
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
           "right_to_handover_ratio": 0.15,
-          "left_approach_ratio": 0.12,
-          "left_grasp_ratio": 0.08,
-          "right_release_ratio": 0.05,
-          "left_move_right_reset_ratio": 0.3
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
         }
       },
       "pick_place": {
-        "right_grasp_offset": [
-          -0.01,
-          -0.15,
-          0.03
-        ],
-        "right_grasp_euler_deg": [
-          180.0,
-          80.0,
-          -90.0
-        ],
         "place_offset": [
           0.0,
           0.0,
@@ -1601,29 +1233,14 @@
           80.0,
           -90.0
         ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
-        ],
+        "lift_height": 0.3,
         "timing": {
-          "phases": [
-            "right_approach",
-            "right_grasp",
-            "right_to_target",
-            "right_release",
-            "right_reset"
-          ],
-          "right_approach_ratio": 0.25,
-          "right_grasp_ratio": 0.1,
-          "right_to_target_ratio": 0.3,
-          "right_release_ratio": 0.1,
-          "right_reset_ratio": 0.25
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
         }
       },
       "pour": {
@@ -1802,54 +1419,34 @@
       },
       "handover": {
         "right_grasp_offset": [
-          -0.01,
-          -0.16,
+          -0.148,
+          -0.07,
           0.04
         ],
         "right_grasp_euler_deg": [
-          180.0,
-          80.0,
+          -90.0,
+          -20.0,
           -90.0
         ],
-        "handover_position": [
-          0.4,
-          0.0,
-          0.95
-        ],
-        "right_handover_euler_deg": [
-          90.0,
-          60.0,
-          0.0
-        ],
         "left_grasp_offset": [
-          0.01,
-          0.12,
-          0.04
+          -0.12,
+          0.09,
+          0.02
         ],
         "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
           -90.0,
-          60.0,
-          0.0
-        ],
-        "left_target_position": [
-          0.4,
-          0.25,
-          0.9
-        ],
-        "left_target_euler_deg": [
-          -90.0,
-          60.0,
-          0.0
-        ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
+          0.0,
+          -90.0
         ],
         "timing": {
           "phases": [
@@ -1859,28 +1456,18 @@
             "left_approach",
             "left_grasp",
             "right_release",
-            "left_move_right_reset"
+            "right_retreat"
           ],
-          "right_approach_ratio": 0.12,
-          "right_grasp_ratio": 0.08,
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
           "right_to_handover_ratio": 0.15,
-          "left_approach_ratio": 0.12,
-          "left_grasp_ratio": 0.08,
-          "right_release_ratio": 0.05,
-          "left_move_right_reset_ratio": 0.3
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
         }
       },
       "pick_place": {
-        "right_grasp_offset": [
-          -0.01,
-          -0.16,
-          0.04
-        ],
-        "right_grasp_euler_deg": [
-          180.0,
-          80.0,
-          -90.0
-        ],
         "place_offset": [
           0.0,
           0.0,
@@ -1891,29 +1478,14 @@
           80.0,
           -90.0
         ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
-        ],
+        "lift_height": 0.3,
         "timing": {
-          "phases": [
-            "right_approach",
-            "right_grasp",
-            "right_to_target",
-            "right_release",
-            "right_reset"
-          ],
-          "right_approach_ratio": 0.25,
-          "right_grasp_ratio": 0.1,
-          "right_to_target_ratio": 0.3,
-          "right_release_ratio": 0.1,
-          "right_reset_ratio": 0.25
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
         }
       },
       "pour": {
@@ -2065,9 +1637,9 @@
         ]
       },
       "grasp": {
-        "grasp_offset": [
-          -0.14,
-          -0.06,
+    "grasp_offset": [
+          -0.1082,
+          -0.0283,
           0.001
         ],
         "grasp_euler_deg": [
@@ -2087,51 +1659,75 @@
           "lift_ratio": 0.5
         }
       },
-      "handover": null,
-      "pick_place": {
+      "handover": {
         "right_grasp_offset": [
-          -0.02,
-          -0.2,
-          0.06
+          -0.1082,
+          -0.0133,
+          0.09
         ],
         "right_grasp_euler_deg": [
-          160.0,
-          75.0,
-          -150.0
-        ],
-        "place_offset": [
-          0.0,
-          0.0,
-          0.02
-        ],
-        "place_euler_deg": [
-          160.0,
-          75.0,
-          -150.0
-        ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
           -90.0,
-          45.0,
-          0.0
+          0.0,
+          -90.0
+        ],
+        "left_grasp_offset": [
+          -0.1637,
+          0.0518,
+          -0.033
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.1082,
+          -0.0133,
+          0.09
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
         ],
         "timing": {
           "phases": [
             "right_approach",
             "right_grasp",
-            "right_to_target",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
             "right_release",
-            "right_reset"
+            "right_retreat"
           ],
-          "right_approach_ratio": 0.25,
+          "right_approach_ratio": 0.15,
           "right_grasp_ratio": 0.1,
-          "right_to_target_ratio": 0.3,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
           "right_release_ratio": 0.1,
-          "right_reset_ratio": 0.25
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
+      "place_offset": [
+          -0.092,
+          -0.042,
+          0.0062
+        ],
+        "place_euler_deg": [
+          -80.0,
+          -0.0,
+          -90.0
+        ],
+        "lift_height": 0.3,
+        "timing": {
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
         }
       },
       "pour": {
@@ -2230,15 +1826,15 @@
         ]
       },
       "grasp": {
-        "grasp_offset": [
-          -0.1326,
-          -0.0395,
-          0.0130
+  "grasp_offset": [
+          -0.11324,
+          -0.0393,
+          0.013
         ],
         "grasp_euler_deg": [
           -90.0,
           0.0,
-          -88.0
+          -90.0
         ],
         "lift_height": 0.3,
         "timing": {
@@ -2252,18 +1848,57 @@
           "lift_ratio": 0.4
         }
       },
-      "handover": null,
-      "pick_place": {
+      "handover": {
         "right_grasp_offset": [
-          -0.02,
-          -0.18,
-          0.05
+          -0.1326,
+          -0.0395,
+          0.013
         ],
         "right_grasp_euler_deg": [
-          157.43,
-          69.16,
-          -154.0
+          -90.0,
+          0.0,
+          -88.0
         ],
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
+          0.02
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
         "place_offset": [
           0.0,
           0.0,
@@ -2274,29 +1909,14 @@
           69.16,
           -154.0
         ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
-        ],
+        "lift_height": 0.3,
         "timing": {
-          "phases": [
-            "right_approach",
-            "right_grasp",
-            "right_to_target",
-            "right_release",
-            "right_reset"
-          ],
-          "right_approach_ratio": 0.25,
-          "right_grasp_ratio": 0.1,
-          "right_to_target_ratio": 0.3,
-          "right_release_ratio": 0.1,
-          "right_reset_ratio": 0.25
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
         }
       },
       "pour": {
@@ -2537,45 +2157,25 @@
           85.0,
           -90.0
         ],
-        "handover_position": [
-          0.4,
-          0.0,
-          0.9
-        ],
-        "right_handover_euler_deg": [
-          90.0,
-          70.0,
-          0.0
-        ],
         "left_grasp_offset": [
-          0.01,
-          0.08,
+          -0.12,
+          0.09,
           0.02
         ],
         "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
           -90.0,
-          70.0,
-          0.0
-        ],
-        "left_target_position": [
-          0.4,
-          0.25,
-          0.85
-        ],
-        "left_target_euler_deg": [
-          -90.0,
-          70.0,
-          0.0
-        ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
+          0.0,
+          -90.0
         ],
         "timing": {
           "phases": [
@@ -2585,28 +2185,18 @@
             "left_approach",
             "left_grasp",
             "right_release",
-            "left_move_right_reset"
+            "right_retreat"
           ],
-          "right_approach_ratio": 0.12,
-          "right_grasp_ratio": 0.08,
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
           "right_to_handover_ratio": 0.15,
-          "left_approach_ratio": 0.12,
-          "left_grasp_ratio": 0.08,
-          "right_release_ratio": 0.05,
-          "left_move_right_reset_ratio": 0.3
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
         }
       },
       "pick_place": {
-        "right_grasp_offset": [
-          -0.01,
-          -0.12,
-          0.02
-        ],
-        "right_grasp_euler_deg": [
-          180.0,
-          85.0,
-          -90.0
-        ],
         "place_offset": [
           0.0,
           0.0,
@@ -2617,29 +2207,14 @@
           85.0,
           -90.0
         ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
-        ],
+        "lift_height": 0.3,
         "timing": {
-          "phases": [
-            "right_approach",
-            "right_grasp",
-            "right_to_target",
-            "right_release",
-            "right_reset"
-          ],
-          "right_approach_ratio": 0.25,
-          "right_grasp_ratio": 0.1,
-          "right_to_target_ratio": 0.3,
-          "right_release_ratio": 0.1,
-          "right_reset_ratio": 0.25
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
         }
       },
       "pour": null,
@@ -2766,45 +2341,25 @@
           80.0,
           -90.0
         ],
-        "handover_position": [
-          0.4,
-          0.0,
-          0.95
-        ],
-        "right_handover_euler_deg": [
-          90.0,
-          60.0,
-          0.0
-        ],
         "left_grasp_offset": [
-          0.01,
-          0.11,
-          0.03
+          -0.12,
+          0.09,
+          0.02
         ],
         "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
           -90.0,
-          60.0,
-          0.0
-        ],
-        "left_target_position": [
-          0.4,
-          0.25,
-          0.9
-        ],
-        "left_target_euler_deg": [
-          -90.0,
-          60.0,
-          0.0
-        ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
+          0.0,
+          -90.0
         ],
         "timing": {
           "phases": [
@@ -2814,28 +2369,18 @@
             "left_approach",
             "left_grasp",
             "right_release",
-            "left_move_right_reset"
+            "right_retreat"
           ],
-          "right_approach_ratio": 0.12,
-          "right_grasp_ratio": 0.08,
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
           "right_to_handover_ratio": 0.15,
-          "left_approach_ratio": 0.12,
-          "left_grasp_ratio": 0.08,
-          "right_release_ratio": 0.05,
-          "left_move_right_reset_ratio": 0.3
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
         }
       },
       "pick_place": {
-        "right_grasp_offset": [
-          -0.01,
-          -0.15,
-          0.03
-        ],
-        "right_grasp_euler_deg": [
-          180.0,
-          80.0,
-          -90.0
-        ],
         "place_offset": [
           0.0,
           0.0,
@@ -2846,29 +2391,14 @@
           80.0,
           -90.0
         ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
-        ],
+        "lift_height": 0.3,
         "timing": {
-          "phases": [
-            "right_approach",
-            "right_grasp",
-            "right_to_target",
-            "right_release",
-            "right_reset"
-          ],
-          "right_approach_ratio": 0.25,
-          "right_grasp_ratio": 0.1,
-          "right_to_target_ratio": 0.3,
-          "right_release_ratio": 0.1,
-          "right_reset_ratio": 0.25
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
         }
       },
       "pour": null,
@@ -2982,8 +2512,7 @@
           "lift_ratio": 0.4
         }
       },
-      "handover": null,
-      "pick_place": {
+      "handover": {
         "right_grasp_offset": [
           -0.03,
           -0.2,
@@ -2994,6 +2523,46 @@
           70.0,
           -150.0
         ],
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
+          0.02
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
         "place_offset": [
           0.0,
           0.0,
@@ -3004,29 +2573,14 @@
           70.0,
           -150.0
         ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
-        ],
+        "lift_height": 0.3,
         "timing": {
-          "phases": [
-            "right_approach",
-            "right_grasp",
-            "right_to_target",
-            "right_release",
-            "right_reset"
-          ],
-          "right_approach_ratio": 0.25,
-          "right_grasp_ratio": 0.1,
-          "right_to_target_ratio": 0.3,
-          "right_release_ratio": 0.1,
-          "right_reset_ratio": 0.25
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
         }
       },
       "pour": null,
@@ -3035,169 +2589,7 @@
       "open": null,
       "close": null
     },
-    "plastic_cylinder_100ml": {
-      "name": "plastic_cylinder_100ml",
-      "name_cn": "100ml塑料量筒",
-      "description": "塑料量筒(100ml)，质量约0.04kg。支持操作：抓取(grasp)、抓放(pick_place)、倾倒(pour)。轻便耐用，适用于一般液体量取和教学演示。操作方式与玻璃量筒相同。",
-      "supported_operations": [
-        "grasp",
-        "pick_place",
-        "pour"
-      ],
-      "related_tasks": [
-        "液体定量",
-        "教学演示",
-        "非精密测量"
-      ],
-      "mass": 0.04,
-      "physics_material": {
-        "static_friction": 0.5,
-        "dynamic_friction": 0.4,
-        "restitution": 0.2
-      },
-      "bbox": {
-        "half_extents": [
-          0.02,
-          0.02,
-          0.12
-        ],
-        "center_offset": [
-          0,
-          0,
-          0.06
-        ]
-      },
-      "grasp": {
-        "grasp_offset": [
-          -0.02,
-          -0.2,
-          0.06
-        ],
-        "grasp_euler_deg": [
-          160.0,
-          75.0,
-          -150.0
-        ],
-        "lift_height": 0.3,
-        "timing": {
-          "phases": [
-            "approach",
-            "grasp",
-            "lift"
-          ],
-          "approach_ratio": 0.4,
-          "grasp_ratio": 0.2,
-          "lift_ratio": 0.4
-        }
-      },
-      "handover": null,
-      "pick_place": {
-        "right_grasp_offset": [
-          -0.02,
-          -0.2,
-          0.06
-        ],
-        "right_grasp_euler_deg": [
-          160.0,
-          75.0,
-          -150.0
-        ],
-        "place_offset": [
-          0.0,
-          0.0,
-          0.02
-        ],
-        "place_euler_deg": [
-          160.0,
-          75.0,
-          -150.0
-        ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
-        ],
-        "timing": {
-          "phases": [
-            "right_approach",
-            "right_grasp",
-            "right_to_target",
-            "right_release",
-            "right_reset"
-          ],
-          "right_approach_ratio": 0.25,
-          "right_grasp_ratio": 0.1,
-          "right_to_target_ratio": 0.3,
-          "right_release_ratio": 0.1,
-          "right_reset_ratio": 0.25
-        }
-      },
-      "pour": {
-        "right_grasp_offset": [
-          -0.02,
-          -0.2,
-          0.06
-        ],
-        "right_grasp_euler_deg": [
-          160.0,
-          75.0,
-          -150.0
-        ],
-        "target_offset": [
-          0.0,
-          0.05,
-          0.15
-        ],
-        "target_euler_deg": [
-          160.0,
-          75.0,
-          -150.0
-        ],
-        "pour_offset": [
-          0.0,
-          0.03,
-          0.13
-        ],
-        "pour_euler_deg": [
-          0.0,
-          -45.0,
-          0.0
-        ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
-        ],
-        "timing": {
-          "phases": [
-            "right_approach",
-            "right_grasp",
-            "right_to_target",
-            "right_pour",
-            "right_reset"
-          ],
-          "right_approach_ratio": 0.2,
-          "right_grasp_ratio": 0.1,
-          "right_to_target_ratio": 0.25,
-          "right_pour_ratio": 0.25,
-          "right_reset_ratio": 0.2
-        }
-      },
-      "insert": null,
-      "press": null,
-      "open": null,
-      "close": null
-    },
+
     "clear_volumetric_flask_250ml": {
       "name": "clear_volumetric_flask_250ml",
       "name_cn": "250ml透明容量瓶",
@@ -3233,14 +2625,14 @@
       },
       "grasp": {
         "grasp_offset": [
-          -0.02,
-          -0.2,
-          0.06
+          -0.1082,
+          -0.0133,
+          0.0407
         ],
         "grasp_euler_deg": [
-          157.43,
-          69.16,
-          -154.0
+          -90.0,
+          0.0,
+          -90.0
         ],
         "lift_height": 0.3,
         "timing": {
@@ -3255,55 +2647,35 @@
         }
       },
       "handover": {
-        "right_grasp_offset": [
-          -0.02,
-          -0.2,
-          0.06
+"right_grasp_offset": [
+          -0.1082,
+          -0.0133,
+          0.0707
         ],
         "right_grasp_euler_deg": [
-          157.43,
-          69.16,
-          -154.0
-        ],
-        "handover_position": [
-          0.4,
+          -90.0,
           0.0,
-          1.0
-        ],
-        "right_handover_euler_deg": [
-          90.0,
-          45.0,
-          0.0
+          -90.0
         ],
         "left_grasp_offset": [
-          0.02,
-          0.16,
-          0.06
+          -0.12,
+          0.03,
+          0.01
         ],
         "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.1,
+          -0.01,
+          0.09
+        ],
+        "right_handover_euler_deg": [
           -90.0,
-          45.0,
-          0.0
-        ],
-        "left_target_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "left_target_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
-        ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
+          0.0,
+          -90.0
         ],
         "timing": {
           "phases": [
@@ -3313,61 +2685,36 @@
             "left_approach",
             "left_grasp",
             "right_release",
-            "left_move_right_reset"
+            "right_retreat"
           ],
-          "right_approach_ratio": 0.12,
-          "right_grasp_ratio": 0.08,
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
           "right_to_handover_ratio": 0.15,
-          "left_approach_ratio": 0.12,
-          "left_grasp_ratio": 0.08,
-          "right_release_ratio": 0.05,
-          "left_move_right_reset_ratio": 0.3
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
         }
       },
       "pick_place": {
-        "right_grasp_offset": [
-          -0.02,
-          -0.2,
-          0.06
-        ],
-        "right_grasp_euler_deg": [
-          157.43,
-          69.16,
-          -154.0
-        ],
-        "place_offset": [
-          0.0,
-          0.0,
-          0.02
+      "place_offset": [
+          -0.1082,
+          -0.0133,
+          0.025
         ],
         "place_euler_deg": [
-          157.43,
-          69.16,
-          -154.0
-        ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
           -90.0,
-          45.0,
-          0.0
+          0.0,
+          -90.0
         ],
+        "lift_height": 0.3,
         "timing": {
-          "phases": [
-            "right_approach",
-            "right_grasp",
-            "right_to_target",
-            "right_release",
-            "right_reset"
-          ],
-          "right_approach_ratio": 0.25,
-          "right_grasp_ratio": 0.1,
-          "right_to_target_ratio": 0.3,
-          "right_release_ratio": 0.1,
-          "right_reset_ratio": 0.25
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
         }
       },
       "pour": {
@@ -3466,14 +2813,14 @@
       },
       "grasp": {
         "grasp_offset": [
-          -0.03,
-          -0.22,
-          0.07
+          -0.1082,
+          -0.0133,
+          0.00407
         ],
         "grasp_euler_deg": [
-          157.43,
-          69.16,
-          -154.0
+          -90.0,
+          0.0,
+          -90.0
         ],
         "lift_height": 0.3,
         "timing": {
@@ -3487,56 +2834,36 @@
           "lift_ratio": 0.4
         }
       },
-      "handover": {
-        "right_grasp_offset": [
-          -0.03,
-          -0.22,
-          0.07
+      "handover": { 
+      "right_grasp_offset": [
+          -0.1082,
+          -0.0133,
+          0.09
         ],
         "right_grasp_euler_deg": [
-          157.43,
-          69.16,
-          -154.0
-        ],
-        "handover_position": [
-          0.4,
+          -90.0,
           0.0,
-          1.05
-        ],
-        "right_handover_euler_deg": [
-          90.0,
-          45.0,
-          0.0
+          -90.0
         ],
         "left_grasp_offset": [
+          -0.12,
           0.03,
-          0.18,
-          0.07
+          -0.0
         ],
         "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.1,
+          -0.01,
+          0.09
+        ],
+        "right_handover_euler_deg": [
           -90.0,
-          45.0,
-          0.0
-        ],
-        "left_target_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "left_target_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
-        ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
+          0.0,
+          -90.0
         ],
         "timing": {
           "phases": [
@@ -3546,28 +2873,18 @@
             "left_approach",
             "left_grasp",
             "right_release",
-            "left_move_right_reset"
+            "right_retreat"
           ],
-          "right_approach_ratio": 0.12,
-          "right_grasp_ratio": 0.08,
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
           "right_to_handover_ratio": 0.15,
-          "left_approach_ratio": 0.12,
-          "left_grasp_ratio": 0.08,
-          "right_release_ratio": 0.05,
-          "left_move_right_reset_ratio": 0.3
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
         }
       },
       "pick_place": {
-        "right_grasp_offset": [
-          -0.03,
-          -0.22,
-          0.07
-        ],
-        "right_grasp_euler_deg": [
-          157.43,
-          69.16,
-          -154.0
-        ],
         "place_offset": [
           0.0,
           0.0,
@@ -3578,29 +2895,14 @@
           69.16,
           -154.0
         ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
-        ],
+        "lift_height": 0.3,
         "timing": {
-          "phases": [
-            "right_approach",
-            "right_grasp",
-            "right_to_target",
-            "right_release",
-            "right_reset"
-          ],
-          "right_approach_ratio": 0.25,
-          "right_grasp_ratio": 0.1,
-          "right_to_target_ratio": 0.3,
-          "right_release_ratio": 0.1,
-          "right_reset_ratio": 0.25
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
         }
       },
       "pour": {
@@ -3698,14 +3000,14 @@
       },
       "grasp": {
         "grasp_offset": [
-          -0.04,
-          -0.25,
-          0.08
+          -0.1082,
+          -0.0283,
+          0.0407
         ],
         "grasp_euler_deg": [
-          157.43,
-          69.16,
-          -154.0
+          -90.0,
+          0.0,
+          -90.0
         ],
         "lift_height": 0.3,
         "timing": {
@@ -3714,23 +3016,62 @@
             "grasp",
             "lift"
           ],
-          "approach_ratio": 0.4,
+          "approach_ratio": 0.3,
           "grasp_ratio": 0.2,
-          "lift_ratio": 0.4
+          "lift_ratio": 0.5
         }
       },
-      "handover": null,
-      "pick_place": {
-        "right_grasp_offset": [
-          -0.04,
-          -0.25,
-          0.08
+      "handover": {
+"right_grasp_offset": [
+          -0.1082,
+          -0.0133,
+          0.09
         ],
         "right_grasp_euler_deg": [
-          157.43,
-          69.16,
-          -154.0
+          -90.0,
+          0.0,
+          -90.0
         ],
+        "left_grasp_offset": [
+          -0.12,
+          0.03,
+          -0.0
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.1,
+          -0.01,
+          0.09
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
         "place_offset": [
           0.0,
           0.0,
@@ -3741,29 +3082,14 @@
           69.16,
           -154.0
         ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
-        ],
+        "lift_height": 0.3,
         "timing": {
-          "phases": [
-            "right_approach",
-            "right_grasp",
-            "right_to_target",
-            "right_release",
-            "right_reset"
-          ],
-          "right_approach_ratio": 0.25,
-          "right_grasp_ratio": 0.1,
-          "right_to_target_ratio": 0.3,
-          "right_release_ratio": 0.1,
-          "right_reset_ratio": 0.25
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
         }
       },
       "pour": {
@@ -3859,11 +3185,11 @@
           0.06
         ]
       },
-      "grasp": {  
+      "grasp": {
         "grasp_offset": [
           -0.1082,
-          -0.0483,
-          -0.0407
+          -0.0133,
+          0.0407
         ],
         "grasp_euler_deg": [
           -90.0,
@@ -3882,51 +3208,75 @@
           "lift_ratio": 0.4
         }
       },
-      "handover": null,
-      "pick_place": {
-        "right_grasp_offset": [
-          -0.02,
-          -0.2,
-          0.06
+      "handover": {
+"right_grasp_offset": [
+          -0.1082,
+          -0.0133,
+          0.0707
         ],
         "right_grasp_euler_deg": [
-          157.43,
-          69.16,
-          -154.0
-        ],
-        "place_offset": [
-          0.0,
-          0.0,
-          0.02
-        ],
-        "place_euler_deg": [
-          157.43,
-          69.16,
-          -154.0
-        ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
           -90.0,
-          45.0,
-          0.0
+          0.0,
+          -90.0
+        ],
+        "left_grasp_offset": [
+          -0.11,
+          0.03,
+          0.01
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.1,
+          -0.01,
+          0.09
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
         ],
         "timing": {
           "phases": [
             "right_approach",
             "right_grasp",
-            "right_to_target",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
             "right_release",
-            "right_reset"
+            "right_retreat"
           ],
-          "right_approach_ratio": 0.25,
+          "right_approach_ratio": 0.15,
           "right_grasp_ratio": 0.1,
-          "right_to_target_ratio": 0.3,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
           "right_release_ratio": 0.1,
-          "right_reset_ratio": 0.25
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
+      "place_offset": [
+          -0.1082,
+          -0.0133,
+          0.025
+        ],
+        "place_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "lift_height": 0.3,
+        "timing": {
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
         }
       },
       "pour": {
@@ -4028,7 +3378,7 @@
         "grasp_offset": [
           -0.1326,
           -0.0395,
-          0.0130
+          -0.025
         ],
         "grasp_euler_deg": [
           -90.0,
@@ -4047,51 +3397,75 @@
           "lift_ratio": 0.5
         }
       },
-      "handover": null,
-      "pick_place": {
+      "handover": {
         "right_grasp_offset": [
-          -0.03,
-          -0.22,
-          0.06
+          -0.1326,
+          -0.0395,
+          0.013
         ],
         "right_grasp_euler_deg": [
-          157.43,
-          69.16,
-          -154.0
+          -90.0,
+          0.0,
+          -88.0
         ],
-        "place_offset": [
-          0.0,
-          0.0,
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
           0.02
         ],
-        "place_euler_deg": [
-          157.43,
-          69.16,
-          -154.0
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
         ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
         ],
-        "right_reset_euler_deg": [
+        "right_handover_euler_deg": [
           -90.0,
-          45.0,
-          0.0
+          0.0,
+          -90.0
         ],
         "timing": {
           "phases": [
             "right_approach",
             "right_grasp",
-            "right_to_target",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
             "right_release",
-            "right_reset"
+            "right_retreat"
           ],
-          "right_approach_ratio": 0.25,
+          "right_approach_ratio": 0.15,
           "right_grasp_ratio": 0.1,
-          "right_to_target_ratio": 0.3,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
           "right_release_ratio": 0.1,
-          "right_reset_ratio": 0.25
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
+      "place_offset": [
+          -0.12, 
+          -0.06, 
+          -0.01
+        ],
+        "place_euler_deg": [
+          -80.0,
+          0.0,
+          -88.0
+        ],
+        "lift_height": 0.3,
+        "timing": {
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
         }
       },
       "pour": {
@@ -4301,14 +3675,14 @@
       },
       "grasp": {
         "grasp_offset": [
-          -0.1326,
-          -0.0395,
-          0.0130
+          -0.11324,
+          -0.0393,
+          0.013
         ],
         "grasp_euler_deg": [
           -90.0,
           0.0,
-          -88.0
+          -90.0
         ],
         "lift_height": 0.3,
         "timing": {
@@ -4322,18 +3696,57 @@
           "lift_ratio": 0.5
         }
       },
-      "handover": null,
-      "pick_place": {
+      "handover": {
         "right_grasp_offset": [
-          -0.02,
-          -0.18,
-          0.05
+          -0.1326,
+          -0.0395,
+          0.013
         ],
         "right_grasp_euler_deg": [
-          157.43,
-          69.16,
-          -154.0
+          -90.0,
+          0.0,
+          -88.0
         ],
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
+          0.02
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
         "place_offset": [
           0.0,
           0.0,
@@ -4344,29 +3757,14 @@
           69.16,
           -154.0
         ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
-        ],
+        "lift_height": 0.3,
         "timing": {
-          "phases": [
-            "right_approach",
-            "right_grasp",
-            "right_to_target",
-            "right_release",
-            "right_reset"
-          ],
-          "right_approach_ratio": 0.25,
-          "right_grasp_ratio": 0.1,
-          "right_to_target_ratio": 0.3,
-          "right_release_ratio": 0.1,
-          "right_reset_ratio": 0.25
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
         }
       },
       "pour": {
@@ -4578,7 +3976,7 @@
         "grasp_offset": [
           -0.1326,
           -0.0395,
-          0.0130
+          -0.025
         ],
         "grasp_euler_deg": [
           -90.0,
@@ -4593,55 +3991,79 @@
             "lift"
           ],
           "approach_ratio": 0.3,
-          "grasp_ratio": 0.2,
-          "lift_ratio": 0.5
+          "grasp_ratio": 0.3,
+          "lift_ratio": 0.4
         }
       },
-      "handover": null,
-      "pick_place": {
+      "handover": {
         "right_grasp_offset": [
-          -0.03,
-          -0.22,
-          0.06
+          -0.1326,
+          -0.0395,
+          0.013
         ],
         "right_grasp_euler_deg": [
-          157.43,
-          69.16,
-          -154.0
+          -90.0,
+          0.0,
+          -88.0
         ],
-        "place_offset": [
-          0.0,
-          0.0,
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
           0.02
         ],
-        "place_euler_deg": [
-          157.43,
-          69.16,
-          -154.0
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
         ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
         ],
-        "right_reset_euler_deg": [
+        "right_handover_euler_deg": [
           -90.0,
-          45.0,
-          0.0
+          0.0,
+          -90.0
         ],
         "timing": {
           "phases": [
             "right_approach",
             "right_grasp",
-            "right_to_target",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
             "right_release",
-            "right_reset"
+            "right_retreat"
           ],
-          "right_approach_ratio": 0.25,
+          "right_approach_ratio": 0.15,
           "right_grasp_ratio": 0.1,
-          "right_to_target_ratio": 0.3,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
           "right_release_ratio": 0.1,
-          "right_reset_ratio": 0.25
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
+      "place_offset": [
+          -0.11,
+          -0.05,
+          -0.017
+        ],
+        "place_euler_deg": [
+          -90.0,
+          0.0,
+          -88.0
+        ],
+        "lift_height": 0.3,
+        "timing": {
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
         }
       },
       "pour": {
@@ -4874,54 +4296,34 @@
       },
       "handover": {
         "right_grasp_offset": [
-          -0.02,
-          -0.2,
-          0.06
+          -0.1313,
+          -0.0639,
+          0.032
         ],
         "right_grasp_euler_deg": [
-          160.0,
-          70.0,
-          -150.0
-        ],
-        "handover_position": [
-          0.4,
-          0.0,
-          1.0
-        ],
-        "right_handover_euler_deg": [
-          90.0,
-          45.0,
-          0.0
+          -90.45,
+          -0.59,
+          -90.18
         ],
         "left_grasp_offset": [
-          0.02,
-          0.16,
-          0.06
+          -0.12,
+          0.09,
+          0.02
         ],
         "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
           -90.0,
-          45.0,
-          0.0
-        ],
-        "left_target_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "left_target_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
-        ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
+          0.0,
+          -90.0
         ],
         "timing": {
           "phases": [
@@ -4931,61 +4333,36 @@
             "left_approach",
             "left_grasp",
             "right_release",
-            "left_move_right_reset"
+            "right_retreat"
           ],
-          "right_approach_ratio": 0.12,
-          "right_grasp_ratio": 0.08,
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
           "right_to_handover_ratio": 0.15,
-          "left_approach_ratio": 0.12,
-          "left_grasp_ratio": 0.08,
-          "right_release_ratio": 0.05,
-          "left_move_right_reset_ratio": 0.3
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
         }
       },
       "pick_place": {
-        "right_grasp_offset": [
-          -0.02,
-          -0.2,
-          0.06
-        ],
-        "right_grasp_euler_deg": [
-          160.0,
-          70.0,
-          -150.0
-        ],
-        "place_offset": [
-          0.0,
-          0.0,
-          0.02
+      "place_offset": [
+          -0.12,
+          -0.06,
+          -0.01
         ],
         "place_euler_deg": [
-          160.0,
-          70.0,
-          -150.0
-        ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
           -90.0,
-          45.0,
-          0.0
+          0.0,
+          -90.0
         ],
+        "lift_height": 0.3,
         "timing": {
-          "phases": [
-            "right_approach",
-            "right_grasp",
-            "right_to_target",
-            "right_release",
-            "right_reset"
-          ],
-          "right_approach_ratio": 0.25,
-          "right_grasp_ratio": 0.1,
-          "right_to_target_ratio": 0.3,
-          "right_release_ratio": 0.1,
-          "right_reset_ratio": 0.25
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
         }
       },
       "pour": {
@@ -5104,8 +4481,7 @@
           "lift_ratio": 0.4
         }
       },
-      "handover": null,
-      "pick_place": {
+      "handover": {
         "right_grasp_offset": [
           -0.01,
           -0.14,
@@ -5116,6 +4492,46 @@
           88.0,
           -90.0
         ],
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
+          0.02
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
         "place_offset": [
           0.0,
           0.0,
@@ -5126,29 +4542,14 @@
           88.0,
           -90.0
         ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
-        ],
+        "lift_height": 0.3,
         "timing": {
-          "phases": [
-            "right_approach",
-            "right_grasp",
-            "right_to_target",
-            "right_release",
-            "right_reset"
-          ],
-          "right_approach_ratio": 0.25,
-          "right_grasp_ratio": 0.1,
-          "right_to_target_ratio": 0.3,
-          "right_release_ratio": 0.1,
-          "right_reset_ratio": 0.25
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
         }
       },
       "pour": null,
@@ -5267,18 +4668,57 @@
           "lift_ratio": 0.4
         }
       },
-      "handover": null,
-      "pick_place": {
+      "handover": {
         "right_grasp_offset": [
-          -0.02,
-          -0.18,
-          0.1
+          -0.1674,
+          -0.0988,
+          0.0666
         ],
         "right_grasp_euler_deg": [
-          180.0,
-          85.0,
+          -90.43,
+          -95.0,
+          -40.42
+        ],
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
+          0.02
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
           -90.0
         ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
         "place_offset": [
           0.0,
           0.0,
@@ -5289,29 +4729,14 @@
           85.0,
           -90.0
         ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
-        ],
+        "lift_height": 0.3,
         "timing": {
-          "phases": [
-            "right_approach",
-            "right_grasp",
-            "right_to_target",
-            "right_release",
-            "right_reset"
-          ],
-          "right_approach_ratio": 0.25,
-          "right_grasp_ratio": 0.1,
-          "right_to_target_ratio": 0.3,
-          "right_release_ratio": 0.1,
-          "right_reset_ratio": 0.25
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
         }
       },
       "pour": null,
@@ -5430,8 +4855,7 @@
           "lift_ratio": 0.4
         }
       },
-      "handover": null,
-      "pick_place": {
+      "handover": {
         "right_grasp_offset": [
           -0.02,
           -0.16,
@@ -5442,6 +4866,46 @@
           85.0,
           -90.0
         ],
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
+          0.02
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
         "place_offset": [
           0.0,
           0.0,
@@ -5452,29 +4916,14 @@
           85.0,
           -90.0
         ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
-        ],
+        "lift_height": 0.3,
         "timing": {
-          "phases": [
-            "right_approach",
-            "right_grasp",
-            "right_to_target",
-            "right_release",
-            "right_reset"
-          ],
-          "right_approach_ratio": 0.25,
-          "right_grasp_ratio": 0.1,
-          "right_to_target_ratio": 0.3,
-          "right_release_ratio": 0.1,
-          "right_reset_ratio": 0.25
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
         }
       },
       "pour": null,
@@ -5593,8 +5042,7 @@
           "lift_ratio": 0.4
         }
       },
-      "handover": null,
-      "pick_place": {
+      "handover": {
         "right_grasp_offset": [
           -0.02,
           -0.18,
@@ -5605,6 +5053,46 @@
           85.0,
           -90.0
         ],
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
+          0.02
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
         "place_offset": [
           0.0,
           0.0,
@@ -5615,29 +5103,14 @@
           85.0,
           -90.0
         ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
-        ],
+        "lift_height": 0.3,
         "timing": {
-          "phases": [
-            "right_approach",
-            "right_grasp",
-            "right_to_target",
-            "right_release",
-            "right_reset"
-          ],
-          "right_approach_ratio": 0.25,
-          "right_grasp_ratio": 0.1,
-          "right_to_target_ratio": 0.3,
-          "right_release_ratio": 0.1,
-          "right_reset_ratio": 0.25
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
         }
       },
       "pour": null,
@@ -5735,7 +5208,7 @@
       "grasp": {
         "grasp_offset": [
           -0.128,
-          -0.10,
+          -0.1,
           0.01
         ],
         "grasp_euler_deg": [
@@ -5755,18 +5228,57 @@
           "lift_ratio": 0.4
         }
       },
-      "handover": null,
-      "pick_place": {
+      "handover": {
         "right_grasp_offset": [
-          -0.02,
-          -0.18,
-          0.1
+          -0.128,
+          -0.1,
+          0.01
         ],
         "right_grasp_euler_deg": [
-          160.0,
-          70.0,
-          -150.0
+          -90.0,
+          0.0,
+          -90.0
         ],
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
+          0.02
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
         "place_offset": [
           0.0,
           0.0,
@@ -5777,29 +5289,14 @@
           70.0,
           -150.0
         ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
-        ],
+        "lift_height": 0.3,
         "timing": {
-          "phases": [
-            "right_approach",
-            "right_grasp",
-            "right_to_target",
-            "right_release",
-            "right_reset"
-          ],
-          "right_approach_ratio": 0.25,
-          "right_grasp_ratio": 0.1,
-          "right_to_target_ratio": 0.3,
-          "right_release_ratio": 0.1,
-          "right_reset_ratio": 0.25
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
         }
       },
       "pour": null,
@@ -5862,8 +5359,7 @@
           "lift_ratio": 0.4
         }
       },
-      "handover": null,
-      "pick_place": {
+      "handover": {
         "right_grasp_offset": [
           -0.01,
           -0.12,
@@ -5874,6 +5370,46 @@
           90.0,
           0.0
         ],
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
+          0.02
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
         "place_offset": [
           0.0,
           0.0,
@@ -5884,29 +5420,14 @@
           90.0,
           0.0
         ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
-        ],
+        "lift_height": 0.3,
         "timing": {
-          "phases": [
-            "right_approach",
-            "right_grasp",
-            "right_to_target",
-            "right_release",
-            "right_reset"
-          ],
-          "right_approach_ratio": 0.25,
-          "right_grasp_ratio": 0.1,
-          "right_to_target_ratio": 0.3,
-          "right_release_ratio": 0.1,
-          "right_reset_ratio": 0.25
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
         }
       },
       "pour": null,
@@ -5969,8 +5490,7 @@
           "lift_ratio": 0.4
         }
       },
-      "handover": null,
-      "pick_place": {
+      "handover": {
         "right_grasp_offset": [
           -0.02,
           -0.15,
@@ -5981,6 +5501,46 @@
           90.0,
           0.0
         ],
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
+          0.02
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
         "place_offset": [
           0.0,
           0.0,
@@ -5991,29 +5551,14 @@
           90.0,
           0.0
         ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
-        ],
+        "lift_height": 0.3,
         "timing": {
-          "phases": [
-            "right_approach",
-            "right_grasp",
-            "right_to_target",
-            "right_release",
-            "right_reset"
-          ],
-          "right_approach_ratio": 0.25,
-          "right_grasp_ratio": 0.1,
-          "right_to_target_ratio": 0.3,
-          "right_release_ratio": 0.1,
-          "right_reset_ratio": 0.25
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
         }
       },
       "pour": null,
@@ -6053,7 +5598,7 @@
           0.025
         ]
       },
-      "grasp": { 
+      "grasp": {
         "grasp_offset": [
           -0.1074,
           -0.1388,
@@ -6076,18 +5621,57 @@
           "lift_ratio": 0.5
         }
       },
-      "handover": null,
-      "pick_place": {
+      "handover": {
         "right_grasp_offset": [
-          -0.02,
-          -0.16,
-          0.05
+          -0.1074,
+          -0.1388,
+          0.0266
         ],
         "right_grasp_euler_deg": [
-          170.0,
-          75.0,
-          -140.0
+          -92.0,
+          -30.63,
+          -50.42
         ],
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
+          0.02
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
         "place_offset": [
           0.0,
           0.0,
@@ -6098,29 +5682,14 @@
           75.0,
           -140.0
         ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
-        ],
-        "right_reset_euler_deg": [
-          -90.0,
-          45.0,
-          0.0
-        ],
+        "lift_height": 0.3,
         "timing": {
-          "phases": [
-            "right_approach",
-            "right_grasp",
-            "right_to_target",
-            "right_release",
-            "right_reset"
-          ],
-          "right_approach_ratio": 0.25,
-          "right_grasp_ratio": 0.1,
-          "right_to_target_ratio": 0.3,
-          "right_release_ratio": 0.1,
-          "right_reset_ratio": 0.25
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
         }
       },
       "pour": null,
@@ -6176,59 +5745,82 @@
           "phases": [
             "approach",
             "grasp",
-            "lift"          
+            "lift"
           ],
-
-          "approach_ratio": 0.2,
-          "grasp_ratio": 0.3,
+          "approach_ratio": 0.3,
+          "grasp_ratio": 0.2,
           "lift_ratio": 0.5
-        }          
+        }
       },
-      "handover": null,
-      "pick_place": {
+      "handover": {
         "right_grasp_offset": [
-          -0.03,
-          -0.22,
-          0.06
+          -0.0574,
+          -0.1388,
+          0.0266
         ],
         "right_grasp_euler_deg": [
-          160.0,
-          70.0,
-          -150.0
+          -95.43,
+          -43.63,
+          -44.42
         ],
-        "place_offset": [
-          0.0,
-          0.0,
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
           0.02
         ],
-        "place_euler_deg": [
-          160.0,
-          70.0,
-          -150.0
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
         ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
         ],
-        "right_reset_euler_deg": [
+        "right_handover_euler_deg": [
           -90.0,
-          45.0,
-          0.0
+          0.0,
+          -90.0
         ],
         "timing": {
           "phases": [
             "right_approach",
             "right_grasp",
-            "right_to_target",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
             "right_release",
-            "right_reset"
+            "right_retreat"
           ],
-          "right_approach_ratio": 0.25,
+          "right_approach_ratio": 0.15,
           "right_grasp_ratio": 0.1,
-          "right_to_target_ratio": 0.3,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
           "right_release_ratio": 0.1,
-          "right_reset_ratio": 0.25
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
+      "place_offset": [
+          -0.0,
+          -0.1388,
+          0.02
+        ],
+        "place_euler_deg": [
+          -95.43,
+          -43.63,
+          -44.42
+        ],
+        "lift_height": 0.3,
+        "timing": {
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
         }
       },
       "pour": null,
@@ -6292,8 +5884,7 @@
           "lift_ratio": 0.4
         }
       },
-      "handover": null,
-      "pick_place": {
+      "handover": {
         "right_grasp_offset": [
           -0.04,
           -0.25,
@@ -6304,6 +5895,46 @@
           70.0,
           -150.0
         ],
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
+          0.02
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
         "place_offset": [
           0.0,
           0.0,
@@ -6314,29 +5945,2983 @@
           70.0,
           -150.0
         ],
-        "right_reset_position": [
-          0.4,
-          0.25,
-          0.95
+        "lift_height": 0.3,
+        "timing": {
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
+        }
+      },
+      "pour": null,
+      "insert": null,
+      "press": null,
+      "open": null,
+      "close": null
+    },
+    "alcohol_lamp": {
+      "name": "alcohol_lamp",
+      "name_cn": "酒精灯",
+      "description": "实验室常用加热工具，使用时需注意防火安全。支持操作：抓取(grasp)、抓放(pick_place)。",
+      "supported_operations": [
+        "grasp",
+        "pick_place"
+      ],
+      "related_tasks": [
+        "通用操作"
+      ],
+      "mass": 0.1,
+      "physics_material": {
+        "static_friction": 0.5,
+        "dynamic_friction": 0.5,
+        "restitution": 0.1
+      },
+      "bbox": {
+        "half_extents": [
+          0.05,
+          0.05,
+          0.05
         ],
-        "right_reset_euler_deg": [
-          -90.0,
-          45.0,
+        "center_offset": [
+          0,
+          0,
+          0
+        ]
+      },
+      "grasp": {
+        "grasp_offset": [
+          -0.145,
+          -0.055,
+          -0.01
+        ],
+      "grasp_euler_deg": 
+      [ -90,
+      -20,
+      -90
+      ],
+        "lift_height": 0.2,
+        "timing": {
+          "phases": [
+            "approach",
+            "grasp",
+            "lift"
+          ],
+          "approach_ratio": 0.3,
+          "grasp_ratio": 0.3,
+          "lift_ratio": 0.4
+        }
+      },
+      "handover": {
+        "right_grasp_offset": [
+          -0.05,
+          -0.1,
+          0.05
+        ],
+        "right_grasp_euler_deg": [
+          180.0,
+          0.0,
           0.0
+        ],
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
+          0.02
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
         ],
         "timing": {
           "phases": [
             "right_approach",
             "right_grasp",
-            "right_to_target",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
             "right_release",
-            "right_reset"
+            "right_retreat"
           ],
-          "right_approach_ratio": 0.25,
+          "right_approach_ratio": 0.15,
           "right_grasp_ratio": 0.1,
-          "right_to_target_ratio": 0.3,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
           "right_release_ratio": 0.1,
-          "right_reset_ratio": 0.25
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
+      "place_offset": [
+          -0.145,
+          -0.06,
+          -0.01
+        ],
+        "place_euler_deg": [
+          -90.0,
+          -20.0,
+          -90.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
+        }
+      },
+      "pour": null,
+      "insert": null,
+      "press": null,
+      "open": null,
+      "close": null
+    },
+    "analytical_balance": {
+      "name": "analytical_balance",
+      "name_cn": "分析天平",
+      "description": "高精度称量仪器，用于精确称量试剂质量。操作时需轻拿轻放，避免震动。支持操作：抓取(grasp)、抓放(pick_place)。",
+      "supported_operations": [
+        "grasp",
+        "pick_place"
+      ],
+      "related_tasks": [
+        "通用操作"
+      ],
+      "mass": 0.1,
+      "physics_material": {
+        "static_friction": 0.5,
+        "dynamic_friction": 0.5,
+        "restitution": 0.1
+      },
+      "bbox": {
+        "half_extents": [
+          0.05,
+          0.05,
+          0.05
+        ],
+        "center_offset": [
+          0,
+          0,
+          0
+        ]
+      },
+      "grasp": {
+        "grasp_offset": [
+          -0.05,
+          -0.1,
+          0.05
+        ],
+        "grasp_euler_deg": [
+          180.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "phases": [
+            "approach",
+            "grasp",
+            "lift"
+          ],
+          "approach_ratio": 0.3,
+          "grasp_ratio": 0.3,
+          "lift_ratio": 0.4
+        }
+      },
+      "handover": {
+        "right_grasp_offset": [
+          -0.05,
+          -0.1,
+          0.05
+        ],
+        "right_grasp_euler_deg": [
+          180.0,
+          0.0,
+          0.0
+        ],
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
+          0.02
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
+        "place_offset": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "place_euler_deg": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
+        }
+      },
+      "pour": null,
+      "insert": null,
+      "press": null,
+      "open": null,
+      "close": null
+    },
+    "bottle_top_dispenser": {
+      "name": "bottle_top_dispenser",
+      "name_cn": "瓶口分液器",
+      "description": "安装在试剂瓶口用于精确分配液体的装置。支持操作：抓取(grasp)、抓放(pick_place)。",
+      "supported_operations": [
+        "grasp",
+        "pick_place"
+      ],
+      "related_tasks": [
+        "通用操作"
+      ],
+      "mass": 0.1,
+      "physics_material": {
+        "static_friction": 0.5,
+        "dynamic_friction": 0.5,
+        "restitution": 0.1
+      },
+      "bbox": {
+        "half_extents": [
+          0.05,
+          0.05,
+          0.05
+        ],
+        "center_offset": [
+          0,
+          0,
+          0
+        ]
+      },
+      "grasp": {
+        "grasp_offset": [
+          -0.05,
+          -0.1,
+          0.05
+        ],
+        "grasp_euler_deg": [
+          180.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "phases": [
+            "approach",
+            "grasp",
+            "lift"
+          ],
+          "approach_ratio": 0.3,
+          "grasp_ratio": 0.3,
+          "lift_ratio": 0.4
+        }
+      },
+      "handover": {
+        "right_grasp_offset": [
+          -0.05,
+          -0.1,
+          0.05
+        ],
+        "right_grasp_euler_deg": [
+          180.0,
+          0.0,
+          0.0
+        ],
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
+          0.02
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
+        "place_offset": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "place_euler_deg": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
+        }
+      },
+      "pour": null,
+      "insert": null,
+      "press": null,
+      "open": null,
+      "close": null
+    },
+    "centrifuge_tube": {
+      "name": "centrifuge_tube",
+      "name_cn": "离心管",
+      "description": "用于离心分离样品的管状容器。支持操作：抓取(grasp)、抓放(pick_place)。",
+      "supported_operations": [
+        "grasp",
+        "pick_place"
+      ],
+      "related_tasks": [
+        "通用操作"
+      ],
+      "mass": 0.1,
+      "physics_material": {
+        "static_friction": 0.5,
+        "dynamic_friction": 0.5,
+        "restitution": 0.1
+      },
+      "bbox": {
+        "half_extents": [
+          0.05,
+          0.05,
+          0.05
+        ],
+        "center_offset": [
+          0,
+          0,
+          0
+        ]
+      },
+      "grasp": {
+        "grasp_offset": [
+          -0.05,
+          -0.1,
+          0.05
+        ],
+        "grasp_euler_deg": [
+          180.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "phases": [
+            "approach",
+            "grasp",
+            "lift"
+          ],
+          "approach_ratio": 0.3,
+          "grasp_ratio": 0.3,
+          "lift_ratio": 0.4
+        }
+      },
+      "handover": {
+        "right_grasp_offset": [
+          -0.05,
+          -0.1,
+          0.05
+        ],
+        "right_grasp_euler_deg": [
+          180.0,
+          0.0,
+          0.0
+        ],
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
+          0.02
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
+        "place_offset": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "place_euler_deg": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
+        }
+      },
+      "pour": null,
+      "insert": null,
+      "press": null,
+      "open": null,
+      "close": null
+    },
+
+
+    "crucible_tong": {
+      "name": "crucible_tong",
+      "name_cn": "坩埚钳",
+      "description": "用于夹取热坩埚或坩埚盖的工具。支持操作：抓取(grasp)、抓放(pick_place)。",
+      "supported_operations": [
+        "grasp",
+        "pick_place"
+      ],
+      "related_tasks": [
+        "通用操作"
+      ],
+      "mass": 0.1,
+      "physics_material": {
+        "static_friction": 0.5,
+        "dynamic_friction": 0.5,
+        "restitution": 0.1
+      },
+      "bbox": {
+        "half_extents": [
+          0.05,
+          0.05,
+          0.05
+        ],
+        "center_offset": [
+          0,
+          0,
+          0
+        ]
+      },
+      "grasp": {
+        "grasp_offset": [
+          -0.05,
+          -0.1,
+          0.05
+        ],
+        "grasp_euler_deg": [
+          180.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "phases": [
+            "approach",
+            "grasp",
+            "lift"
+          ],
+          "approach_ratio": 0.3,
+          "grasp_ratio": 0.3,
+          "lift_ratio": 0.4
+        }
+      },
+      "handover": {
+        "right_grasp_offset": [
+          -0.05,
+          -0.1,
+          0.05
+        ],
+        "right_grasp_euler_deg": [
+          180.0,
+          0.0,
+          0.0
+        ],
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
+          0.02
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
+        "place_offset": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "place_euler_deg": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
+        }
+      },
+      "pour": null,
+      "insert": null,
+      "press": null,
+      "open": null,
+      "close": null
+    },
+    "electric_heating_mantle": {
+      "name": "electric_heating_mantle",
+      "name_cn": "电热套",
+      "description": "用于圆底烧瓶加热的加热设备。支持操作：抓取(grasp)、抓放(pick_place)。",
+      "supported_operations": [
+        "grasp",
+        "pick_place"
+      ],
+      "related_tasks": [
+        "通用操作"
+      ],
+      "mass": 0.1,
+      "physics_material": {
+        "static_friction": 0.5,
+        "dynamic_friction": 0.5,
+        "restitution": 0.1
+      },
+      "bbox": {
+        "half_extents": [
+          0.05,
+          0.05,
+          0.05
+        ],
+        "center_offset": [
+          0,
+          0,
+          0
+        ]
+      },
+      "grasp": {
+        "grasp_offset": [
+          -0.05,
+          -0.1,
+          0.05
+        ],
+        "grasp_euler_deg": [
+          180.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "phases": [
+            "approach",
+            "grasp",
+            "lift"
+          ],
+          "approach_ratio": 0.3,
+          "grasp_ratio": 0.3,
+          "lift_ratio": 0.4
+        }
+      },
+      "handover": {
+        "right_grasp_offset": [
+          -0.05,
+          -0.1,
+          0.05
+        ],
+        "right_grasp_euler_deg": [
+          180.0,
+          0.0,
+          0.0
+        ],
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
+          0.02
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
+        "place_offset": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "place_euler_deg": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
+        }
+      },
+      "pour": null,
+      "insert": null,
+      "press": null,
+      "open": null,
+      "close": null
+    },
+    "erlenmeyer_flask_with_stopper": {
+      "name": "erlenmeyer_flask_with_stopper",
+      "name_cn": "具塞锥形瓶",
+      "description": "带有磨口塞的锥形瓶，用于防止挥发或污染。支持操作：抓取(grasp)、抓放(pick_place)。",
+      "supported_operations": [
+        "grasp",
+        "pick_place"
+      ],
+      "related_tasks": [
+        "通用操作"
+      ],
+      "mass": 0.1,
+      "physics_material": {
+        "static_friction": 0.5,
+        "dynamic_friction": 0.5,
+        "restitution": 0.1
+      },
+      "bbox": {
+        "half_extents": [
+          0.05,
+          0.05,
+          0.05
+        ],
+        "center_offset": [
+          0,
+          0,
+          0
+        ]
+      },
+      "grasp": {
+        "grasp_offset": [
+          -0.1313,
+          -0.0639,
+          0.012
+        ],
+        "grasp_euler_deg": [
+          -90.45,
+          -0.59,
+          -90.18
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "phases": [
+            "approach",
+            "grasp",
+            "lift"
+          ],
+          "approach_ratio": 0.3,
+          "grasp_ratio": 0.3,
+          "lift_ratio": 0.4
+        }
+      },
+      "handover": {
+        "right_grasp_offset": [
+          -0.05,
+          -0.1,
+          0.05
+        ],
+        "right_grasp_euler_deg": [
+          180.0,
+          0.0,
+          0.0
+        ],
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
+          0.02
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
+      "place_offset": [
+          -0.1113,
+          -0.05,
+          -0.01
+        ],
+        "place_euler_deg": [
+          -90.45,
+          0.59,
+          -90.18
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
+        }
+      },
+      "pour": null,
+      "insert": null,
+      "press": null,
+      "open": null,
+      "close": null
+    },
+    "funnel": {
+      "name": "funnel",
+      "name_cn": "漏斗",
+      "description": "用于过滤或向小口容器倾倒液体的工具。支持操作：抓取(grasp)、抓放(pick_place)。",
+      "supported_operations": [
+        "grasp",
+        "pick_place"
+      ],
+      "related_tasks": [
+        "通用操作"
+      ],
+      "mass": 0.1,
+      "physics_material": {
+        "static_friction": 0.5,
+        "dynamic_friction": 0.5,
+        "restitution": 0.1
+      },
+      "bbox": {
+        "half_extents": [
+          0.05,
+          0.05,
+          0.05
+        ],
+        "center_offset": [
+          0,
+          0,
+          0
+        ]
+      },
+      "grasp": {
+        "grasp_offset": [
+          -0.1082,
+          -0.0133,
+          0.0407
+        ],
+        "grasp_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "phases": [
+            "approach",
+            "grasp",
+            "lift"
+          ],
+          "approach_ratio": 0.3,
+          "grasp_ratio": 0.3,
+          "lift_ratio": 0.4
+        }
+      },
+      "handover": {
+        "right_grasp_offset": [
+          -0.05,
+          -0.1,
+          0.05
+        ],
+        "right_grasp_euler_deg": [
+          180.0,
+          0.0,
+          0.0
+        ],
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
+          0.02
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
+        "place_offset": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "place_euler_deg": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
+        }
+      },
+      "pour": null,
+      "insert": null,
+      "press": null,
+      "open": null,
+      "close": null
+    },
+    "glass_graduated_cylinder_500ml": {
+      "name": "glass_graduated_cylinder_500ml",
+      "name_cn": "500ml玻璃量筒",
+      "description": "500ml规格的玻璃量筒，用于量取较大体积液体。支持操作：抓取(grasp)、抓放(pick_place)。",
+      "supported_operations": [
+        "grasp",
+        "pick_place"
+      ],
+      "related_tasks": [
+        "通用操作"
+      ],
+      "mass": 0.1,
+      "physics_material": {
+        "static_friction": 0.5,
+        "dynamic_friction": 0.5,
+        "restitution": 0.1
+      },
+      "bbox": {
+        "half_extents": [
+          0.05,
+          0.05,
+          0.05
+        ],
+        "center_offset": [
+          0,
+          0,
+          0
+        ]
+      },
+      "grasp": {
+        "grasp_offset": [
+          -0.1182,
+          -0.035,
+          0.0407
+        ],
+        "grasp_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "phases": [
+            "approach",
+            "grasp",
+            "lift"
+          ],
+          "approach_ratio": 0.3,
+          "grasp_ratio": 0.3,
+          "lift_ratio": 0.4
+        }
+      },
+      "handover": {
+        "right_grasp_offset": [
+          -0.1182,
+          -0.035,
+          0.0807
+        ],
+        "right_grasp_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "left_grasp_offset": [
+          -0.14537,
+          0.0515,
+          0.003
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.1182,
+          -0.035,
+          0.0807
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
+        "place_offset": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "place_euler_deg": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
+        }
+      },
+      "pour": null,
+      "insert": null,
+      "press": null,
+      "open": null,
+      "close": null
+    },
+    "high_speed_centrifuge": {
+      "name": "high_speed_centrifuge",
+      "name_cn": "高速离心机",
+      "description": "用于样品快速沉降分离的设备。支持操作：抓取(grasp)、抓放(pick_place)。",
+      "supported_operations": [
+        "grasp",
+        "pick_place"
+      ],
+      "related_tasks": [
+        "通用操作"
+      ],
+      "mass": 0.1,
+      "physics_material": {
+        "static_friction": 0.5,
+        "dynamic_friction": 0.5,
+        "restitution": 0.1
+      },
+      "bbox": {
+        "half_extents": [
+          0.05,
+          0.05,
+          0.05
+        ],
+        "center_offset": [
+          0,
+          0,
+          0
+        ]
+      },
+      "grasp": {
+        "grasp_offset": [
+          -0.05,
+          -0.1,
+          0.05
+        ],
+        "grasp_euler_deg": [
+          180.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "phases": [
+            "approach",
+            "grasp",
+            "lift"
+          ],
+          "approach_ratio": 0.3,
+          "grasp_ratio": 0.3,
+          "lift_ratio": 0.4
+        }
+      },
+      "handover": {
+        "right_grasp_offset": [
+          -0.05,
+          -0.1,
+          0.05
+        ],
+        "right_grasp_euler_deg": [
+          180.0,
+          0.0,
+          0.0
+        ],
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
+          0.02
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
+        "place_offset": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "place_euler_deg": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
+        }
+      },
+      "pour": null,
+      "insert": null,
+      "press": null,
+      "open": null,
+      "close": null
+    },
+    "magnetic_stirrer": {
+      "name": "magnetic_stirrer",
+      "name_cn": "磁力搅拌器",
+      "description": "利用磁场驱动磁力搅拌子进行搅拌的仪器。支持操作：抓取(grasp)、抓放(pick_place)。",
+      "supported_operations": [
+        "grasp",
+        "pick_place"
+      ],
+      "related_tasks": [
+        "通用操作"
+      ],
+      "mass": 0.1,
+      "physics_material": {
+        "static_friction": 0.5,
+        "dynamic_friction": 0.5,
+        "restitution": 0.1
+      },
+      "bbox": {
+        "half_extents": [
+          0.05,
+          0.05,
+          0.05
+        ],
+        "center_offset": [
+          0,
+          0,
+          0
+        ]
+      },
+      "grasp": {
+        "grasp_offset": [
+          -0.05,
+          -0.1,
+          0.05
+        ],
+        "grasp_euler_deg": [
+          180.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "phases": [
+            "approach",
+            "grasp",
+            "lift"
+          ],
+          "approach_ratio": 0.3,
+          "grasp_ratio": 0.3,
+          "lift_ratio": 0.4
+        }
+      },
+      "handover": {
+        "right_grasp_offset": [
+          -0.05,
+          -0.1,
+          0.05
+        ],
+        "right_grasp_euler_deg": [
+          180.0,
+          0.0,
+          0.0
+        ],
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
+          0.02
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
+        "place_offset": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "place_euler_deg": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
+        }
+      },
+      "pour": null,
+      "insert": null,
+      "press": null,
+      "open": null,
+      "close": null
+    },
+    "mercury_thermometer": {
+      "name": "mercury_thermometer",
+      "name_cn": "水银温度计",
+      "description": "玻璃水银温度计，用于测量温度。易碎品，操作需小心。支持操作：抓取(grasp)、抓放(pick_place)。",
+      "supported_operations": [
+        "grasp",
+        "pick_place"
+      ],
+      "related_tasks": [
+        "通用操作"
+      ],
+      "mass": 0.1,
+      "physics_material": {
+        "static_friction": 0.5,
+        "dynamic_friction": 0.5,
+        "restitution": 0.1
+      },
+      "bbox": {
+        "half_extents": [
+          0.05,
+          0.05,
+          0.05
+        ],
+        "center_offset": [
+          0,
+          0,
+          0
+        ]
+      },
+      "grasp": {
+        "grasp_offset": [
+          -0.05,
+          -0.1,
+          0.05
+        ],
+        "grasp_euler_deg": [
+          180.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "phases": [
+            "approach",
+            "grasp",
+            "lift"
+          ],
+          "approach_ratio": 0.3,
+          "grasp_ratio": 0.3,
+          "lift_ratio": 0.4
+        }
+      },
+      "handover": {
+        "right_grasp_offset": [
+          -0.05,
+          -0.1,
+          0.05
+        ],
+        "right_grasp_euler_deg": [
+          180.0,
+          0.0,
+          0.0
+        ],
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
+          0.02
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
+        "place_offset": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "place_euler_deg": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
+        }
+      },
+      "pour": null,
+      "insert": null,
+      "press": null,
+      "open": null,
+      "close": null
+    },
+    "micropipette": {
+      "name": "micropipette",
+      "name_cn": "移液枪",
+      "description": "微量液体移取工具，需配合枪头使用。支持操作：抓取(grasp)、抓放(pick_place)。",
+      "supported_operations": [
+        "grasp",
+        "pick_place"
+      ],
+      "related_tasks": [
+        "通用操作"
+      ],
+      "mass": 0.1,
+      "physics_material": {
+        "static_friction": 0.5,
+        "dynamic_friction": 0.5,
+        "restitution": 0.1
+      },
+      "bbox": {
+        "half_extents": [
+          0.05,
+          0.05,
+          0.05
+        ],
+        "center_offset": [
+          0,
+          0,
+          0
+        ]
+      },
+      "grasp": {
+        "grasp_offset": [
+          -0.05,
+          -0.1,
+          0.05
+        ],
+        "grasp_euler_deg": [
+          180.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "phases": [
+            "approach",
+            "grasp",
+            "lift"
+          ],
+          "approach_ratio": 0.3,
+          "grasp_ratio": 0.3,
+          "lift_ratio": 0.4
+        }
+      },
+      "handover": {
+        "right_grasp_offset": [
+          -0.05,
+          -0.1,
+          0.05
+        ],
+        "right_grasp_euler_deg": [
+          180.0,
+          0.0,
+          0.0
+        ],
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
+          0.02
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
+        "place_offset": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "place_euler_deg": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
+        }
+      },
+      "pour": null,
+      "insert": null,
+      "press": null,
+      "open": null,
+      "close": null
+    },
+    "micropipette_tip": {
+      "name": "micropipette_tip",
+      "name_cn": "移液枪头",
+      "description": "移液枪的一次性耗材。支持操作：抓取(grasp)、抓放(pick_place)。",
+      "supported_operations": [
+        "grasp",
+        "pick_place"
+      ],
+      "related_tasks": [
+        "通用操作"
+      ],
+      "mass": 0.1,
+      "physics_material": {
+        "static_friction": 0.5,
+        "dynamic_friction": 0.5,
+        "restitution": 0.1
+      },
+      "bbox": {
+        "half_extents": [
+          0.05,
+          0.05,
+          0.05
+        ],
+        "center_offset": [
+          0,
+          0,
+          0
+        ]
+      },
+      "grasp": {
+        "grasp_offset": [
+          -0.05,
+          -0.1,
+          0.05
+        ],
+        "grasp_euler_deg": [
+          180.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "phases": [
+            "approach",
+            "grasp",
+            "lift"
+          ],
+          "approach_ratio": 0.3,
+          "grasp_ratio": 0.3,
+          "lift_ratio": 0.4
+        }
+      },
+      "handover": {
+        "right_grasp_offset": [
+          -0.05,
+          -0.1,
+          0.05
+        ],
+        "right_grasp_euler_deg": [
+          180.0,
+          0.0,
+          0.0
+        ],
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
+          0.02
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
+        "place_offset": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "place_euler_deg": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
+        }
+      },
+      "pour": null,
+      "insert": null,
+      "press": null,
+      "open": null,
+      "close": null
+    },
+    "ph_meter": {
+      "name": "ph_meter",
+      "name_cn": "PH计",
+      "description": "用于测量溶液酸碱度的仪器。支持操作：抓取(grasp)、抓放(pick_place)。",
+      "supported_operations": [
+        "grasp",
+        "pick_place"
+      ],
+      "related_tasks": [
+        "通用操作"
+      ],
+      "mass": 0.1,
+      "physics_material": {
+        "static_friction": 0.5,
+        "dynamic_friction": 0.5,
+        "restitution": 0.1
+      },
+      "bbox": {
+        "half_extents": [
+          0.05,
+          0.05,
+          0.05
+        ],
+        "center_offset": [
+          0,
+          0,
+          0
+        ]
+      },
+      "grasp": {
+        "grasp_offset": [
+          -0.05,
+          -0.1,
+          0.05
+        ],
+        "grasp_euler_deg": [
+          180.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "phases": [
+            "approach",
+            "grasp",
+            "lift"
+          ],
+          "approach_ratio": 0.3,
+          "grasp_ratio": 0.3,
+          "lift_ratio": 0.4
+        }
+      },
+      "handover": {
+        "right_grasp_offset": [
+          -0.05,
+          -0.1,
+          0.05
+        ],
+        "right_grasp_euler_deg": [
+          180.0,
+          0.0,
+          0.0
+        ],
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
+          0.02
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
+        "place_offset": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "place_euler_deg": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
+        }
+      },
+      "pour": null,
+      "insert": null,
+      "press": null,
+      "open": null,
+      "close": null
+    },
+    "pipette": {
+      "name": "pipette",
+      "name_cn": "移液管",
+      "description": "用于准确移取一定体积溶液的量出式玻璃量器。支持操作：抓取(grasp)、抓放(pick_place)。",
+      "supported_operations": [
+        "grasp",
+        "pick_place"
+      ],
+      "related_tasks": [
+        "通用操作"
+      ],
+      "mass": 0.1,
+      "physics_material": {
+        "static_friction": 0.5,
+        "dynamic_friction": 0.5,
+        "restitution": 0.1
+      },
+      "bbox": {
+        "half_extents": [
+          0.05,
+          0.05,
+          0.05
+        ],
+        "center_offset": [
+          0,
+          0,
+          0
+        ]
+      },
+      "grasp": {
+        "grasp_offset": [
+          -0.05,
+          -0.1,
+          0.05
+        ],
+        "grasp_euler_deg": [
+          180.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "phases": [
+            "approach",
+            "grasp",
+            "lift"
+          ],
+          "approach_ratio": 0.3,
+          "grasp_ratio": 0.3,
+          "lift_ratio": 0.4
+        }
+      },
+      "handover": {
+        "right_grasp_offset": [
+          -0.05,
+          -0.1,
+          0.05
+        ],
+        "right_grasp_euler_deg": [
+          180.0,
+          0.0,
+          0.0
+        ],
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
+          0.02
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
+        "place_offset": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "place_euler_deg": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
+        }
+      },
+      "pour": null,
+      "insert": null,
+      "press": null,
+      "open": null,
+      "close": null
+    },
+    "plastic_graduated_cylinder_100ml": {
+      "name": "plastic_graduated_cylinder_100ml",
+      "name_cn": "100ml塑料量筒",
+      "description": "100ml规格的塑料量筒，不易破碎。支持操作：抓取(grasp)、抓放(pick_place)。",
+      "supported_operations": [
+        "grasp",
+        "pick_place"
+      ],
+      "related_tasks": [
+        "通用操作"
+      ],
+      "mass": 0.1,
+      "physics_material": {
+        "static_friction": 0.5,
+        "dynamic_friction": 0.5,
+        "restitution": 0.1
+      },
+      "bbox": {
+        "half_extents": [
+          0.05,
+          0.05,
+          0.05
+        ],
+        "center_offset": [
+          0,
+          0,
+          0
+        ]
+      },
+      "grasp": {
+      "grasp_offset": [
+          -0.1082,
+          -0.0283,
+          0.0407
+        ],
+        "grasp_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "phases": [
+            "approach",
+            "grasp",
+            "lift"
+          ],
+          "approach_ratio": 0.3,
+          "grasp_ratio": 0.3,
+          "lift_ratio": 0.4
+        }
+      },
+      "handover": {
+        "right_grasp_offset": [
+          -0.1082,
+          -0.0133,
+          0.09
+        ],
+        "right_grasp_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "left_grasp_offset": [
+          -0.1637,
+          0.0518,
+          -0.033
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.1082,
+          -0.0133,
+          0.09
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
+      "place_offset": [
+          -0.092,
+          -0.042,
+          0.0062
+        ],
+        "place_euler_deg": [
+          -80.0,
+          -0.0,
+          -90.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
+        }
+      },
+      "pour": null,
+      "insert": null,
+      "press": null,
+      "open": null,
+      "close": null
+    },
+    "plastic_graduated_cylinder_500ml": {
+      "name": "plastic_graduated_cylinder_500ml",
+      "name_cn": "500ml塑料量筒",
+      "description": "500ml规格的塑料量筒，不易破碎。支持操作：抓取(grasp)、抓放(pick_place)。",
+      "supported_operations": [
+        "grasp",
+        "pick_place"
+      ],
+      "related_tasks": [
+        "通用操作"
+      ],
+      "mass": 0.1,
+      "physics_material": {
+        "static_friction": 0.5,
+        "dynamic_friction": 0.5,
+        "restitution": 0.1
+      },
+      "bbox": {
+        "half_extents": [
+          0.05,
+          0.05,
+          0.05
+        ],
+        "center_offset": [
+          0,
+          0,
+          0
+        ]
+      },
+      "grasp": {
+      "grasp_offset": [
+          -0.1182,
+          -0.035,
+          0.0407
+        ],
+        "grasp_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "phases": [
+            "approach",
+            "grasp",
+            "lift"
+          ],
+          "approach_ratio": 0.3,
+          "grasp_ratio": 0.3,
+          "lift_ratio": 0.4
+        }
+      },
+      "handover": {
+        "right_grasp_offset": [
+          -0.1182,
+          -0.035,
+          0.0807
+        ],
+        "right_grasp_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "left_grasp_offset": [
+          -0.14537,
+          0.0515,
+          -0.033
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.1182,
+          -0.035,
+          0.0807
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
+        "place_offset": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "place_euler_deg": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
+        }
+      },
+      "pour": null,
+      "insert": null,
+      "press": null,
+      "open": null,
+      "close": null
+    },
+    "plastic_test_tube_20ml": {
+      "name": "plastic_test_tube_20ml",
+      "name_cn": "20ml塑料试管",
+      "description": "20ml规格的塑料试管。支持操作：抓取(grasp)、抓放(pick_place)。",
+      "supported_operations": [
+        "grasp",
+        "pick_place"
+      ],
+      "related_tasks": [
+        "通用操作"
+      ],
+      "mass": 0.1,
+      "physics_material": {
+        "static_friction": 0.5,
+        "dynamic_friction": 0.5,
+        "restitution": 0.1
+      },
+      "bbox": {
+        "half_extents": [
+          0.05,
+          0.05,
+          0.05
+        ],
+        "center_offset": [
+          0,
+          0,
+          0
+        ]
+      },
+      "grasp": {
+        "grasp_offset": [
+          -0.05,
+          -0.1,
+          0.05
+        ],
+        "grasp_euler_deg": [
+          180.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "phases": [
+            "approach",
+            "grasp",
+            "lift"
+          ],
+          "approach_ratio": 0.3,
+          "grasp_ratio": 0.3,
+          "lift_ratio": 0.4
+        }
+      },
+      "handover": {
+        "right_grasp_offset": [
+          -0.05,
+          -0.1,
+          0.05
+        ],
+        "right_grasp_euler_deg": [
+          180.0,
+          0.0,
+          0.0
+        ],
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
+          0.02
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
+        "place_offset": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "place_euler_deg": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
+        }
+      },
+      "pour": null,
+      "insert": null,
+      "press": null,
+      "open": null,
+      "close": null
+    },
+    "precision_electronic_balance": {
+      "name": "precision_electronic_balance",
+      "name_cn": "精密电子天平",
+      "description": "用于一般精度的称量工作。支持操作：抓取(grasp)、抓放(pick_place)。",
+      "supported_operations": [
+        "grasp",
+        "pick_place"
+      ],
+      "related_tasks": [
+        "通用操作"
+      ],
+      "mass": 0.1,
+      "physics_material": {
+        "static_friction": 0.5,
+        "dynamic_friction": 0.5,
+        "restitution": 0.1
+      },
+      "bbox": {
+        "half_extents": [
+          0.05,
+          0.05,
+          0.05
+        ],
+        "center_offset": [
+          0,
+          0,
+          0
+        ]
+      },
+      "grasp": {
+        "grasp_offset": [
+          -0.05,
+          -0.1,
+          0.05
+        ],
+        "grasp_euler_deg": [
+          180.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "phases": [
+            "approach",
+            "grasp",
+            "lift"
+          ],
+          "approach_ratio": 0.3,
+          "grasp_ratio": 0.3,
+          "lift_ratio": 0.4
+        }
+      },
+      "handover": {
+        "right_grasp_offset": [
+          -0.05,
+          -0.1,
+          0.05
+        ],
+        "right_grasp_euler_deg": [
+          180.0,
+          0.0,
+          0.0
+        ],
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
+          0.02
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
+        "place_offset": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "place_euler_deg": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
+        }
+      },
+      "pour": null,
+      "insert": null,
+      "press": null,
+      "open": null,
+      "close": null
+    },
+    "sample_tube_with_stopper": {
+      "name": "sample_tube_with_stopper",
+      "name_cn": "具塞样品管",
+      "description": "带有盖子的样品管，用于保存样品。支持操作：抓取(grasp)、抓放(pick_place)。",
+      "supported_operations": [
+        "grasp",
+        "pick_place"
+      ],
+      "related_tasks": [
+        "通用操作"
+      ],
+      "mass": 0.1,
+      "physics_material": {
+        "static_friction": 0.5,
+        "dynamic_friction": 0.5,
+        "restitution": 0.1
+      },
+      "bbox": {
+        "half_extents": [
+          0.05,
+          0.05,
+          0.05
+        ],
+        "center_offset": [
+          0,
+          0,
+          0
+        ]
+      },
+      "grasp": {
+        "grasp_offset": [
+          -0.05,
+          -0.1,
+          0.05
+        ],
+        "grasp_euler_deg": [
+          180.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "phases": [
+            "approach",
+            "grasp",
+            "lift"
+          ],
+          "approach_ratio": 0.3,
+          "grasp_ratio": 0.3,
+          "lift_ratio": 0.4
+        }
+      },
+      "handover": {
+        "right_grasp_offset": [
+          -0.05,
+          -0.1,
+          0.05
+        ],
+        "right_grasp_euler_deg": [
+          180.0,
+          0.0,
+          0.0
+        ],
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
+          0.02
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
+        "place_offset": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "place_euler_deg": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
+        }
+      },
+      "pour": null,
+      "insert": null,
+      "press": null,
+      "open": null,
+      "close": null
+    },
+    "test_tube_rack": {
+      "name": "test_tube_rack",
+      "name_cn": "试管架",
+      "description": "用于放置和晾干试管的架子。支持操作：抓取(grasp)、抓放(pick_place)。",
+      "supported_operations": [
+        "grasp",
+        "pick_place"
+      ],
+      "related_tasks": [
+        "通用操作"
+      ],
+      "mass": 0.1,
+      "physics_material": {
+        "static_friction": 0.5,
+        "dynamic_friction": 0.5,
+        "restitution": 0.1
+      },
+      "bbox": {
+        "half_extents": [
+          0.05,
+          0.05,
+          0.05
+        ],
+        "center_offset": [
+          0,
+          0,
+          0
+        ]
+      },
+      "grasp": {
+        "grasp_offset": [
+          -0.065,
+          -0.25,
+          0.01
+        ],
+        "grasp_euler_deg": [
+          -90,
+          -20,
+          -50
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "phases": [
+            "approach",
+            "grasp",
+            "lift"
+          ],
+          "approach_ratio": 0.3,
+          "grasp_ratio": 0.3,
+          "lift_ratio": 0.4
+        }
+      },
+      "handover": {
+        "right_grasp_offset": [
+          -0.065,
+          -0.25,
+          0.01
+        ],
+        "right_grasp_euler_deg": [
+          -90,
+          -20,
+          -50
+        ],
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
+          0.02
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
+        "place_offset": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "place_euler_deg": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
+        }
+      },
+      "pour": null,
+      "insert": null,
+      "press": null,
+      "open": null,
+      "close": null
+    },
+    "thermometer_sleeve": {
+      "name": "thermometer_sleeve",
+      "name_cn": "温度计套管",
+      "description": "用于保护温度计或固定温度计的套管。支持操作：抓取(grasp)、抓放(pick_place)。",
+      "supported_operations": [
+        "grasp",
+        "pick_place"
+      ],
+      "related_tasks": [
+        "通用操作"
+      ],
+      "mass": 0.1,
+      "physics_material": {
+        "static_friction": 0.5,
+        "dynamic_friction": 0.5,
+        "restitution": 0.1
+      },
+      "bbox": {
+        "half_extents": [
+          0.05,
+          0.05,
+          0.05
+        ],
+        "center_offset": [
+          0,
+          0,
+          0
+        ]
+      },
+      "grasp": {
+        "grasp_offset": [
+          -0.05,
+          -0.1,
+          0.05
+        ],
+        "grasp_euler_deg": [
+          180.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "phases": [
+            "approach",
+            "grasp",
+            "lift"
+          ],
+          "approach_ratio": 0.3,
+          "grasp_ratio": 0.3,
+          "lift_ratio": 0.4
+        }
+      },
+      "handover": {
+        "right_grasp_offset": [
+          -0.05,
+          -0.1,
+          0.05
+        ],
+        "right_grasp_euler_deg": [
+          180.0,
+          0.0,
+          0.0
+        ],
+        "left_grasp_offset": [
+          -0.12,
+          0.09,
+          0.02
+        ],
+        "left_grasp_euler_deg": [
+          90.0,
+          0.0,
+          90.0
+        ],
+        "right_handover_offset": [
+          -0.14,
+          -0.06,
+          0.001
+        ],
+        "right_handover_euler_deg": [
+          -90.0,
+          0.0,
+          -90.0
+        ],
+        "timing": {
+          "phases": [
+            "right_approach",
+            "right_grasp",
+            "right_to_handover",
+            "left_approach",
+            "left_grasp",
+            "right_release",
+            "right_retreat"
+          ],
+          "right_approach_ratio": 0.15,
+          "right_grasp_ratio": 0.1,
+          "right_to_handover_ratio": 0.15,
+          "left_approach_ratio": 0.15,
+          "left_grasp_ratio": 0.1,
+          "right_release_ratio": 0.1,
+          "right_retreat_ratio": 0.3
+        }
+      },
+      "pick_place": {
+        "place_offset": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "place_euler_deg": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "lift_height": 0.2,
+        "timing": {
+          "approach": 0.15,
+          "grasp": 0.1,
+          "lift": 0.15,
+          "transport": 0.15,
+          "release": 0.1,
+          "retreat": 0.35
         }
       },
       "pour": null,

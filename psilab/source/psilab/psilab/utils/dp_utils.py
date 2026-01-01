@@ -59,30 +59,81 @@ def process_image(img:torch.Tensor):
 
     return img
 
-def process_batch_image(imgs:torch.Tensor):
+def process_batch_image(imgs: torch.Tensor, mask_imgs: torch.Tensor = None, with_mask: bool = False):
+    """
+    处理批量图像，支持 RGB 或 RGBM 模式
     
-    images_proccessed = torch.tensor([],dtype=torch.uint8,device= imgs.device)
+    Args:
+        imgs: RGB 图像张量 [N, H, W, C]
+        mask_imgs: mask 图像张量 [N, H, W] 或 [N, H, W, C]，仅在 with_mask=True 时使用
+        with_mask: 是否将 mask 通道拼接到 RGB 后（变成 4 通道 RGBM）
+        
+    Returns:
+        处理后的图像张量 [N, C, 224, 224]，C=3(RGB) 或 C=4(RGBM)
+    """
+    batch_size = imgs.shape[0]
+    num_channels = 4 if with_mask else 3
+    images_processed = torch.zeros((batch_size, num_channels, 224, 224), 
+                                    dtype=torch.float32, device=imgs.device)
 
-    for i in range(imgs.shape[0]):
-        img = imgs[i,...]
-        # 只保留RGB通道
-        img = img[...,:3].float()  
+    for i in range(batch_size):
+        img = imgs[i, ...]
+        # 只保留 RGB 通道
+        img = img[..., :3].float()  
         # 调整通道顺序 [H, W, C] -> [C, H, W]
-        # img = img.permute(0, 3, 1, 2)  
-        # img = img.permute(2, 1, 0)  # 调整通道顺序
-        img = img.permute(2, 0, 1)  # 调整通道顺序
+        img = img.permute(2, 0, 1)
 
-        # 归一化到[0,1]并调整尺寸
+        # 归一化到 [0,1] 并调整尺寸
         img = F.interpolate(
-            img.unsqueeze(0) / 255.0,  # 添加batch维度并归一化
-            size=(224, 224),           # 调整到模型期望的尺寸
+            img.unsqueeze(0) / 255.0,
+            size=(224, 224),
             mode='bilinear',
             align_corners=False
         )
 
-        images_proccessed = torch.cat((images_proccessed,img),dim=0)
+        if with_mask and mask_imgs is not None:
+            # 处理 mask
+            mask = mask_imgs[i, ...]
+            if len(mask.shape) == 3:
+                # 如果 mask 是多通道的，取第一个通道
+                mask = mask[:, :, 0] if mask.shape[2] >= 1 else mask
+            # 转为二值 mask（非零值为 1.0）
+            mask_binary = (mask > 0).float()
+            # 调整尺寸
+            mask_resized = F.interpolate(
+                mask_binary.unsqueeze(0).unsqueeze(0),
+                size=(224, 224),
+                mode='nearest'
+            )
 
-    return images_proccessed
+            import matplotlib.pyplot as plt
+            # head_camera_mask = self._robot.tiled_cameras["head_camera"].data.output["instance_segmentation_fast"][0,:,:,:].cpu().numpy()
+            # head_camera_mask = self._robot.tiled_cameras["chest_camera"].data.output["instance_segmentation_fast"][0,:,:,:].cpu().numpy()
+            # head_camera_depth = self._robot.tiled_cameras["chest_camera"].data.output["depth"][0,:,:,:].cpu().numpy()
+            # head_camera_normal = self._robot.tiled_cameras["chest_camera"].data.output["normals"][0,:,:,:].cpu().numpy()
+        
+            # plt.figure(figsize=(12, 6))
+            # # 展示RGB图
+            # plt.subplot(1, 2, 1)
+            # plt.title("RGB")
+            # plt.imshow(img.squeeze(0).permute(1, 2, 0).cpu().numpy())
+            # plt.axis('off')
+            # # 展示Mask图
+            # plt.subplot(1, 2, 2)
+            # plt.title("Mask")
+            # plt.imshow(mask_resized.squeeze(0).squeeze(0).cpu().numpy(), cmap='gray')
+            # plt.axis('off')
+            # plt.show()
+            # import time
+            # time.sleep(0.1)
+            
+            # 拼接 RGB 和 Mask 为 4 通道
+            images_processed[i, :3, :, :] = img.squeeze(0)
+            images_processed[i, 3:4, :, :] = mask_resized.squeeze(0)
+        else:
+            images_processed[i, :3, :, :] = img.squeeze(0)
+
+    return images_processed
 
 
 # Copyright (c) 2022-2024, The PsiRobot Project Developers
