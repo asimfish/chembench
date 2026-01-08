@@ -1,11 +1,10 @@
 """
-RGBM (RGB + Mask) 图像数据集
-用于处理带有 mask 通道的图像数据
+RGB 图像 + 状态数据集
+支持有速度和无速度两种模式
 """
 from typing import Dict
 import torch
 import numpy as np
-import copy
 from diffusion_policy.common.pytorch_util import dict_apply
 from psi_dp.common.streaming_replay_buffer import StreamingReplayBuffer
 from diffusion_policy.common.sampler import (
@@ -16,34 +15,55 @@ from diffusion_policy.common.normalize_util import get_image_range_normalizer
 import torch.nn.functional as F
 
 
-class RGBMImageDataset(BaseImageDataset):
+class GraspRGBDataset(BaseImageDataset):
     """
-    处理 RGBM (RGB + Mask) 格式图像的数据集
+    RGB 图像 + 状态数据集
     
-    输入图像格式: [H, W, 4] 其中最后一个通道是 mask
-    输出图像格式: [4, H, W] 归一化后的 RGBM
+    包含数据：
+    - chest_camera_rgb: 胸部相机 RGB 图像
+    - head_camera_rgb: 头部相机 RGB 图像
+    - arm2_pos: 机械臂关节位置 (7)
+    - arm2_vel: 机械臂关节速度 (7) [可选]
+    - hand2_pos: 机械手关节位置 (6)
+    - hand2_vel: 机械手关节速度 (6) [可选]
+    - arm2_eef_pos: 末端执行器位置 (3)
+    - arm2_eef_quat: 末端执行器四元数 (4)
+    - target_pose: 目标物体位姿 (7)
     """
+    
     def __init__(self,
-            zarr_path, 
-            horizon=1,
-            n_obs_steps=1,
-            pad_before=0,
-            pad_after=0,
-            seed=42,
-            val_ratio=0.0,
-            max_train_episodes=None,
-            image_size=(224, 224),
-            use_velocity=False,  # 是否使用速度观测
+            zarr_path: str, 
+            horizon: int = 1,
+            n_obs_steps: int = 1,
+            pad_before: int = 0,
+            pad_after: int = 0,
+            seed: int = 42,
+            val_ratio: float = 0.0,
+            max_train_episodes: int = None,
+            image_size: tuple = (224, 224),
+            use_velocity: bool = False
             ):
-        
+        """
+        Args:
+            zarr_path: Zarr 数据集路径
+            horizon: 动作预测长度
+            n_obs_steps: 观测步数
+            pad_before: 序列前填充
+            pad_after: 序列后填充
+            seed: 随机种子
+            val_ratio: 验证集比例
+            max_train_episodes: 最大训练 episode 数
+            image_size: 输出图像尺寸 (H, W)
+            use_velocity: 是否使用速度观测
+        """
         super().__init__()
         self.image_size = image_size
         self.use_velocity = use_velocity
         
-        # 基础观测键
+        # 根据 use_velocity 确定需要加载的数据键
         keys = [
-            'chest_camera_rgb',  # 胸部相机 RGBM
-            'head_camera_rgb',   # 头部相机 RGBM
+            'chest_camera_rgb',
+            'head_camera_rgb',
             'arm2_pos',
             'hand2_pos',
             'arm2_eef_pos',
@@ -56,6 +76,11 @@ class RGBMImageDataset(BaseImageDataset):
         if use_velocity:
             keys.insert(3, 'arm2_vel')   # 在 arm2_pos 后插入
             keys.insert(5, 'hand2_vel')  # 在 hand2_pos 后插入
+        
+        print(f"[GraspRGBDataset] 初始化:")
+        print(f"  - use_velocity: {use_velocity}")
+        print(f"  - image_size: {image_size}")
+        print(f"  - 加载的数据键: {keys}")
         
         # 加载数据
         self.replay_buffer = StreamingReplayBuffer.copy_from_path(
@@ -83,43 +108,18 @@ class RGBMImageDataset(BaseImageDataset):
         self.pad_before = pad_before
         self.pad_after = pad_after
         self.n_obs_steps = n_obs_steps
-
-    def _process_rgbm_batch(self, images):
-        """
-        批量处理 RGBM 图像
         
-        输入: images [T, H, W, 4] - RGB(3通道) + Mask(1通道)
-        输出: [T, 4, H, W] - 归一化后的 RGBM
+        # 打印数据集信息
+        print(f"  - 总 episodes: {self.replay_buffer.n_episodes}")
+        print(f"  - 训练 episodes: {train_mask.sum()}")
+        print(f"  - 总样本数: {len(self.sampler)}")
+
+    def _process_image_batch(self, images: np.ndarray) -> np.ndarray:
         """
-        # 分离 RGB 和 Mask
-        rgb = torch.from_numpy(images[..., :3]).float()   # [T, H, W, 3]
-        mask = torch.from_numpy(images[..., 3:]).float()  # [T, H, W, 1]
+        批量处理 RGB 图像
         
-        # 处理 RGB：归一化并 resize
-        rgb = rgb.permute(0, 3, 1, 2)  # [T, 3, H, W]
-        rgb = F.interpolate(
-            rgb / 255.0,              # 归一化到 [0, 1]
-            size=self.image_size,
-            mode='bilinear',
-            align_corners=False
-        )
-
-        # 处理 Mask：resize 并二值化
-        mask = mask.permute(0, 3, 1, 2)  # [T, 1, H, W]
-        mask = F.interpolate(
-            mask / 255.0 if mask.max() > 1 else mask,  # 处理 0-255 或 0-1 的 mask
-            size=self.image_size,
-            mode='nearest'  # 最近邻保持边缘清晰
-        )
-        mask = (mask > 0.5).float()  # 二值化
-
-        # 合并 RGBM
-        combined = torch.cat([rgb, mask], dim=1)  # [T, 4, H, W]
-        return combined.numpy()
-
-    def _process_rgb_batch(self, images):
-        """
-        批量处理纯 RGB 图像（兼容性方法）
+        输入: images [T, H, W, 3] uint8 [0, 255]
+        输出: [T, 3, H, W] float32 [0, 1]
         """
         rgb = torch.from_numpy(images[..., :3]).float()  # [T, H, W, 3]
         rgb = rgb.permute(0, 3, 1, 2)  # [T, 3, H, W]
@@ -131,13 +131,14 @@ class RGBMImageDataset(BaseImageDataset):
         )
         return rgb.numpy()
     
-    def _sample_to_data(self, sample):
+    def _sample_to_data(self, sample: dict) -> dict:
+        """将采样数据转换为模型输入格式"""
         T_slice = slice(self.n_obs_steps)
         
-        # 使用 RGBM 处理方法
-        chest_frames = self._process_rgbm_batch(sample['chest_camera_rgb'][T_slice])
-        head_frames = self._process_rgbm_batch(sample['head_camera_rgb'][T_slice])
-
+        # 处理图像数据
+        chest_frames = self._process_image_batch(sample['chest_camera_rgb'][T_slice])
+        head_frames = self._process_image_batch(sample['head_camera_rgb'][T_slice])
+        
         # 基础观测数据
         obs_data = {
             'chest_camera_rgb': chest_frames,
@@ -153,7 +154,7 @@ class RGBMImageDataset(BaseImageDataset):
         if self.use_velocity:
             obs_data['arm2_vel'] = sample['arm2_vel'][T_slice].astype(np.float32)
             obs_data['hand2_vel'] = sample['hand2_vel'][T_slice].astype(np.float32)
-
+        
         data = {
             'obs': obs_data,
             'action': sample['action'].astype(np.float32)
@@ -161,7 +162,7 @@ class RGBMImageDataset(BaseImageDataset):
         return data
 
     def get_normalizer(self, mode='limits', **kwargs):
-        """创建数据归一化器"""
+        """创建数据标准化器"""
         # 基础数据
         data = {
             'action': self.replay_buffer['action'],
@@ -176,24 +177,28 @@ class RGBMImageDataset(BaseImageDataset):
         if self.use_velocity:
             data['arm2_vel'] = self.replay_buffer['arm2_vel']
             data['hand2_vel'] = self.replay_buffer['hand2_vel']
-            
+        
         normalizer = LinearNormalizer()
         normalizer.fit(data=data, last_n_dims=1, mode=mode, **kwargs)
         
-        # 添加图像 normalizer（RGBM 已经在 _process_rgbm_batch 中归一化）
+        # 添加图像 normalizer
         normalizer['chest_camera_rgb'] = get_image_range_normalizer()
         normalizer['head_camera_rgb'] = get_image_range_normalizer()
+        
         return normalizer
 
     def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
+        """获取单个数据样本"""
         sample = self.sampler.sample_sequence(idx)        
         data = self._sample_to_data(sample)
         torch_data = dict_apply(data, torch.from_numpy)
         return torch_data
 
     def get_all_actions(self) -> torch.Tensor:
+        """获取所有动作数据"""
         return torch.from_numpy(self.replay_buffer['action'])
 
     def __len__(self):
+        """返回数据集长度"""
         return len(self.sampler)
 

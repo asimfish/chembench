@@ -13,7 +13,10 @@ exp_name: "default"
 object_name: ${task.object_name}
 num_demos: ${task.num_demos}
 
-n_action_steps: 4
+# ==================== 观测模式配置（从task继承）====================
+use_velocity: ${task.obs_config.use_velocity}
+
+n_action_steps: 8
 n_obs_steps: 1
 n_emb: 768
 n_latency_steps: 0
@@ -70,14 +73,14 @@ ema:
   max_value: 0.9999
 
 dataloader:
-  batch_size: 256
+  batch_size: 128
   num_workers: 12
   shuffle: True
   pin_memory: True
   persistent_workers: True
 
 val_dataloader:
-  batch_size: 256
+  batch_size: 128
   num_workers: 12
   shuffle: False
   pin_memory: True
@@ -98,7 +101,7 @@ training:
   lastest_ckpt_path: null
   lr_scheduler: cosine
   lr_warmup_steps: 2000
-  num_epochs: 20000
+  num_epochs: 10000
   gradient_accumulate_every: 1
   use_ema: True
   freeze_encoder: False
@@ -115,10 +118,10 @@ training:
 # name: 物体名称_n数据条数_时间戳
 # tags: 包含随机化设置、数据类型、超参数等信息
 logging:
-  project: DP_并行实验1222_${task.name}
+  project: DP_并行实验1222_rbg_${task.name}
   resume: False
   mode: online
-  name: ${object_name}_n${num_demos}_${now:%Y%m%d_%H%M%S}
+  name: ${object_name}_n${num_demos}_vel${use_velocity}_${now:%Y%m%d_%H%M%S}
   tags: [
     # 基本信息
     "${task_name}",
@@ -128,6 +131,7 @@ logging:
     "obs:${task.data_info.obs_type}",
     "action_dim:${task.data_info.action_dim}",
     "img:${task.data_info.image_size}",
+    "velocity:${use_velocity}",
     # 随机化配置
     "pos_rand:${task.randomization.position.enabled}",
     "rot_rand:${task.randomization.rotation.enabled}",
@@ -144,30 +148,29 @@ logging:
   ]
   id: null
   group: ${object_name}
-  # 详细配置记录（会显示在wandb config中）
-  notes: "物体:${object_name} | 数据:${num_demos}条 | 观测:${task.data_info.obs_type} | 图像:${task.data_info.image_size} | 位置随机:${task.randomization.position.enabled} | 旋转随机:${task.randomization.rotation.enabled} | 编码器:${policy.obs_encoder.model_name}"
+  notes: "物体:${object_name} | 数据:${num_demos}条 | 观测:${task.data_info.obs_type} | 图像:${task.data_info.image_size} | 速度:${use_velocity} | 位置随机:${task.randomization.position.enabled} | 旋转随机:${task.randomization.rotation.enabled} | 编码器:${policy.obs_encoder.model_name}"
 
 checkpoint:
   topk:
     monitor_key: train_loss
     mode: min
-    k: 10
+    k: 5
     format_str: 'epoch={epoch:04d}-train_loss={train_loss:.3f}.ckpt'
   save_last_ckpt: True
   save_last_snapshot: False
 
 multi_run:
-  run_dir: data/outputs/${task_name}/${object_name}/${now:%Y%m%d_%H%M%S}_n${num_demos}
-  wandb_name_base: ${object_name}_n${num_demos}_${now:%Y%m%d_%H%M%S}
+  run_dir: data/outputs/${task_name}/${object_name}/${now:%Y%m%d_%H%M%S}_n${num_demos}_vel${use_velocity}
+  wandb_name_base: ${object_name}_n${num_demos}_vel${use_velocity}_${now:%Y%m%d_%H%M%S}
 
 # ==================== 输出目录结构 ====================
-# 格式: data/outputs/{task_name}/{object_name}/{timestamp}_n{num_demos}
-# 例如: data/outputs/grasp_rgb/100ml玻璃烧杯/20251218_103000_n50
+# 格式: data/outputs/{task_name}/{object_name}/{timestamp}_n{num_demos}_vel{use_velocity}
+# 例如: data/outputs/grasp_rgb/100ml玻璃烧杯/20251218_103000_n50_velFalse
 hydra:
   job:
     override_dirname: ${name}
   run:
-    dir: data/outputs/${task_name}/${object_name}/${now:%Y%m%d_%H%M%S}_n${num_demos}
+    dir: data/outputs/${task_name}/${object_name}/${now:%Y%m%d_%H%M%S}_n${num_demos}_vel${use_velocity}
   sweep:
-    dir: data/outputs/${task_name}/${object_name}/${now:%Y%m%d_%H%M%S}_n${num_demos}
+    dir: data/outputs/${task_name}/${object_name}/${now:%Y%m%d_%H%M%S}_n${num_demos}_vel${use_velocity}
     subdir: ${hydra.job.num}

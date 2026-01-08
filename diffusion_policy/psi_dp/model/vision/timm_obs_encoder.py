@@ -54,7 +54,7 @@ class AttentionPool2d(nn.Module):
             need_weights=False
         )
         return x.squeeze(0)
-    
+
 
 # 多通道图像变换类 (支持 nd 和 rgbnd 模式)
 class MultiChannelRandomCrop(nn.Module):
@@ -72,6 +72,7 @@ class MultiChannelRandomCrop(nn.Module):
             return x[:, :, i:i+self.size, j:j+self.size]
         return x
 
+
 class MultiChannelResize(nn.Module):
     """支持任意通道数的缩放"""
     def __init__(self, size):
@@ -80,6 +81,7 @@ class MultiChannelResize(nn.Module):
         
     def forward(self, x):
         return F.interpolate(x, size=(self.size, self.size), mode='bilinear', align_corners=False)
+
 
 class MultiChannelRandomRotation(nn.Module):
     """支持任意通道数的随机旋转"""
@@ -90,7 +92,7 @@ class MultiChannelRandomRotation(nn.Module):
     def forward(self, x):
         angle = torch.FloatTensor(1).uniform_(self.degrees[0], self.degrees[1]).item()
         return torchvision.transforms.functional.rotate(x, angle)
-
+    
 
 class TimmObsEncoder(ModuleAttrMixin):
     def __init__(self,
@@ -158,7 +160,7 @@ class TimmObsEncoder(ModuleAttrMixin):
                 in_chans=4,
                 num_classes=0
             )
-            
+        
         # 创建 6 通道模型 (用于 rgb_masked_rgb)
         model_6ch = None
         if in_channels == 6:
@@ -214,7 +216,7 @@ class TimmObsEncoder(ModuleAttrMixin):
                         num_groups=(x.num_features // 16) if (x.num_features % 16 == 0) else (x.num_features // 8), 
                         num_channels=x.num_features)
                 )
-                
+            
             if model_6ch is not None:
                 model_6ch = replace_submodules(
                     root_module=model_6ch,
@@ -236,9 +238,7 @@ class TimmObsEncoder(ModuleAttrMixin):
         # handle feature aggregation
         self.feature_aggregation = feature_aggregation
         if model_name.startswith('vit'):
-            # assert self.feature_aggregation is None # vit uses the CLS token
             if self.feature_aggregation is None:
-                # Use all tokens from ViT
                 pass
             elif self.feature_aggregation != 'cls':
                 logger.warn(f'vit will use the CLS token. feature_aggregation ({self.feature_aggregation}) is ignored!')
@@ -264,7 +264,7 @@ class TimmObsEncoder(ModuleAttrMixin):
         for key, attr in obs_shape_meta.items():
             shape = tuple(attr['shape'])
             type = attr.get('type', 'low_dim')
-            if type in ['rgb', 'rgbm', 'nd', 'rgbnd', 'rgb_masked', 'rgb_masked_rgb']:
+            if type in ['rgb', 'rgbm', 'rgb_masked', 'rgb_masked_rgb', 'nd', 'rgbnd']:
                 assert image_shape is None or image_shape == shape[1:]
                 image_shape = shape[1:]
 
@@ -278,11 +278,11 @@ class TimmObsEncoder(ModuleAttrMixin):
                 torchvision.transforms.RandomCrop(size=int(image_shape[0] * ratio)),
                 torchvision.transforms.Resize(size=image_shape[0], antialias=True),
                 RGBColorJitter(
-                                brightness=0.2,
-                                contrast=0.2,
-                                saturation=0.2,
-                                hue=0.05
-                            ),
+                    brightness=0.2,
+                    contrast=0.2,
+                    saturation=0.2,
+                    hue=0.05
+                ),
                 RGBRandomRotation(degrees=(-5.0, 5.0))
             ] + transforms[1:]
         transform = nn.Identity() if transforms is None else torch.nn.Sequential(*transforms)
@@ -306,6 +306,15 @@ class TimmObsEncoder(ModuleAttrMixin):
                 MultiChannelRandomRotation(degrees=(-5.0, 5.0)),
             )
             
+        # RGBND 7通道变换 (不使用颜色增强)
+        rgbnd_transforms = None
+        if model_7ch is not None and transforms is not None:
+            rgbnd_transforms = torch.nn.Sequential(
+                MultiChannelRandomCrop(size=int(image_shape[0] * ratio)),
+                MultiChannelResize(size=image_shape[0]),
+                MultiChannelRandomRotation(degrees=(-5.0, 5.0)),
+            )
+        
         # RGB_MASKED_RGB 6通道变换 (前3通道RGB使用颜色增强，后3通道RGB*Mask也使用颜色增强)
         rgb_masked_rgb_transforms = None
         if model_6ch is not None and transforms is not None:
@@ -316,28 +325,14 @@ class TimmObsEncoder(ModuleAttrMixin):
                 MultiChannelRandomRotation(degrees=(-5.0, 5.0)),
                 # 注意：颜色抖动需要特殊处理，对前3通道和后3通道分别应用
             )
-            
-        # RGBND 7通道变换 (不使用颜色增强)
-        rgbnd_transforms = None
-        if model_7ch is not None and transforms is not None:
-            rgbnd_transforms = torch.nn.Sequential(
-                MultiChannelRandomCrop(size=int(image_shape[0] * ratio)),
-                MultiChannelResize(size=image_shape[0]),
-                MultiChannelRandomRotation(degrees=(-5.0, 5.0)),
-            )
-
 
         for key, attr in obs_shape_meta.items():
             shape = tuple(attr['shape'])
             type = attr.get('type', 'low_dim')
-            # print(f"\nProcessing key: {key}")
-            # print(f"Shape from meta: {shape}")
-            # print(f"Type: {type}")
             key_shape_map[key] = shape
 
             if type == 'rgb':
                 rgb_keys.append(key)
-                # print(f"Added to rgb_keys: {key}")
 
                 this_model = model if share_rgb_model else copy.deepcopy(model)
                 key_model_map[key] = this_model
@@ -379,29 +374,6 @@ class TimmObsEncoder(ModuleAttrMixin):
                 key_projection_map[key] = proj
 
                 this_transform = transform
-                key_transform_map[key] = this_transform
-
-            elif type == 'rgb_masked_rgb':
-                # rgb_masked_rgb 是 6 通道（原始RGB + 背景置黑RGB）
-                rgb_masked_rgb_keys.append(key)
-
-                this_model = model_6ch if share_rgb_model else copy.deepcopy(model_6ch)
-                key_model_map[key] = this_model
-                
-                # check if we need feature projection
-                with torch.no_grad():
-                    example_img = torch.zeros((1,)+tuple(shape))
-                    logger.info(f"Creating RGB_MASKED_RGB example tensor with shape: {example_img.shape}")
-                    example_feature_map = this_model(example_img)
-                    example_features = self.aggregate_feature(example_feature_map)
-                    feature_shape = example_features.shape
-                    feature_size = feature_shape[-1]
-                proj = nn.Identity()
-                if feature_size != n_emb:
-                    proj = nn.Linear(in_features=feature_size, out_features=n_emb)
-                key_projection_map[key] = proj
-
-                this_transform = rgb_masked_rgb_transforms if rgb_masked_rgb_transforms is not None else nn.Identity()
                 key_transform_map[key] = this_transform
 
             elif type == 'low_dim':
@@ -483,6 +455,30 @@ class TimmObsEncoder(ModuleAttrMixin):
                 
                 this_transform = rgbnd_transforms if rgbnd_transforms is not None else nn.Identity()
                 key_transform_map[key] = this_transform
+            
+            elif type == 'rgb_masked_rgb':
+                # RGB + RGB*Mask 6通道
+                rgb_masked_rgb_keys.append(key)
+                
+                this_model = model_6ch if share_rgb_model else copy.deepcopy(model_6ch)
+                key_model_map[key] = this_model
+                
+                # check if we need feature projection
+                with torch.no_grad():
+                    example_img = torch.zeros((1,)+tuple(shape))
+                    logger.info(f"Creating RGB_MASKED_RGB example tensor with shape: {example_img.shape}")
+                    example_feature_map = this_model(example_img)
+                    example_features = self.aggregate_feature(example_feature_map)
+                    feature_shape = example_features.shape
+                    feature_size = feature_shape[-1]
+                    
+                proj = nn.Identity()
+                if feature_size != n_emb:
+                    proj = nn.Linear(in_features=feature_size, out_features=n_emb)
+                key_projection_map[key] = proj
+                
+                this_transform = rgb_masked_rgb_transforms if rgb_masked_rgb_transforms is not None else nn.Identity()
+                key_transform_map[key] = this_transform
                 
             else:
                 raise RuntimeError(f"Unsupported obs type: {type}")
@@ -554,20 +550,9 @@ class TimmObsEncoder(ModuleAttrMixin):
         """通用的图像处理方法"""
         embeddings = []
         for key in keys:
-            if key not in obs_dict:
-                # 兼容性处理：如果期望的 key 不在 obs_dict 中，可能是在旧的 checkpoint 中
-                # 或者 obs_mode 不匹配，跳过或警告
-                logger.warning(f"Key {key} not found in obs_dict! Available keys: {obs_dict.keys()}")
-                continue
-                
             img = obs_dict[key]  # [B, T, C, H, W]
             B, T = img.shape[:2]
             assert B == batch_size            
-            
-            # Debug shape info
-            if img.shape[2:] != self.key_shape_map[key]:
-                 print(f"Shape mismatch for key {key}: expected {self.key_shape_map[key]}, got {img.shape[2:]}")
-            
             assert img.shape[2:] == self.key_shape_map[key]
             # Reshape to [B*T, C, H, W]
             img = img.reshape(B*T, *img.shape[2:])

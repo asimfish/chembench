@@ -20,6 +20,10 @@ set -e  # 遇到错误立即退出
 GPU_ID=7
 CONFIG_NAME="train_diffusion_transformer_rgbm_workspace"
 TASK="task=grasp_rgbm"
+# CONFIG_NAME="train_diffusion_transformer_timm_workspace"
+# TASK="task=grasp_rgb"
+# CONFIG_NAME="train_diffusion_transformer_state_workspace"
+# TASK="task=grasp_state"
 MODE=${1:-"fg"}  # 默认前台运行
 
 # ============================================
