@@ -850,6 +850,8 @@ def main():
     zc_config = config.get("zarr_conversion", {})
     zarr_convert_args = [
         "--mode", zc_config.get("mode", "rgb"),
+        "--task_type", zc_config.get("task_type", "auto"),
+        "--max_episodes", str(zc_config.get("max_episodes", 50)),
     ]
     if zc_config.get("with_mask", True):
         zarr_convert_args.append("--with_mask")
@@ -857,8 +859,12 @@ def main():
         zarr_convert_args.append("--with_depth")
     if zc_config.get("with_normals", True):
         zarr_convert_args.append("--with_normals")
+    if zc_config.get("with_pointcloud", False):
+        zarr_convert_args.append("--with_pointcloud")
+        num_points = zc_config.get("num_points", 2048)
+        zarr_convert_args.extend(["--num_points", str(num_points)])
     
-    zarr_dir = Path(zc_config.get("zarr_dir", str(WORKSPACE_ROOT / "data/zarr_final")))
+    zarr_dir = Path(zc_config.get("zarr_dir", str(WORKSPACE_ROOT / "data/zarr_point_cloud")))
     
     # 构建物体名称映射
     object_name_map = {}

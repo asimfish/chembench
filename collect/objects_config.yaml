@@ -3,7 +3,7 @@
 
 # 数据采集参数
 data_collection:
-  num_envs: 20
+  num_envs: 5
   seed: 17
   sample_step: 4
   max_episode: 500
@@ -12,9 +12,14 @@ data_collection:
 # 数据转换参数
 zarr_conversion:
   mode: "rgb"
+  task_type: "single_hand"   # 任务类型: "auto" (自动检测), "single_hand" (单手), "bimanual" (双手)
+  max_episodes: 50           # 每个任务最大转换数量（默认：50）
   with_mask: true
   with_depth: true
   with_normals: true
+  with_pointcloud: true      # 启用点云数据收集
+  num_points: 1024           # 点云采样点数（FPS降采样）
+  zarr_dir: "/home/psibot/chembench/data/zarr_gt_point_1024"  # Zarr 输出目录（可自定义路径）
 
 # 物体配置列表
 # 每个物体包含：
@@ -25,11 +30,11 @@ zarr_conversion:
 #   - pre_grasp_offset: (可选) 预抓取偏移 [x, y, z]
 objects:
 
-  # - target_object_name: "glass_beaker_100ml"
-  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_100ml/Beaker003.usd"
-  #   chinese_name: "100ml玻璃烧杯"
-  #   finger_grasp_mode: "all"  # 可选: "all", "pinch", "no_thumb"
-  #   pre_grasp_offset: [-0.02, -0.02, 0.05]  # [x, y, z] 预抓取偏移（单位：米）
+  - target_object_name: "glass_beaker_100ml"
+    usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_100ml/Beaker003.usd"
+    chinese_name: "100ml玻璃烧杯"
+    finger_grasp_mode: "all"  # 可选: "all", "pinch", "no_thumb"
+    pre_grasp_offset: [-0.02, -0.02, 0.05]  # [x, y, z] 预抓取偏移（单位：米）
 
   # - target_object_name: "glass_beaker_250ml"
   #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_250ml/Beaker004.usd"
@@ -72,11 +77,11 @@ objects:
   #   finger_grasp_mode: "all"  # 可选: "all", "pinch", "no_thumb"
   #   pre_grasp_offset: [-0.02, -0.02, 0.05]  # [x, y, z] 预抓取偏移（单位：米）
 
-  # - target_object_name: "clear_volumetric_flask_500ml"
-  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/clear_volumetric_flask_500ml/VolumetricFlask003.usd"
-  #   chinese_name: "500ml透明容量瓶"
-  #   finger_grasp_mode: "all"  # 可选: "all", "pinch", "no_thumb"
-  #   pre_grasp_offset: [-0.095, -0.01, 0.02] # [x, y, z] 预抓取偏移（单位：米）
+  - target_object_name: "clear_volumetric_flask_500ml"
+    usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/clear_volumetric_flask_500ml/VolumetricFlask003.usd"
+    chinese_name: "500ml透明容量瓶"
+    finger_grasp_mode: "all"  # 可选: "all", "pinch", "no_thumb"
+    pre_grasp_offset: [-0.095, -0.01, 0.02] # [x, y, z] 预抓取偏移（单位：米）
 
 
   # - target_object_name: "clear_volumetric_flask_1000ml"
@@ -109,62 +114,62 @@ objects:
 
 
   # - target_object_name: "plastic_graduated_cylinder_500ml"
-  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets_new/Plastic_Graduated_Cylinder_500ml/GraduatedCylinder002.usd"
+  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets_new/plastic_graduated_cylinder_500ml/GraduatedCylinder002.usd"
   #   chinese_name: "500ml塑料量筒"
   #   finger_grasp_mode: "all"  # 可选: "all", "pinch", "no_thumb"
   #   pre_grasp_offset: [-0.02, -0.02, 0.05]  # [x, y, z] 预抓取偏移（单位：米）
 
 
   # - target_object_name: "glass_graduated_cylinder_500ml"
-  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets_new/Glass_Graduated_Cylinder_500ml/GraduatedCylinder003.usd"
+  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets_new/glass_graduated_cylinder_500ml/GraduatedCylinder003.usd"
   #   chinese_name: "500ml玻璃量筒"
   #   finger_grasp_mode: "all"  # 可选: "all", "pinch", "no_thumb"
   #   pre_grasp_offset: [-0.02, -0.02, 0.05]  # [x, y, z] 预抓取偏移（单位：米）
 
   # - target_object_name: "erlenmeyer_flask_with_stopper"
-  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets_new/Erlenmeyer_Flask_With_Stopper/ErlenmeyerFlask002.usd"
+  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets_new/erlenmeyer_flask_with_stopper/ErlenmeyerFlask002.usd"
   #   chinese_name: "具塞锥形瓶"
   #   finger_grasp_mode: "pinch"  # 可选: "all", "pinch", "no_thumb"
   #   pre_grasp_offset: [-0.02, -0.02, 0.05]  # [x, y, z] 预抓取偏移（单位：米）
 
 
   # - target_object_name: "funnel"
-  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets_new/Funnel/Funnel001.usd"
+  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets_new/funnel/Funnel001.usd"
   #   chinese_name: "漏斗"
   #   finger_grasp_mode: "all"  # 可选: "all", "pinch", "no_thumb"
   #   pre_grasp_offset: [-0.02, -0.02, 0.05]  # [x, y, z] 预抓取偏移（单位：米）
 
 
   # - target_object_name: "alcohol_lamp"
-  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets_new/Alcohol_Lamp/AlcoholLamp001.usd"
+  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets_new/alcohol_lamp/AlcoholLamp001.usd"
   #   chinese_name: "酒精灯"
   #   finger_grasp_mode: "all"  # 可选: "all", "pinch", "no_thumb"
   #   pre_grasp_offset: [-0.02, -0.02, 0.05]  # [x, y, z] 预抓取偏移（单位：米）
 
-  - target_object_name: "plastic_cylinder_100ml"
-    usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/plastic_cylinder_100ml/GraduatedCylinder001.usd"
-    chinese_name: "100ml塑料量筒"
-    finger_grasp_mode: "no_thumb"  # 可选: "all", "pinch", "no_thumb"
-    pre_grasp_offset: [-0.095, -0.01, 0.02]  # [x, y, z] 预抓取偏移（单位：米）
+  # - target_object_name: "plastic_cylinder_100ml"
+  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/plastic_cylinder_100ml/GraduatedCylinder001.usd"
+  #   chinese_name: "100ml塑料量筒"
+  #   finger_grasp_mode: "no_thumb"  # 可选: "all", "pinch", "no_thumb"
+  #   pre_grasp_offset: [-0.095, -0.01, 0.02]  # [x, y, z] 预抓取偏移（单位：米）
 
-  - target_object_name: "glass_cylinder_100ml"
-    usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_cylinder_100ml/GraduatedCylinder004.usd"
-    chinese_name: "100ml玻璃量筒"
-    finger_grasp_mode: "no_thumb"  # 可选: "all", "pinch", "no_thumb"
-    pre_grasp_offset: [-0.095, -0.01, 0.02]  # [x, y, z] 预抓取偏移（单位：米）
+  # - target_object_name: "glass_cylinder_100ml"
+  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_cylinder_100ml/GraduatedCylinder004.usd"
+  #   chinese_name: "100ml玻璃量筒"
+  #   finger_grasp_mode: "no_thumb"  # 可选: "all", "pinch", "no_thumb"
+  #   pre_grasp_offset: [-0.095, -0.01, 0.02]  # [x, y, z] 预抓取偏移（单位：米）
 
 
-  - target_object_name: "clear_reagent_bottle_small"
-    usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/clear_reagent_bottle_small/ReagentBottle003.usd"
-    chinese_name: "透明试剂瓶(小)"
-    finger_grasp_mode: "all"  # 可选: "all", "pinch", "no_thumb"
-    pre_grasp_offset: [-0.02, -0.02, 0.05]  # [x, y, z] 预抓取偏移（单位：米）
+  # - target_object_name: "clear_reagent_bottle_small"
+  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/clear_reagent_bottle_small/ReagentBottle003.usd"
+  #   chinese_name: "透明试剂瓶(小)"
+  #   finger_grasp_mode: "all"  # 可选: "all", "pinch", "no_thumb"
+  #   pre_grasp_offset: [-0.02, -0.02, 0.05]  # [x, y, z] 预抓取偏移（单位：米）
 
-  - target_object_name: "brown_reagent_bottle_small"
-    usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/brown_reagent_bottle_small/ReagentBottle004.usd"
-    chinese_name: "棕色试剂瓶(小)"
-    finger_grasp_mode: "all"  # 可选: "all", "pinch", "no_thumb"
-    pre_grasp_offset: [-0.02, -0.02, 0.05]  # [x, y, z] 预抓取偏移（单位：米）
+  # - target_object_name: "brown_reagent_bottle_small"
+  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/brown_reagent_bottle_small/ReagentBottle004.usd"
+  #   chinese_name: "棕色试剂瓶(小)"
+  #   finger_grasp_mode: "all"  # 可选: "all", "pinch", "no_thumb"
+  #   pre_grasp_offset: [-0.02, -0.02, 0.05]  # [x, y, z] 预抓取偏移（单位：米）
 
 
 

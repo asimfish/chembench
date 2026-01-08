@@ -53,17 +53,17 @@ def load_diffusion_policy_from_checkpoint(checkpoint_path: str, device: str = 'c
     return policy
 
 @configclass
-class GraspBottleEnvCfg(ILEnvCfg):
-    """Configuration for Rl environment."""
+class HandoverEnvCfg(ILEnvCfg):
+    """Configuration for Handover environment (双手传递任务)."""
 
     # fake params - These parameters are placeholders for episode length, action and observation spaces
     action_scale = 0.5
-    action_space = 13
-    observation_space = 130
-    state_space = 130
+    action_space = 26  # 双手：2个手臂(7+7) + 2个手(6+6) = 26
+    observation_space = 260
+    state_space = 260
 
     # 
-    episode_length_s = 2
+    episode_length_s = 3.5
     decimation = 4
     sample_step = 1
 
@@ -105,9 +105,19 @@ class GraspBottleEnvCfg(ILEnvCfg):
     # 0.1 约等于 37° 的偏差，0.05 约等于 26° 的偏差
     orientation_threshold: float = 0.1
     
+    # ========== Handover 特有配置 ==========
+    # 传递位置 [x, y, z]（相对机器人基座的坐标）
+    handover_position: list = [0.48, 0.05, 1.1605]  # type: ignore
+    
+    # 右手撤回距离（沿y轴负方向，单位：米）
+    right_retreat_distance: float = 0.05
+    
+    # 传递位置误差阈值（米）
+    handover_position_threshold: float = 0.06  # 6cm范围内
+    
     # 观测模式配置
-    # 可选: "rgb", "rgbm", "nd", "rgbnd", "state"
-    obs_mode: Literal["rgb", "rgbm", "nd", "rgbnd", "state"] = "nd"
+    # 可选: "rgb", "rgbm", "nd", "rgbnd", "state", "rgb_masked", "rgb_masked_rgb"
+    obs_mode: Literal["rgb", "rgbm", "nd", "rgbnd", "state", "rgb_masked", "rgb_masked_rgb"] = "nd"
     
     # Mask 解耦实验配置
     # "real": 使用真实的 mask（默认）
@@ -115,11 +125,11 @@ class GraspBottleEnvCfg(ILEnvCfg):
     # "all_1": mask 通道填充全1（测试模型是否依赖 mask）
     mask_mode: str = "real"
 
-class GraspBottleEnv(ILEnv):
+class HandoverEnv(ILEnv):
 
-    cfg: GraspBottleEnvCfg
+    cfg: HandoverEnvCfg
 
-    def __init__(self, cfg: GraspBottleEnvCfg, render_mode: str | None = None, **kwargs):
+    def __init__(self, cfg: HandoverEnvCfg, render_mode: str | None = None, **kwargs):
         #
         cfg.scene.robots_cfg["robot"].diff_ik_controllers = None # type: ignore
 
@@ -129,21 +139,26 @@ class GraspBottleEnv(ILEnv):
         self._robot = self.scene.robots["robot"]
         self._target = self.scene.rigid_objects["bottle"]
 
-        # initialize contact sensor
-        self._contact_sensors = {}
+        # ========== 双手 contact sensors ==========
+        # 右手 contact sensors
+        self._contact_sensors_right = {}
         for key in ["hand2_link_base",
-                    "hand2_link_1_1",
-                    "hand2_link_1_2",
-                    "hand2_link_1_3",
-                    "hand2_link_2_1",
-                    "hand2_link_2_2",
-                    "hand2_link_3_1",
-                    "hand2_link_3_2",
-                    "hand2_link_4_1",
-                    "hand2_link_4_2",
-                    "hand2_link_5_1",
-                    "hand2_link_5_2"]:
-            self._contact_sensors[key] = self.scene.sensors[key]
+                    "hand2_link_1_1", "hand2_link_1_2", "hand2_link_1_3",
+                    "hand2_link_2_1", "hand2_link_2_2",
+                    "hand2_link_3_1", "hand2_link_3_2",
+                    "hand2_link_4_1", "hand2_link_4_2",
+                    "hand2_link_5_1", "hand2_link_5_2"]:
+            self._contact_sensors_right[key] = self.scene.sensors[key]
+        
+        # 左手 contact sensors
+        self._contact_sensors_left = {}
+        for key in ["hand1_link_base",
+                    "hand1_link_1_1", "hand1_link_1_2", "hand1_link_1_3",
+                    "hand1_link_2_1", "hand1_link_2_2",
+                    "hand1_link_3_1", "hand1_link_3_2",
+                    "hand1_link_4_1", "hand1_link_4_2",
+                    "hand1_link_5_1", "hand1_link_5_2"]:
+            self._contact_sensors_left[key] = self.scene.sensors[key]
 
         # joint limit for compute later
         self._joint_limit_lower = self._robot.data.joint_limits[:,:,0].clone()
@@ -158,6 +173,17 @@ class GraspBottleEnv(ILEnv):
         self._target_pos_init = torch.zeros((self.num_envs,3),device=self.device)
         self._target_quat_init = torch.zeros((self.num_envs,4),device=self.device)  # 初始朝向（wxyz）
         
+        # ========== Handover 关键参数 ==========
+        # 传递位置（从配置文件读取，相对机器人基座）
+        self._handover_position = torch.tensor(self.cfg.handover_position, dtype=torch.float32, device=self.device)
+        
+        # 右手撤回距离（沿y轴负方向）
+        self._right_retreat_distance = self.cfg.right_retreat_distance
+        
+        # ========== 双手末端执行器索引 ==========
+        self._eef2_link_index = self._robot.find_bodies("arm2_link7")[0][0]  # 右手
+        self._eef1_link_index = self._robot.find_bodies("arm1_link7")[0][0]  # 左手
+        
         # 记录成功时的步数列表
         self._success_steps_list: list[int] = []
         self.sim.set_camera_view([-0.7, -5.2, 1.3], [-1.2, -5.2, 1.1])
@@ -168,37 +194,50 @@ class GraspBottleEnv(ILEnv):
 
     def step(self,actions):
         
-        # get obs for policy
-        eef_link_index = self._robot.find_bodies("arm2_link7")[0][0]
-        eef_state = self._robot.data.body_link_state_w[:,eef_link_index,:7].clone()
-        eef_state[:,:3] -= self._robot.data.root_state_w[:,:3]
+        # get obs for policy - 双手
+        # 右手末端执行器状态
+        eef2_link_index = self._eef2_link_index  # 右手
+        eef2_state = self._robot.data.body_link_state_w[:,eef2_link_index,:7].clone()
+        eef2_state[:,:3] -= self._robot.data.root_state_w[:,:3]
+        
+        # 左手末端执行器状态
+        eef1_link_index = self._eef1_link_index  # 左手
+        eef1_state = self._robot.data.body_link_state_w[:,eef1_link_index,:7].clone()
+        eef1_state[:,:3] -= self._robot.data.root_state_w[:,:3]
         
         # process image
         
         # 获取基础 RGB 图像
         chest_rgb = self._robot.tiled_cameras["chest_camera"].data.output["rgb"][:, :, :, :]
         head_rgb = self._robot.tiled_cameras["head_camera"].data.output["rgb"][:, :, :, :]
+        third_rgb = self._robot.tiled_cameras["third_camera"].data.output["rgb"][:, :, :, :]  # 新增：第三人称相机
         
         # 初始化可选通道
-        chest_mask, head_mask = None, None
-        chest_depth, head_depth = None, None
-        chest_normal, head_normal = None, None
+        chest_mask, head_mask, third_mask = None, None, None
+        chest_depth, head_depth, third_depth = None, None, None
+        chest_normal, head_normal, third_normal = None, None, None
 
         # 根据 obs_mode 获取所需的额外通道
         # 1. Mask
-        if self.cfg.obs_mode == "rgbm":
+        if self.cfg.obs_mode in ["rgbm", "rgb_masked", "rgb_masked_rgb"]:
             if self.cfg.mask_mode == "real":
                 if "instance_segmentation_fast" in self._robot.tiled_cameras["chest_camera"].data.output:
                     chest_mask = self._robot.tiled_cameras["chest_camera"].data.output["instance_segmentation_fast"][:, :, :, 0]
+                
                 if "instance_segmentation_fast" in self._robot.tiled_cameras["head_camera"].data.output:
                     head_mask = self._robot.tiled_cameras["head_camera"].data.output["instance_segmentation_fast"][:, :, :, 0]
+                
+                if "instance_segmentation_fast" in self._robot.tiled_cameras["third_camera"].data.output:
+                    third_mask = self._robot.tiled_cameras["third_camera"].data.output["instance_segmentation_fast"][:, :, :, 0]
             elif self.cfg.mask_mode == "all_0":
                 chest_mask = torch.zeros_like(chest_rgb[:, :, :, 0])
                 head_mask = torch.zeros_like(head_rgb[:, :, :, 0])
+                third_mask = torch.zeros_like(third_rgb[:, :, :, 0])
             elif self.cfg.mask_mode == "all_1":
                 # 解耦实验：mask 通道填充全 1（会被归一化为 1.0）
                 chest_mask = torch.ones_like(chest_rgb[:, :, :, 0])
                 head_mask = torch.ones_like(head_rgb[:, :, :, 0])
+                third_mask = torch.ones_like(third_rgb[:, :, :, 0])
         
         # 2. Depth
         if self.cfg.obs_mode in ["nd", "rgbnd"]:
@@ -206,6 +245,8 @@ class GraspBottleEnv(ILEnv):
                 chest_depth = self._robot.tiled_cameras["chest_camera"].data.output["depth"][:, :, :, 0]
             if "depth" in self._robot.tiled_cameras["head_camera"].data.output:
                 head_depth = self._robot.tiled_cameras["head_camera"].data.output["depth"][:, :, :, 0]
+            if "depth" in self._robot.tiled_cameras["third_camera"].data.output:
+                third_depth = self._robot.tiled_cameras["third_camera"].data.output["depth"][:, :, :, 0]
 
         # 3. Normal
         if self.cfg.obs_mode in ["nd", "rgbnd"]:
@@ -213,10 +254,13 @@ class GraspBottleEnv(ILEnv):
                 chest_normal = self._robot.tiled_cameras["chest_camera"].data.output["normals"][:, :, :, :3] # 取前3通道
             if "normals" in self._robot.tiled_cameras["head_camera"].data.output:
                 head_normal = self._robot.tiled_cameras["head_camera"].data.output["normals"][:, :, :, :3]
+            if "normals" in self._robot.tiled_cameras["third_camera"].data.output:
+                third_normal = self._robot.tiled_cameras["third_camera"].data.output["normals"][:, :, :, :3]
 
         # 统一处理图像
         chest_camera_img = None
         head_camera_img = None
+        third_camera_img = None
 
         if self.cfg.obs_mode != 'state':
             # 胸部相机
@@ -234,6 +278,15 @@ class GraspBottleEnv(ILEnv):
                 mask=head_mask, 
                 depth=head_depth, 
                 normal=head_normal, 
+                obs_mode=self.cfg.obs_mode
+            )
+            
+            # 第三人称相机
+            third_camera_img = process_batch_image_multimodal(
+                rgb=third_rgb, 
+                mask=third_mask, 
+                depth=third_depth, 
+                normal=third_normal, 
                 obs_mode=self.cfg.obs_mode
             )
 
@@ -293,24 +346,33 @@ class GraspBottleEnv(ILEnv):
         if self.cfg.obs_mode == 'state':
             current_obs = {
                 'target_pose': target_pose.unsqueeze(1),
+                # 右手状态
                 'arm2_pos': self._robot.data.joint_pos[:,self._robot.actuators["arm2"].joint_indices].unsqueeze(1),
                 'hand2_pos': self._robot.data.joint_pos[:,self._robot.actuators["hand2"].joint_indices[:6]].unsqueeze(1), # type: ignore
-                'arm2_eef_pos': eef_state[:,:3].unsqueeze(1),
-                'arm2_eef_quat': eef_state[:,3:7].unsqueeze(1),
-                # 'target_pose': target_pose.unsqueeze(1),
+                'arm2_eef_pos': eef2_state[:,:3].unsqueeze(1),
+                'arm2_eef_quat': eef2_state[:,3:7].unsqueeze(1),
+                # 左手状态
+                'arm1_pos': self._robot.data.joint_pos[:,self._robot.actuators["arm1"].joint_indices].unsqueeze(1),
+                'hand1_pos': self._robot.data.joint_pos[:,self._robot.actuators["hand1"].joint_indices[:6]].unsqueeze(1), # type: ignore
+                'arm1_eef_pos': eef1_state[:,:3].unsqueeze(1),
+                'arm1_eef_quat': eef1_state[:,3:7].unsqueeze(1),
             }
         else:
             current_obs = {
                 'chest_camera_rgb': chest_camera_img.unsqueeze(1),
                 'head_camera_rgb': head_camera_img.unsqueeze(1),
-                # 'third_person_camera_rgb': third_person_camera_rgb.unsqueeze(1),
-                'arm2_pos': self._robot.data.joint_pos[:,self._robot.actuators["arm2"].joint_indices].unsqueeze(1),
-                # 'arm2_vel': self._robot.data.joint_vel[:,self._robot.actuators["arm2"].joint_indices].unsqueeze(1),
-                'hand2_pos': self._robot.data.joint_pos[:,self._robot.actuators["hand2"].joint_indices[:6]].unsqueeze(1), # type: ignore
-                # 'hand2_vel': self._robot.data.joint_vel[:,self._robot.actuators["hand2"].joint_indices[:6]].unsqueeze(1), # type: ignore
-                'arm2_eef_pos': eef_state[:,:3].unsqueeze(1),
-                'arm2_eef_quat': eef_state[:,3:7].unsqueeze(1),
+                'third_camera_rgb': third_camera_img.unsqueeze(1),  # 新增：第三人称相机
                 'target_pose': target_pose.unsqueeze(1),
+                # 右手状态
+                'arm2_pos': self._robot.data.joint_pos[:,self._robot.actuators["arm2"].joint_indices].unsqueeze(1),
+                'hand2_pos': self._robot.data.joint_pos[:,self._robot.actuators["hand2"].joint_indices[:6]].unsqueeze(1), # type: ignore
+                'arm2_eef_pos': eef2_state[:,:3].unsqueeze(1),
+                'arm2_eef_quat': eef2_state[:,3:7].unsqueeze(1),
+                # 左手状态
+                'arm1_pos': self._robot.data.joint_pos[:,self._robot.actuators["arm1"].joint_indices].unsqueeze(1),
+                'hand1_pos': self._robot.data.joint_pos[:,self._robot.actuators["hand1"].joint_indices[:6]].unsqueeze(1), # type: ignore
+                'arm1_eef_pos': eef1_state[:,:3].unsqueeze(1),
+                'arm1_eef_quat': eef1_state[:,3:7].unsqueeze(1),
             }
         
         # 如果是 nd 模式，可能 obs key 是 chest_camera_normals ?
@@ -363,9 +425,14 @@ class GraspBottleEnv(ILEnv):
         
     def sim_step(self):
 
-        # set target
+        # set target - 双手动作
+        # 动作格式：[arm2(7) + hand2(6) + arm1(7) + hand1(6)] = 26
+        # 右手（arm2 + hand2）
         self._robot.set_joint_position_target(self._action[:,:7],self._robot.actuators["arm2"].joint_indices) # type: ignore
-        self._robot.set_joint_position_target(self._action[:,7:],self._robot.actuators["hand2"].joint_indices[:6]) # type: ignore
+        self._robot.set_joint_position_target(self._action[:,7:13],self._robot.actuators["hand2"].joint_indices[:6]) # type: ignore
+        # 左手（arm1 + hand1）
+        self._robot.set_joint_position_target(self._action[:,13:20],self._robot.actuators["arm1"].joint_indices) # type: ignore
+        self._robot.set_joint_position_target(self._action[:,20:26],self._robot.actuators["hand1"].joint_indices[:6]) # type: ignore
 
         # write data to sim
         self._robot.write_data_to_sim()
@@ -489,18 +556,85 @@ class GraspBottleEnv(ILEnv):
         
         return bsuccessed
 
+    def _eval_success_handover(self) -> torch.Tensor:
+        """
+        评估 Handover 是否成功（参考 handover_mp.py）
+        
+        成功条件：
+        1. 左手已抓取物体（左手手指有接触力）
+        2. 右手已松开（右手手指接触力为0）
+        3. 右手已撤回（沿y轴负方向移动）
+        4. 物体朝向偏离不超过阈值
+        5. 物体在交接位置附近（6cm内）
+        6. 物体高度比初始高度至少高1.5cm
+        """
+        # 1. 检查左手是否抓取物体
+        contact_force_num_left = torch.zeros(self.num_envs, dtype=torch.int8, device=self.device)
+        for sensor_name, contact_sensor in self._contact_sensors_left.items():
+            forces = torch.sum(contact_sensor.data.net_forces_w, dim=[1, 2])  # type: ignore
+            force_magnitude = torch.abs(forces)  # 使用力的绝对值（大小）
+            contact_force_num_left = torch.where(
+                force_magnitude > 0.1,  # 力的大小超过阈值（0.1N）
+                contact_force_num_left + 1,
+                contact_force_num_left
+            )
+
+        left_grasped = contact_force_num_left >= 2  # type: ignore  # 至少2个手指有接触力
+        
+        # 2. 检查右手是否松开
+        contact_force_num_right = torch.zeros(self.num_envs, dtype=torch.int8, device=self.device)
+        for sensor_name, contact_sensor in self._contact_sensors_right.items():
+            forces = torch.sum(contact_sensor.data.net_forces_w, dim=[1, 2])  # type: ignore
+            force_magnitude = torch.abs(forces)  # 使用力的绝对值（大小）
+            contact_force_num_right = torch.where(
+                force_magnitude > 0.1,  # 力的大小超过阈值（0.1N）
+                contact_force_num_right + 1,
+                contact_force_num_right
+            )
+        right_released = contact_force_num_right == 0  # type: ignore  # 右手完全无接触力
+        
+        # 3. 检查右手是否已撤回（y轴负方向）
+        eef2_pos_w = self._robot.data.body_link_pos_w[:, self._eef2_link_index, :]
+        object_pos_w = self._target.data.root_pos_w
+        # 检查右手相对物体在y轴方向上是否已经向负方向移动了指定距离
+        y_distance = eef2_pos_w[:, 1] - object_pos_w[:, 1]
+        right_retreated = y_distance < -self._right_retreat_distance  # 向y负方向移动超过指定距离
+        
+        # 4. 检查物体朝向
+        current_quat = self._target.data.root_quat_w
+        orientation_loss = self._quat_orientation_loss(self._target_quat_init, current_quat)
+        orientation_check = orientation_loss < self.cfg.orientation_threshold
+        
+        # 5. 检查物体是否在交接位置附近（6cm内）
+        current_pos = self._target.data.root_pos_w  # [num_envs, 3]
+        handover_pos = self._handover_position.unsqueeze(0).repeat(self.num_envs, 1)  # [num_envs, 3]
+        handover_pos += self._robot.data.root_link_pos_w[:, :]
+        distance = torch.norm(current_pos - handover_pos, dim=1)  # 计算3D欧氏距离
+        position_check = distance < self.cfg.handover_position_threshold  # 在6cm范围内
+        
+        # 6. 检查物体高度是否比初始高度至少高1.5cm
+        current_height = current_pos[:, 2]  # z坐标
+        initial_height = self._target_pos_init[:, 2]  # 初始z坐标
+        height_diff = current_height - initial_height
+        height_check = height_diff > 0.015  # 至少抬高1.5cm
+        
+        # 综合判断（所有条件都要满足）
+        bsuccessed = left_grasped & right_released & right_retreated & orientation_check & position_check & height_check
+        
+        return bsuccessed
+
     def _get_dones(self) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         # 
         time_out = self.episode_length_buf >= self.max_episode_length - 1
-        # task evalutation
-        bfailed,self._has_contacted = eval_fail(self._target,self._contact_sensors, self._has_contacted) # type: ignore
+        # task evalutation（使用右手contact sensors检测初期失败）
+        bfailed,self._has_contacted = eval_fail(self._target,self._contact_sensors_right, self._has_contacted) # type: ignore
         
         # 新增：检测物体在未接触时被移动（被推动/碰撞）
         bfailed_moved = self._eval_fail_moved_without_contact()
         bfailed = bfailed_moved
         
-        # success eval（使用带朝向检查的函数）
-        bsuccessed = self._eval_success_with_orientation()
+        # success eval（使用 Handover 的成功判断）
+        bsuccessed = self._eval_success_handover()
         
         # 记录成功环境的步数
         success_indices = torch.nonzero(bsuccessed == True).squeeze(1).tolist()

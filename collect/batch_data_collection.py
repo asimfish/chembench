@@ -51,9 +51,11 @@ DEFAULT_DATA_COLLECT_ARGS = [
 ]
 
 # 默认数据转换参数
-DEFAULT_ZARR_DIR = WORKSPACE_ROOT / "data/zarr_final"
+DEFAULT_ZARR_DIR = WORKSPACE_ROOT / "data/zarr_point_cloud"
 DEFAULT_ZARR_CONVERT_ARGS = [
     "--mode", "rgb",
+    "--task_type", "single_hand",
+    "--max_episodes", "50",
     "--with_mask",
     "--with_depth",
     "--with_normals"
@@ -770,6 +772,8 @@ def main():
         zc_config = config.get("zarr_conversion", {})
         zarr_convert_args = [
             "--mode", zc_config.get("mode", "rgb"),
+            "--task_type", zc_config.get("task_type", "auto"),
+            "--max_episodes", str(zc_config.get("max_episodes", 50)),
         ]
         if zc_config.get("with_mask", True):
             zarr_convert_args.append("--with_mask")
@@ -777,6 +781,10 @@ def main():
             zarr_convert_args.append("--with_depth")
         if zc_config.get("with_normals", True):
             zarr_convert_args.append("--with_normals")
+        if zc_config.get("with_pointcloud", False):
+            zarr_convert_args.append("--with_pointcloud")
+            num_points = zc_config.get("num_points", 2048)
+            zarr_convert_args.extend(["--num_points", str(num_points)])
         
         zarr_dir = Path(zc_config.get("zarr_dir", str(DEFAULT_ZARR_DIR)))
         

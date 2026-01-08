@@ -30,6 +30,11 @@ from psilab.utils.data_collect_utils import parse_data,save_data
 """ Local Modules """
 from ..config_loader import load_grasp_config, load_grasp_points, get_grasp_point_by_index, get_available_grasp_points
 
+# 导入标准的点云加载和采样函数
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../../../..")))
+from extract_ground_truth_pointcloud import load_usd_mesh_as_trimesh, sample_pointcloud
+
 # ========== 任务配置（修改这里即可切换不同任务）==========
 # TARGET_OBJECT_NAME = "mortar"  # 目标物体名称，如 "mortar", "glass_beaker_100ml" 等
 # glass_graduated_cylinder_500ml
@@ -113,11 +118,11 @@ class GraspBottleEnvCfg(MPEnvCfg):
     # 预抓取位置偏移
 
     # 普通物体
-    pre_grasp_height: float = 0.05
-    pre_grasp_y_offset: float = -0.02
-    pre_grasp_x_offset: float = -0.02
+    pre_grasp_height: float = 0.02
+    pre_grasp_y_offset: float = -0.01
+    pre_grasp_x_offset: float = -0.095
 # [-0.02, -0.02, 0.05] 
-    # 高的物体
+    # 高的物体[-0.02, -0.02, 0.05]
     # pre_grasp_height: float = 0.02
     # pre_grasp_y_offset: float = -0.01
     # pre_grasp_x_offset: float = -0.095
@@ -158,6 +163,14 @@ class GraspBottleEnvCfg(MPEnvCfg):
     
     # 是否启用阶段步数统计输出
     enable_phase_stats: bool = True
+    
+    # 是否加载真值点云（从USD采样）
+    enable_pointcloud: bool = True
+    
+    # 材质切换配置
+    enable_material_switch: bool = False  # 是否启用材质切换
+    material_switch_step: int = 2  # 在哪一步切换材质
+    target_material_path: str = "/World/Looks/M_Glass_Clear"  # 目标材质路径（示例）
     
     def __post_init__(self):
         """
@@ -262,6 +275,13 @@ class GraspBottleEnv(MPEnv):
         self._target_pos_init = torch.zeros((self.num_envs,3),device=self.device)
         self._target_quat_init = torch.zeros((self.num_envs,4),device=self.device)  # 初始朝向（wxyz）
         
+        # ========== 加载真值点云（从USD采样）==========
+        if self.cfg.enable_pointcloud:
+            self._load_ground_truth_pointcloud()
+        else:
+            print("⚠️  点云加载已禁用（enable_pointcloud=False）")
+            self._base_pointcloud = None
+        
         # ========== 阶段步数统计 ==========
         if self.cfg.enable_phase_stats:
             # 计算各阶段边界（与 create_trajectory_smooth 中的计算保持一致）
@@ -300,7 +320,10 @@ class GraspBottleEnv(MPEnv):
         carb_settings_iface.set_bool("/rtx/raytracing/fractionalCutoutOpacity", True)
         # 3. 可选：确保透明物体参与 Primary Ray Hit
         carb_settings_iface.set_bool("/rtx/hydra/segmentation/includeTransparent", True)
-
+        
+        # 材质切换标志（用于记录是否已经切换过）
+        self._material_switched = torch.zeros(self.num_envs, device=self.device, dtype=torch.bool)
+        
         # self.sim.render.rendering_mode = "quality"
         # self.sim.render.antialiasing_mode = "TAA"
 
@@ -322,6 +345,235 @@ class GraspBottleEnv(MPEnv):
         
         # # 可选：启用 AI 降噪器以提高实时性能
         # carb_settings_iface.set_bool("/rtx/pathtracing/optixDenoiser/enabled", True)
+
+    def _load_ground_truth_pointcloud(self, num_points: int = 1024):
+        """
+        从USD文件加载并采样真值点云
+        
+        使用与 extract_ground_truth_pointcloud.py 完全相同的标准函数，确保：
+        1. 正确处理USD transform层级
+        2. 处理所有类型的n-gon（不只是三角形和四边形）
+        3. 生成的点云与离线生成的ground truth完全一致
+        
+        Args:
+            num_points: 采样点数（默认2048）
+        """
+        try:
+            import numpy as np
+            
+            # 获取物体USD路径（基础路径指向 sim_ready，子目录有 solid_assets 和 solid_assets_new）
+            usd_base_path = os.path.join(
+                os.path.dirname(__file__), 
+                "../../../../../../psilab/assets/usd/asset_collection/sim_ready"
+            )
+            
+            # 根据 target_object_name 映射到USD文件
+            # 映射关系来自 collect/objects_config.yaml
+            object_usd_map = {
+                # ========== solid_assets (旧版) ==========
+                "glass_beaker_50ml": "glass_beaker_50ml/Beaker002.usd",
+                "glass_beaker_100ml": "glass_beaker_100ml/Beaker003.usd",
+                "glass_beaker_250ml": "glass_beaker_250ml/Beaker004.usd",
+                "glass_beaker_500ml": "glass_beaker_500ml/Beaker005.usd",
+                
+                "brown_volumetric_flask_250ml": "brown_volumetric_flask_250ml/VolumetricFlask001.usd",
+                "clear_volumetric_flask_250ml": "clear_volumetric_flask_250ml/VolumetricFlask002.usd",
+                "clear_volumetric_flask_500ml": "clear_volumetric_flask_500ml/VolumetricFlask003.usd",
+                "clear_volumetric_flask_1000ml": "clear_volumetric_flask_1000ml/VolumetricFlask004.usd",
+                
+                "mortar": "mortar/Mortar001.usd",
+                
+                "brown_reagent_bottle_small": "brown_reagent_bottle_small/ReagentBottle004.usd",
+                "brown_reagent_bottle_large": "brown_reagent_bottle_large/ReagentBottle001.usd",
+                "clear_reagent_bottle_small": "clear_reagent_bottle_small/ReagentBottle003.usd",
+                "clear_reagent_bottle_large": "clear_reagent_bottle_large/ReagentBottle002.usd",
+                
+                "erlenmeyer_flask": "erlenmeyer_flask/ErlenmeyerFlask001.usd",
+                
+                "plastic_cylinder_100ml": "plastic_cylinder_100ml/GraduatedCylinder001.usd",
+                "glass_cylinder_100ml": "glass_cylinder_100ml/GraduatedCylinder004.usd",
+            }
+            
+            # ========== solid_assets_new (新版) ==========
+            object_usd_map_new = {
+                "plastic_graduated_cylinder_500ml": "solid_assets_new/plastic_graduated_cylinder_500ml/GraduatedCylinder002.usd",
+                "glass_graduated_cylinder_500ml": "solid_assets_new/glass_graduated_cylinder_500ml/GraduatedCylinder003.usd",
+                "erlenmeyer_flask_with_stopper": "solid_assets_new/erlenmeyer_flask_with_stopper/ErlenmeyerFlask002.usd",
+                "funnel": "solid_assets_new/funnel/Funnel001.usd",
+                "alcohol_lamp": "solid_assets_new/alcohol_lamp/AlcoholLamp001.usd",
+            }
+            
+            # 合并两个映射
+            object_usd_map.update(object_usd_map_new)
+            
+            usd_rel_path = object_usd_map.get(self.cfg.target_object_name)
+            if usd_rel_path is None:
+                print(f"⚠️ 未找到 {self.cfg.target_object_name} 的USD映射，跳过真值点云加载")
+                self._base_pointcloud = None
+                return
+            
+            # 如果路径包含 solid_assets_new，直接使用；否则添加 solid_assets 前缀
+            if "solid_assets_new" in usd_rel_path:
+                # 已经包含完整路径（solid_assets_new/...）
+                full_usd_rel_path = usd_rel_path
+            else:
+                # 旧版资产，添加 solid_assets 前缀
+                full_usd_rel_path = os.path.join("solid_assets", usd_rel_path)
+            
+            usd_path = os.path.abspath(os.path.join(usd_base_path, full_usd_rel_path))
+            
+            if not os.path.exists(usd_path):
+                print(f"⚠️ USD文件不存在: {usd_path}，跳过真值点云加载")
+                self._base_pointcloud = None
+                return
+            
+            print(f"📦 加载真值点云: {usd_path}")
+            
+            # 使用标准函数加载USD mesh（确保正确处理transform层级）
+            # 注意：加载单独的USD文件时，不指定root_prim_path（使用世界坐标系）
+            # 这样采样的点云就是物体局部坐标系中的点，后续通过物体的世界位姿来变换
+            mesh = load_usd_mesh_as_trimesh(
+                usd_path=usd_path,
+                root_prim_path=None,  # 不指定root，使用世界坐标系（即USD文件的局部坐标系）
+                convert_to_meters=True,  # 假设USD单位需要转换为米
+                time_code=None,
+                process=False,
+            )
+            
+            # 使用标准函数采样点云
+            base_pc = sample_pointcloud(mesh, num_points=num_points, seed=0)
+            
+            # 转换为torch tensor并移到GPU
+            self._base_pointcloud = torch.from_numpy(base_pc.astype(np.float32)).to(self.device)
+            
+            print(f"✅ 真值点云加载完成: {self._base_pointcloud.shape}")
+            
+        except Exception as e:
+            print(f"⚠️ 加载真值点云时出错: {e}")
+            import traceback
+            traceback.print_exc()
+            self._base_pointcloud = None
+    
+    def _transform_pointcloud(self, env_id: int) -> torch.Tensor | None:
+        """
+        将基础点云变换到当前物体姿态
+        
+        Args:
+            env_id: 环境ID
+            
+        Returns:
+            变换后的点云 (N, 3) 或 None
+        """
+        if self._base_pointcloud is None:
+            return None
+        
+        # 获取物体当前位姿（世界坐标系）
+        obj_pos_w = self._target.data.root_pos_w[env_id, :].clone()  # (3,)
+        obj_quat_w = self._target.data.root_quat_w[env_id, :].clone()  # (4,) wxyz
+        
+        # 获取环境原点
+        env_origin = self.scene.env_origins[env_id, :].clone()  # (3,)
+        
+        # 物体相对于环境原点的位置
+        obj_pos_rel = obj_pos_w - env_origin  # (3,)
+        
+        # 将四元数转换为旋转矩阵
+        # 四元数格式: wxyz
+        w, x, y, z = obj_quat_w[0], obj_quat_w[1], obj_quat_w[2], obj_quat_w[3]
+        
+        # 构建旋转矩阵 (3x3)
+        R = torch.stack([
+            torch.stack([1 - 2*(y*y + z*z), 2*(x*y - w*z), 2*(x*z + w*y)]),
+            torch.stack([2*(x*y + w*z), 1 - 2*(x*x + z*z), 2*(y*z - w*x)]),
+            torch.stack([2*(x*z - w*y), 2*(y*z + w*x), 1 - 2*(x*x + y*y)])
+        ])  # (3, 3)
+        
+        # 应用变换: p' = R * p + t
+        transformed_pc = torch.matmul(self._base_pointcloud, R.T) + obj_pos_rel.unsqueeze(0)  # (N, 3)
+        
+        # ⚠️ 修复：USD点云朝向与IsaacSim中的物体朝向相差180度
+        # 对点云应用绕Z轴旋转180度的修正（相对于物体中心）
+        # 旋转180度等价于: x' = -x, y' = -y, z' = z (相对于中心点)
+        pc_center = obj_pos_rel  # 物体中心位置
+        transformed_pc_centered = transformed_pc - pc_center.unsqueeze(0)  # 移到原点
+        transformed_pc_centered[:, 0] = -transformed_pc_centered[:, 0]  # x取负
+        transformed_pc_centered[:, 1] = -transformed_pc_centered[:, 1]  # y取负
+        transformed_pc = transformed_pc_centered + pc_center.unsqueeze(0)  # 移回物体中心
+        
+        return transformed_pc
+    
+    def _switch_bottle_material(self, env_id: int):
+        """
+        切换指定环境中 bottle 的材质
+        
+        Args:
+            env_id: 环境ID
+        """
+        try:
+            from pxr import Usd, UsdShade, Sdf
+            
+            # 获取 USD stage
+            stage = self.sim.stage
+            
+            # 构建 bottle 的材质路径
+            # 格式: /World/envs/env_{env_id}/bottle/Beaker003/Visuals/Beaker003/M_Beaker003_001
+            # bottle_prim_path = self._target.prim_paths[env_id]  # 获取 bottle 的基础路径
+            
+            # 查找材质绑定的 prim（通常在 Visuals 下）
+            # 方法1: 直接指定完整路径（如果知道具体结构）
+            # material_prim_path = f"{bottle_prim_path}/Beaker003/Visuals/Beaker003"
+
+            material_prim_path = "/World/envs/env_0/Bottle/base/Visuals/Beaker003/M_Beaker003_001"
+
+            
+            # 获取 prim
+            mesh_prim = stage.GetPrimAtPath(material_prim_path)
+            
+            # if not mesh_prim.IsValid():
+            #     print(f"⚠️ 未找到材质绑定的 Prim: {material_prim_path}")
+            #     # 尝试查找其他可能的路径
+            #     print(f"📋 Bottle prim path: {bottle_prim_path}")
+            #     # 遍历子 prim 查找
+            #     bottle_prim = stage.GetPrimAtPath(bottle_prim_path)
+            #     for child in bottle_prim.GetAllChildren():
+            #         print(f"  - Child: {child.GetPath()}")
+            #     return
+            target_material_path = "/World/envs/env_0/Bottle/Physics/PhysicsMaterial"
+            # 绑定新材质
+            material_prim = stage.GetPrimAtPath(target_material_path)
+            if not material_prim.IsValid():
+                print(f"⚠️ 目标材质不存在: {target_material_path}")
+                return
+            
+            # 创建材质绑定
+            shade_material = UsdShade.Material(material_prim)
+            UsdShade.MaterialBindingAPI(mesh_prim).Bind(shade_material)
+            
+            print(f"✅ 环境 {env_id}: 已将材质切换为 {target_material_path}")
+            
+        except Exception as e:
+            print(f"❌ 切换材质时出错 (env {env_id}): {e}")
+            import traceback
+            traceback.print_exc()
+
+
+    def debug_find_fluid(self, env_id=0):
+        from pxr import Usd, UsdShade, Sdf
+            
+        # 获取 USD stage
+        stage = self.sim.stage
+        # stage = omni.usd.get_context().get_stage()
+        root = stage.GetPrimAtPath(f"/World/envs/env_{env_id}/Bottle")
+        print("Root exists:", root.IsValid(), root.GetPath())
+
+        hits = []
+        for p in root.Traverse():
+            name = p.GetName().lower()
+            t = p.GetTypeName()
+            if "fluid" in name or "particle" in name or t.lower().startswith("physxparticle"):
+                hits.append((str(p.GetPath()), t))
+        for h in hits[:80]:
+            print(h)
 
     def create_trajectory(self,env_ids: torch.Tensor | None):
         
@@ -855,6 +1107,16 @@ class GraspBottleEnv(MPEnv):
         self._robot.set_ik_command({"arm2":eef_pose_target})
         self._robot.set_joint_position_target(hand_pos_target,self._robot.actuators["hand2"].joint_indices[:6]) # type: ignore
 
+        # ========== 材质切换检查 ==========
+        if self.cfg.enable_material_switch:
+            for i in range(self.num_envs):
+                # 检查是否到达指定步数且尚未切换过
+                if self._episode_step[i] == self.cfg.material_switch_step and not self._material_switched[i]:
+                    self._switch_bottle_material(i)
+                    self._material_switched[i] = True
+
+        # self.debug_find_fluid(0)
+
         if self.cfg.print_eef_pose:
             # ========== 输出末端执行器位置和旋转 ==========
             # 获取当前末端执行器位姿（世界坐标系）
@@ -940,7 +1202,9 @@ class GraspBottleEnv(MPEnv):
             parse_data(
                 sim_time=self._sim_step_counter * self.cfg.sim.dt,
                 data = self._data,
-                scene = self.scene
+                scene = self.scene,
+                env_obj = self,  # 传递环境对象
+                pointcloud_transform_fn = self._transform_pointcloud if (self.cfg.enable_pointcloud and self._base_pointcloud is not None) else None  # 传递点云变换函数
             )
 
 
@@ -1095,8 +1359,20 @@ class GraspBottleEnv(MPEnv):
         # success eval（使用新的带朝向检查的函数）
         bsuccessed = self._eval_success_with_orientation()
      
-        # update success number
-        self._episode_success_num += len(torch.nonzero(bsuccessed == True).squeeze(1).tolist())
+        # update success number (精确控制，不超过目标)
+        new_success_count = len(torch.nonzero(bsuccessed == True).squeeze(1).tolist())
+        
+        if self.cfg.target_success_count and self.cfg.target_success_count > 0:
+            # 计算还可以接受的成功数
+            remaining = self.cfg.target_success_count - self._episode_success_num
+            if remaining > 0:
+                # 只增加不超过剩余目标的成功数
+                actual_increment = min(new_success_count, remaining)
+                self._episode_success_num += actual_increment
+            # else: 已达到或超过目标，不再增加
+        else:
+            # 没有设置目标，正常增加
+            self._episode_success_num += new_success_count
         
         # ========== 阶段步数统计 ==========
         if self.cfg.enable_phase_stats:
@@ -1189,20 +1465,33 @@ class GraspBottleEnv(MPEnv):
         if success_ids is None:
             success_ids=[]
         
-        # 截断 logic: 确保保存的数据不超过 target_success_count
+        # 截断 logic: 确保保存的数据恰好等于 target_success_count
         ids_to_save = success_ids
+        prev_total = 0  # 初始化，避免后续使用时未定义
+        
         if self.cfg.enable_output and self.cfg.target_success_count and self.cfg.target_success_count > 0:
             # 注意: _get_dones 已经更新了 _episode_success_num，包含了当前 batch
             current_total = self._episode_success_num
             batch_size = len(success_ids)
             prev_total = current_total - batch_size
             
+            # 计算还需要多少条数据
             if prev_total < self.cfg.target_success_count:
                 needed = self.cfg.target_success_count - prev_total
                 if batch_size > needed:
+                    # 当前批次超过需要的数量，只保存需要的部分
                     ids_to_save = success_ids[:needed]
+                    print(f"\n[INFO] 截断保存：需要 {needed} 条，当前批次 {batch_size} 条，保存前 {needed} 条")
+                elif batch_size < needed:
+                    # 当前批次不够，全部保存
+                    ids_to_save = success_ids
+                else:
+                    # 恰好等于需要的数量
+                    ids_to_save = success_ids
             else:
+                # 已经达到目标，不再保存
                 ids_to_save = []
+                print(f"\n[INFO] 已达到目标 {self.cfg.target_success_count} 条，跳过当前批次")
 
         # output data
         if self.cfg.enable_output:
@@ -1218,7 +1507,13 @@ class GraspBottleEnv(MPEnv):
             # 打印保存的文件路径
             if ids_to_save:
                 saved_path = f"{self.cfg.output_folder}/{timestamp}_data.hdf5"
-                print(f"[DATA] 已保存数据: {saved_path} (成功轨迹数: {len(ids_to_save)})")
+                saved_count = len(ids_to_save)
+                # 计算已保存的总数
+                if self.cfg.target_success_count and self.cfg.target_success_count > 0:
+                    total_saved = min(prev_total + saved_count, self.cfg.target_success_count)
+                    print(f"[DATA] 已保存数据: {saved_path} (本批次: {saved_count}条, 总计: {total_saved}/{self.cfg.target_success_count})")
+                else:
+                    print(f"[DATA] 已保存数据: {saved_path} (成功轨迹数: {saved_count})")
 
 
         super()._reset_idx(env_ids)   
@@ -1248,6 +1543,7 @@ class GraspBottleEnv(MPEnv):
         self._target_pos_init[env_ids, :] = self._target.data.root_link_pos_w[env_ids, :].clone()
         self._target_quat_init[env_ids, :] = self._target.data.root_quat_w[env_ids, :].clone()  # 保存初始朝向
         self._has_contacted[env_ids] = torch.zeros_like(self._has_contacted[env_ids], device=self.device, dtype=torch.bool)  # type: ignore
+        self._material_switched[env_ids] = torch.zeros_like(self._material_switched[env_ids], device=self.device, dtype=torch.bool)  # type: ignore
 
     def _log_info(self):
         # log policy evalutation result

@@ -33,6 +33,25 @@
         // Diffusion Policy 训练配置（新版）
         // 使用说明：修改 task/*.yaml 中的 object_name 和 num_demos
         // ============================================
+        
+        // RGBM任务训练 - 使用图像+Mask输入（修改 task/grasp_rgbm.yaml）
+        {
+            "name": "DP:Train-Grasp-RGBM",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/diffusion_policy/train.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--config-name",
+                "train_diffusion_transformer_rgbm_workspace",
+                "task=grasp_rgbm"
+            ],
+            "env": {
+                "CUDA_VISIBLE_DEVICES": "6"
+            },
+            "justMyCode": false
+        },
+        
         // // RGB任务训练 - 使用图像输入（修改 task/grasp_rgb.yaml）
         // {
         //     "name": "DP:Train-Grasp-RGB",
@@ -283,7 +302,7 @@
         //     "console": "integratedTerminal",
         //     "justMyCode": false
         // },
-
+        // "/home/psibot/chembench/data/download/final_real/model/grasp_rgbm_latest/part1/第一批_250ml棕色容量瓶_带第三人称相机_nd_4通道/20251231_171525_n50_nd/latest.ckpt",
         // ============================================
         // Motion Planning 数据收集配置
         // ============================================
@@ -399,11 +418,13 @@
             "args": [
                 "--task",
                 "Psi-IL-Grasp-v1",
+                // "Psi-IL-PickPlace-v1",
                 "--num_envs",
-                "30",
+                "20",
                 "--seed",
                 "17",
                 "--scene",
+                // "room_cfg:PSI_DC_PickPlace_CFG",
                 "room_cfg:PSI_DC_Grasp_CFG",
                 "--enable_cameras",
                 "--async_reset",
@@ -411,11 +432,11 @@
                 "--enable_random",
                 // "--headless",
                 "--checkpoint",
-                
+                "/home/psibot/chembench/act/2026.01.08/05.59.45_DP3_grasp_500ml_clear_volumetric/checkpoints/latest.ckpt",
                 // "/home/psibot/chembench/data/outputs/download/grasp_rgb/100ml玻璃透明_state/epoch=4990-train_loss=0.003.ckpt",
                 // "/home/psibot/chembench/data/outputs/download/grasp_rgb/1225/100ml玻璃烧杯_黑色_无速度_rgb+normal+depth/20251224_170156_n50_rgbnd/checkpoints/epoch=4130-train_loss=0.003.ckpt",
                 // "/home/psibot/chembench/data/outputs/download/grasp_rgb/1225/100ml玻璃烧杯_无速度_normal+depth/20251224_181826_n50_nd/checkpoints/epoch=4290-train_loss=0.002.ckpt",
-                "/home/psibot/chembench/data/tmp/100ml烧杯_nd.ckpt",
+                // "/home/psibot/chembench/data/tmp/100ml烧杯_nd.ckpt",
                 // "/home/psibot/chembench/data/outputs/download/grasp_rgb/1225_rbg/black_beaker_rgb_no_vel.ckpt",
                 // "/home/psibot/chembench/data/outputs/download/grasp_rgb/采集/烧杯纯图/epoch=4910-train_loss=0.002.ckpt",
                 "--max_step",
@@ -427,6 +448,51 @@
             "program": "${workspaceFolder}/psilab/scripts_psi/workflows/imitation_learning/play.py",
             "console": "integratedTerminal",
             "justMyCode": false
+        },
+
+        {
+            // ACT 评估 - 6通道模式（RGB + RGB_masked）
+            "name": "ACT:Eval-Grasp-100ml-Beaker-6Channel",
+            "type": "debugpy",
+            "request": "launch",
+            "args": [
+                "--task",
+                "Psi-IL-Grasp-ACT-v1",
+                "--num_envs",
+                "1",
+                "--seed",
+                "42",
+                "--scene",
+                "room_cfg:PSI_DC_Grasp_CFG",
+                "--enable_cameras",
+                "--async_reset",
+                "--enable_eval",
+                "--enable_random",
+                "--checkpoint",
+                "/home/psibot/chembench/act/chunk_other/grasp_beaker_kl10_chunk15_bs64_lr1e5_hd512_20260108_181056/policy_best.ckpt",
+                "--max_step",
+                "500",
+                "--max_episode",
+                "100",
+                "--obs_mode",
+                "rgb_masked_rgb",  // 6通道：RGB + RGB_masked（你的模型）
+                "--camera_names",
+                "chest_camera",
+                "head_camera",
+                "third_camera",
+                "--num_queries",
+                "15",
+                "--temporal_agg",
+                "true",
+                "--mask_mode",
+                "real",
+            ],
+            "program": "${workspaceFolder}/psilab/scripts_psi/workflows/imitation_learning/play.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "CUDA_VISIBLE_DEVICES": "0"
+            }
         },
 
         {
@@ -464,7 +530,7 @@
             "args": [
                 "--enable_cameras",
                 "--hdf5_file_folder",
-                "/home/psibot/chembench/data/motion_plan/pick_place/坩埚/20251231_225007",
+                "/home/psibot/chembench/data/motion_plan/grasp/50ml玻璃烧杯/20260104_043014",
                 "--enable_state"
             ],
             "program": "${workspaceFolder}/psilab/scripts_psi/workflows/replay/replay.py",
@@ -489,19 +555,26 @@
         // // ============================================
         // HDF5 to Zarr 数据转换
         {
-            "name": "HDF5 to Zarr (RGB+Mask)",
+            "name": "HDF5 to Zarr (RGB+Mask+PointCloud+GT)",
             "type": "debugpy",
             "request": "launch",
             "args": [
                 "--h5_dir",
-                "/home/psibot/chembench/data/motion_plan/grasp/100ml玻璃烧杯/20251231_150714",
+                "/home/psibot/chembench/data/motion_plan/grasp/100ml玻璃烧杯/20260107_164121",
                 "--zarr_dir",
-                "${workspaceFolder}/data/zarr_final",
+                "${workspaceFolder}/data/zarr_gt_point",
                 "--mode",
                 "rgb",
                 "--with_mask",
                 "--with_depth",
-                "--with_normals"
+                "--with_normals",
+                "--task_type",
+                "single_hand",
+                "--max_episodes",
+                "50",
+                "--with_pointcloud",  // 包含相机点云和Ground Truth点云
+                "--num_points",
+                "2048",
                 // "--save_rgb_separate",
                 // "--save_mask_separate"
             ],
@@ -683,6 +756,312 @@
             "program": "${workspaceFolder}/test/batch_test_universal.py",
             "console": "integratedTerminal",
             "justMyCode": false
+        },
+
+        // ============================================
+        // 点云真值提取
+        // ============================================
+        {
+            "name": "Extract Ground Truth Pointcloud (原始点云)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/extract_ground_truth_pointcloud.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--usd",
+                "${workspaceFolder}/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_100ml/Beaker003.usd",
+                "--num-points",
+                "2048",
+                "--output",
+                "${workspaceFolder}/data/test_beaker_pointcloud.zarr",
+                "--no-transform",  // 只输出原始点云（不应用pose）
+                // "--visualize",  // 取消注释以可视化
+            ],
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/psilab/source/psilab:${workspaceFolder}/psilab/source/psilab_tasks:${env:PYTHONPATH}"
+            }
+        },
+        {
+            "name": "Extract Ground Truth Pointcloud (带变换)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/extract_ground_truth_pointcloud.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--usd",
+                "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/clear_reagent_bottle_large/ReagentBottle002.usd",
+                "--zarr",
+                "/home/psibot/chembench/data/zarr_point_cloud/motion_plan/grasp/透明试剂瓶(大).zarr",
+                "--num-points",
+                "2048",
+                "--output",
+                "/home/psibot/chembench/data/zarr_point_cloud/motion_plan/grasp/透明试剂瓶(大)_ground_truth.zarr",
+                "--quat-order",
+                "wxyz",  // 四元数顺序：wxyz 或 xyzw
+                // "--root-prim",
+                // "/World/Object",  // 可选：指定root坐标系
+                // "--convert-to-meters",  // 可选：使用USD metersPerUnit转换
+                // "--stream-to-zarr",  // 可选：流式写入（长序列推荐）
+                // "--visualize",  // 取消注释以可视化轨迹
+                // "--skip-frames",
+                // "50",
+            ],
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/psilab/source/psilab:${workspaceFolder}/psilab/source/psilab_tasks:${env:PYTHONPATH}"
+            }
+        },
+
+
+
+        // ============================================
+        // 真值点云可视化
+        // ============================================
+        {
+            "name": "Visualize GT Pointcloud - Static",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/visualize_ground_truth_pointcloud.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--zarr",
+                "/home/psibot/chembench/data/zarr_gt_point_1024/motion_plan/grasp/500ml透明容量瓶_20260108_231319.zarr",
+                "--mode",
+                "static",
+                // "--frames", "0", "500", "1000", "1500",  // 取消注释以指定帧
+                // "--save", "pointcloud_static.png",  // 取消注释以保存图片
+            ],
+            "justMyCode": false
+        },
+
+        {
+            "name": "Visualize GT Pointcloud - Animation",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/visualize_ground_truth_pointcloud.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--zarr",
+                "/home/psibot/chembench/data/zarr_gt_point/motion_plan/grasp/100ml玻璃烧杯_20260106_023356.zarr",
+                "--mode",
+                "animation",
+                "--skip_frames",
+                "2",
+                // "--save", "pointcloud_animation.gif",  // 取消注释以保存动画
+            ],
+            "justMyCode": false
+        },
+
+        {
+            "name": "Visualize GT Pointcloud - Trajectory",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/visualize_ground_truth_pointcloud.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--zarr",
+                "/home/psibot/chembench/data/zarr_final_point_cloud/motion_plan/grasp/100ml玻璃烧杯.zarr",
+                "--mode",
+                "trajectory",
+                "--sample_rate",
+                "100",
+            ],
+            "justMyCode": false
+        },
+
+        {
+            "name": "Visualize GT Pointcloud - Open3D",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/visualize_ground_truth_pointcloud.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--zarr",
+                "/home/psibot/chembench/data/zarr_point_cloud/motion_plan/grasp/100ml玻璃烧杯.zarr",
+                "--mode",
+                "open3d",
+                // "--frames", "0", "500", "1000", "1500", "2621",  // 取消注释以指定帧
+            ],
+            "justMyCode": false
+        },
+
+        {
+            "name": "Visualize GT Pointcloud - Compare with Camera",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/visualize_ground_truth_pointcloud.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--zarr",
+                "/home/psibot/chembench/data/zarr_gt_point/motion_plan/grasp/100ml玻璃烧杯.zarr",
+                "--mode",
+                "compare",
+                "--frames",
+                "520",  // 修改帧索引
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "Visualize GT Pointcloud - Dynamic Compare",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/visualize_ground_truth_pointcloud.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--zarr",
+                "/home/psibot/chembench/data/zarr_gt_point/motion_plan/grasp/100ml玻璃烧杯_20260106_025457.zarr",
+                "--mode",
+                "compare_animation",  // 新模式：动态对比
+                "--skip_frames",
+                "2",  // 跳帧数
+                // "--save", "pointcloud_compare_animation.gif",  // 保存动画
+            ],
+            "justMyCode": false
+        },
+
+        // ============================================
+        // 相机点云可视化
+        // ============================================
+        {
+            "name": "Visualize Camera Pointcloud - Single",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/visualize_camera_pointcloud.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--zarr",
+                "/home/psibot/chembench/data/zarr_final_point_cloud/motion_plan/grasp/100ml玻璃烧杯.zarr",
+                "--mode",
+                "single",
+                "--camera",
+                "chest_camera_pointcloud",  // chest_camera_pointcloud, head_camera_pointcloud, third_camera_pointcloud
+                "--frames",
+                "0",
+                "--use_rgb",  // 取消注释以使用RGB颜色
+                // "--save", "camera_pointcloud.png",
+            ],
+            "justMyCode": false
+        },
+
+        {
+            "name": "Visualize Camera Pointcloud - All Cameras",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/visualize_camera_pointcloud.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--zarr",
+                "/home/psibot/chembench/data/zarr_point_cloud/motion_plan/grasp/100ml玻璃烧杯.zarr",
+                "--mode",
+                "all",
+                "--frames",
+                "0",
+                "--use_rgb",  // 使用RGB颜色
+                // "--save", "all_cameras.png",
+            ],
+            "justMyCode": false
+        },
+
+        {
+            "name": "Visualize Camera Pointcloud - Animation",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/visualize_camera_pointcloud.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--zarr",
+                "/home/psibot/chembench/data/zarr_final_point_cloud/motion_plan/grasp/100ml玻璃烧杯.zarr",
+                "--mode",
+                "animation",
+                "--camera",
+                "chest_camera_pointcloud",
+                "--skip_frames",
+                "1",
+                // "--use_rgb",
+                // "--save", "camera_animation.gif",
+            ],
+            "justMyCode": false
+        },
+
+        {
+            "name": "Visualize Camera Pointcloud - Compare with GT",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/visualize_camera_pointcloud.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--zarr",
+                "/home/psibot/chembench/data/zarr_point_cloud/motion_plan/grasp/100ml玻璃烧杯.zarr",
+                "--mode",
+                "compare",
+                "--camera",
+                "chest_camera_pointcloud",
+                "--frames",
+                "0",
+                "--use_rgb",
+            ],
+            "justMyCode": false
+        },
+
+        {
+            "name": "Visualize Camera Pointcloud - Open3D",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/visualize_camera_pointcloud.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--zarr",
+                "/home/psibot/chembench/data/zarr_point_cloud/motion_plan/grasp/100ml玻璃烧杯.zarr",
+                "--mode",
+                "open3d",
+                "--camera",
+                "chest_camera_pointcloud",
+                "--frames",
+                "0", "500", "1000", "1500",
+                "--use_rgb",
+            ],
+            "justMyCode": false
+        },
+
+        // ============================================
+        // OpenVLA 评估配置（参考 LIBERO 评估风格）
+        // ⚠️ 注意事项：
+        //    1. 需要先安装 draccus: cd psilab/source/isaaclab && ./isaaclab.sh -p -m pip install draccus
+        //    2. 必须使用 Isaac Lab 的 Python 环境运行
+        //    3. 详细说明见：psilab/source/psilab_tasks/psilab_tasks/imitation_learning/grasp/RUN_OPENVLA.md
+        // 
+        // 推荐运行方式（在终端中）：
+        //    cd /home/psibot/chembench
+        //    ./run_openvla_grasp_eval.sh --model_family openvla --pretrained_checkpoint /path/to/checkpoint --task_config config.yaml --max_episode 50
+        // ============================================
+
+        // OpenVLA 评估 - RGB 模式
+        // ⚠️ 由于 Isaac Lab 环境限制，建议在终端运行：./run_openvla_grasp_eval.sh
+        {
+            "name": "OpenVLA:Eval-Grasp-RGB (Terminal)",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "cd /home/psibot/chembench && ./run_openvla_grasp_eval.sh --model_family openvla --pretrained_checkpoint /home/psibot/chembench/data/dp3/openvla-7b-model+chembench_grasp100mlbeaker+b16+lr-0.0005+lora-r32+dropout-0.0 --task_config config_grasp.yaml --obs_mode rgb --max_episode 50 --center_crop True --device cuda:0",
+            "cwd": "${workspaceFolder}"
+        },
+
+        // OpenVLA 评估 - 快速测试（10 episodes）
+        {
+            "name": "OpenVLA:Eval-Quick-Test (Terminal)",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "cd /home/psibot/chembench && ./run_openvla_grasp_eval.sh --model_family openvla --pretrained_checkpoint /home/psibot/chembench/data/dp3/openvla-7b-model+chembench_grasp100mlbeaker+b16+lr-0.0005+lora-r32+dropout-0.0 --task_config config_grasp.yaml --obs_mode rgb --max_episode 10 --center_crop True --run_id_note 'quick-test'",
+            "cwd": "${workspaceFolder}"
+        },
+
+        // OpenVLA 评估 - 8-bit 量化（节省显存）
+        {
+            "name": "OpenVLA:Eval-8bit-Quant (Terminal)",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "cd /home/psibot/chembench && ./run_openvla_grasp_eval.sh --model_family openvla --pretrained_checkpoint /home/psibot/chembench/data/dp3/openvla-7b-model+chembench_grasp100mlbeaker+b16+lr-0.0005+lora-r32+dropout-0.0 --task_config config_grasp.yaml --obs_mode rgb --max_episode 50 --center_crop True --load_in_8bit --device cuda:0",
+            "cwd": "${workspaceFolder}"
         },
 
     ]

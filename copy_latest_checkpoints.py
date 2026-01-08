@@ -50,6 +50,9 @@ def find_all_checkpoint_dirs(source_dir):
     checkpoint_dirs = []
     
     for root, dirs, files in os.walk(source_dir):
+        # 过滤掉以 "fini" 开头的目录
+        dirs[:] = [d for d in dirs if not d.startswith("fini")]
+        
         if "checkpoints" in dirs:
             checkpoint_dir = Path(root) / "checkpoints"
             checkpoint_dirs.append(checkpoint_dir)

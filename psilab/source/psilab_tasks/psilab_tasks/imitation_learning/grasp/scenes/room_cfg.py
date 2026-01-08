@@ -64,7 +64,9 @@ BASE_CFG = SceneCfg(
                     # usd_path=PSILAB_USD_ASSET_DIR + "/Chemistrylab/lab_simple.usd"
                     # usd_path=PSILAB_USD_ASSET_DIR + "/Chemistrylab/lab_simple_1.28.usd"
                     
-                    usd_path=PSILAB_USD_ASSET_DIR + "/Chemistrylab/lab_simple_1.25.usd"
+                    # usd_path=PSILAB_USD_ASSET_DIR + "/Chemistrylab/lab_simple_1.25.usd"
+
+                    usd_path="/home/psibot/chembench/psilab/assets/usd/Chemistrylab/lab_simple_1.25.usd"
                     # usd_path=PSILAB_USD_ASSET_DIR + "/Chemistrylab/lab_no_desk.usd"
                     # usd_path=PSILAB_USD_ASSET_DIR + "/Chemistrylab/lab_simple_1.35.usd"
                 ),
@@ -677,13 +679,7 @@ PSI_DC_02_CFG = BASE_CFG.replace(
                 tiled_cameras={
                 "head_camera": TiledCameraCfg(
                     prim_path="/World/envs/env_[0-9]+/Robot/camera_head_base/camera_head_color",
-                    # data_types=["rgb", "instance_segmentation_fast"],
                     data_types=["rgb", "depth","normals","instance_segmentation_fast"],
-                    # data_types=["rgb", "semantic_segmentation"],  # 使用语义分割
-                    # colorize_instance_segmentation=True,
-                    # semantic_filter="class:target",  # 只分割 class=target 的物体
-                    # colorize_instance_segmentation=False,  # 🔑 推荐：获取原始ID
-                    # data_types=["rgb"],
                     width=640,
                     height=480,
                     spawn=None,
@@ -691,85 +687,19 @@ PSI_DC_02_CFG = BASE_CFG.replace(
 
                 "third_camera": TiledCameraCfg(
                     prim_path="/World/envs/env_[0-9]+/Robot/camera_third_base/camera_third_color",
-                    
-                    # data_types=["rgb", "instance_segmentation_fast"],
                     data_types=["rgb", "depth","normals","instance_segmentation_fast"],
-                    # data_types=["rgb", "semantic_segmentation"],  # 使用语义分割
-                    # semantic_filter="class:target",  # 只分割 class=target 的物体
-                    # colorize_instance_segmentation=True,  # 已开启：对实例分割图像进行着色
-                    # colorize_semantic_segmentation=True, # 如果使用语义分割，可开启此项
-                    # data_types=["rgb"],
                     width=640,
                     height=480,
                     spawn=None,
                 ),
-                # "arm1_camera": TiledCameraCfg(
-                #     prim_path="/World/envs/env_[0-9]+/Robot/falan1/arm1_camera_rgb",
-                #     data_types=["rgb"],
-                #     width=640,
-                #     height=480,
-                #     spawn=None,
-                # ),
-                # "arm2_camera": TiledCameraCfg(
-                #     prim_path="/World/envs/env_[0-9]+/Robot/falan2/arm2_camera_rgb",
-                #     data_types=["rgb"],
-                #     width=640,
-                #     height=480,
-                #     spawn=None,
-                # ),
                 "chest_camera": TiledCameraCfg(
                     prim_path="/World/envs/env_[0-9]+/Robot/camera_chest_base/camera_chest_color",
-                    
-                    # data_types=["rgb", "instance_segmentation_fast"],
                     data_types=["rgb", "depth","normals","instance_segmentation_fast"],
-                    # data_types=["rgb", "semantic_segmentation"],  # 使用语义分割
-                    # semantic_filter="class:target",  # 只分割 class=target 的物体
-                    # colorize_instance_segmentation=True,  # 已开启：对实例分割图像进行着色
-                    # colorize_semantic_segmentation=True, # 如果使用语义分割，可开启此项
-                    # data_types=["rgb"],
                     width=640,
                     height=480,
                     spawn=None,
-                    # offset=TiledCameraCfg.OffsetCfg(
-                    #     pos=(0.045, -0.0115, -0.00005),
-                    #     # 欧拉角 (X=-1.085°, Y=-60.448°, Z=-91.299°) 转换为四元数
-                    #     rot=(0.601, -0.366, -0.347, -0.620),
-                    #     convention="ros"
-                    # ),
                 ),
-                # "third_person_camera": TiledCameraCfg(
-                #     prim_path="/World/envs/env_[0-9]+/ThirdPersonCamera",
-                #     data_types=["rgb"],
-                #     width=640,
-                #     height=480,
-                #     # width=640 * 4,
-                #     # height=480 * 4,
 
-                #     spawn=sim_utils.PinholeCameraCfg(),
-                #     offset=TiledCameraCfg.OffsetCfg(
-                #         # pos=(2.2, 0.0, 1.2),
-                #         # rot=(0.0, 0.0, 0.0, 1.0),  # 180 degrees around Z axis to look towards -X
-                        
-                #         # pos=(5.3, 1.5, 1.2),
-                #         # # rot=(0.0, 0.0, 0.0, 1.0),  # 180 degrees around Z axis to look towards -X
-                #         # # rot =(0.0000, 0.0000, 0.7071, -0.7071),
-                #         # rot=(-0.7071, 0, 0, 0.7071),
-
-                #         pos = (0.6,-5.0,1.2),
-
-                #         # rot = (0.5, -0.5, 0.5, 0.5),  # 欧拉角 (90°, 90°, 0°) XYZ顺序,
-                #         # rot = (0.5000, 0.5000, 0.5000, -0.5000),
-                #         # rot = (-0.5, 0.5, -0.5, -0.5),  # 欧拉角 (90°, 90°, 0°) xyz顺序
-                #         rot = (0, 0, 0, 1),
-
-
-                        
-                #         # rot = (0, 0, -0.707, -0.707),
-                        
-                        
-                #         convention="world"
-                #     ),
-                # ),
             },        
             )
         },
@@ -779,16 +709,29 @@ PSI_DC_02_CFG = BASE_CFG.replace(
 
 
 PSI_DC_Grasp_CFG = PSI_DC_02_CFG.replace(
+
+    # usd_cfg = {
+    #     "bottle": UsdFileCfg(
+    #         usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/liquid_assets/glass_beaker_100ml_liquid/Beaker003.usd",
+    #         scale=(1.0,1.0,1.0),
+    #         rigid_props=RigidBodyPropertiesCfg(
+    #             solver_position_iteration_count=255
+    #         ),
+    #         semantic_tags=[("class","target")]
+    #     )
+    # },
+    
     rigid_objects_cfg={
         "bottle" : RigidObjectCfg(
                 prim_path="/World/envs/env_[0-9]+/Bottle",
                 spawn=sim_utils.UsdFileCfg(
                     # usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/plastic_cylinder_100ml/GraduatedCylinder001.usd",
-                    usd_path = "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_100ml/Beaker003.usd",
+                    # usd_path = "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/brown_volumetric_flask_250ml/VolumetricFlask001.usd",
                     # usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/funnel_stand/FunnelStand001.usd",
                     # usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/brown_reagent_bottle_large/ReagentBottle001.usd",
                     # usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/mortar/Mortar001.usd",
-
+                    usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/task_object/grasp/glass_beaker_100ml/Beaker003.usd",
+                    # usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/liquid_assets/glass_beaker_100ml_liquid/Beaker003.usd",
                     # usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/clear_volumetric_flask_1000ml/VolumetricFlask004.usd",
                     # usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/plastic_cylinder_100ml/GraduatedCylinder001.usd",
                     

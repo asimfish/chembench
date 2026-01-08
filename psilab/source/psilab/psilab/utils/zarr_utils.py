@@ -17,6 +17,14 @@ from functools import cached_property
 import cv2
 from datetime import datetime
 
+# Import Isaac Lab's pointcloud utilities
+try:
+    from isaaclab.sensors.camera.utils import create_pointcloud_from_rgbd
+    ISAACLAB_AVAILABLE = True
+except ImportError:
+    ISAACLAB_AVAILABLE = False
+    print("Warning: Isaac Lab not available, will use fallback pointcloud generation")
+
 # add argparse arguments
 parser = argparse.ArgumentParser(description="Convert HDF5 data to Zarr format for diffusion policy training.")
 parser.add_argument("--h5_dir", type=str, default="", help="Directory containing HDF5 files.")
@@ -33,12 +41,239 @@ parser.add_argument("--save_rgb_separate", action="store_true",
                     help="Whether to save RGB images as separate 3-channel datasets for inspection.")
 parser.add_argument("--save_mask_separate", action="store_true",
                     help="Whether to save mask images as separate 1-channel datasets for inspection.")
+parser.add_argument("--with_pointcloud", action="store_true",
+                    help="Whether to generate point clouds from depth images.")
+parser.add_argument("--num_points", type=int, default=1024,
+                    help="Number of points to sample from point cloud (default: 1024).")
+parser.add_argument("--task_type", type=str, default="auto", 
+                    choices=["auto", "single_hand", "bimanual"],
+                    help="Task type: 'auto' (auto-detect), 'single_hand' (grasp/pick_place), 'bimanual' (handover).")
+parser.add_argument("--max_episodes", type=int, default=50,
+                    help="Maximum number of episodes to convert (default: 50).")
 
 def check_chunks_compatible(chunks: tuple, shape: tuple):
     assert len(shape) == len(chunks)
     for c in chunks:
         assert isinstance(c, numbers.Integral)
         assert c > 0 # type: ignore
+
+
+def depth_to_pointcloud_isaaclab(depth_map: np.ndarray, fx: float, fy: float, cx: float, cy: float, 
+                                  rgb_image: Optional[np.ndarray] = None, mask: Optional[np.ndarray] = None,
+                                  near: float = 0.2, far: float = 1.8) -> np.ndarray:
+    """
+    使用 Isaac Lab 官方工具从深度图转换为点云（推荐）
+    
+    Args:
+        depth_map: 深度图 (H, W) uint16格式，使用near/far范围编码
+        fx, fy: 相机焦距
+        cx, cy: 相机光心
+        rgb_image: 可选的RGB图像 (H, W, 3) uint8
+        mask: 可选的mask (H, W) uint8，仅提取mask区域的点云
+        near, far: 深度范围
+        
+    Returns:
+        point_cloud: (N, 3) 或 (N, 6) 如果提供了RGB，格式为 [x, y, z] 或 [x, y, z, r, g, b]
+    """
+    H, W = depth_map.shape
+    
+    # 1. 将uint16深度解码回真实深度值 (float32)
+    depth_float = np.zeros_like(depth_map, dtype=np.float32)
+    valid_mask = depth_map > 0
+    if np.sum(valid_mask) > 0:
+        depth_norm = (depth_map[valid_mask].astype(np.float32) - 1.0) / 65534.0
+        depth_float[valid_mask] = depth_norm * (far - near) + near
+    
+    # 2. 构建相机内参矩阵
+    intrinsic_matrix = np.array([
+        [fx, 0, cx],
+        [0, fy, cy],
+        [0, 0, 1]
+    ], dtype=np.float32)
+    
+    # 3. 使用 Isaac Lab 工具生成点云
+    if rgb_image is not None:
+        # 生成带颜色的点云
+        rgb_float = rgb_image.astype(np.float32)  # (H, W, 3)
+        points, colors = create_pointcloud_from_rgbd(
+            intrinsic_matrix=intrinsic_matrix,
+            depth=depth_float,
+            rgb=rgb_float,
+            normalize_rgb=True,  # 归一化到 [0, 1]
+            device="cpu"
+        )
+        # points: (N, 3), colors: (N, 3)
+        points = points.numpy() if hasattr(points, 'numpy') else points
+        colors = colors.numpy() if hasattr(colors, 'numpy') else colors
+    else:
+        # 仅生成XYZ点云
+        from isaaclab.sensors.camera.utils import create_pointcloud_from_depth
+        points = create_pointcloud_from_depth(
+            intrinsic_matrix=intrinsic_matrix,
+            depth=depth_float,
+            device="cpu"
+        )
+        points = points.numpy() if hasattr(points, 'numpy') else points
+        colors = None
+    
+    # 4. 应用 mask 过滤
+    if mask is not None:
+        # Isaac Lab 已经生成了所有有效深度点的点云
+        # 我们需要找出哪些点对应mask区域
+        # 这需要将点云投影回图像平面
+        u = (points[:, 0] * fx / points[:, 2] + cx).astype(np.int32)
+        v = (points[:, 1] * fy / points[:, 2] + cy).astype(np.int32)
+        
+        # 确保在图像范围内
+        valid = (u >= 0) & (u < W) & (v >= 0) & (v < H)
+        u = np.clip(u, 0, W-1)
+        v = np.clip(v, 0, H-1)
+        
+        # 检查mask
+        mask_values = mask[v, u]
+        keep_mask = valid & (mask_values > 0)
+        
+        points = points[keep_mask]
+        if colors is not None:
+            colors = colors[keep_mask]
+    
+    # 5. 组合结果
+    # if colors is not None:
+    #     result = np.concatenate([points, colors], axis=1)  # (N, 6)
+    # else:
+        # 用零填充RGB通道，保持和 read_point_cloud.py 一致
+    zeros_rgb = np.zeros((points.shape[0], 3), dtype=np.float32)  # (N, 3) [0, 0, 0]
+    result = np.concatenate([points, zeros_rgb], axis=1)  # (N, 6) [x, y, z, 0, 0, 0]
+
+    return result
+
+
+def depth_to_pointcloud(depth_map: np.ndarray, fx: float, fy: float, cx: float, cy: float, 
+                        rgb_image: Optional[np.ndarray] = None, mask: Optional[np.ndarray] = None,
+                        near: float = 0.2, far: float = 1.8) -> np.ndarray:
+    """
+    将深度图转换为点云（优先使用 Isaac Lab 官方实现）
+    
+    Args:
+        depth_map: 深度图 (H, W) uint16格式，使用near/far范围编码
+        fx, fy: 相机焦距
+        cx, cy: 相机光心
+        rgb_image: 可选的RGB图像 (H, W, 3) uint8
+        mask: 可选的mask (H, W) uint8，仅提取mask区域的点云
+        near, far: 深度范围
+        
+    Returns:
+        point_cloud: (N, 3) 或 (N, 6) 如果提供了RGB，格式为 [x, y, z] 或 [x, y, z, r, g, b]
+    """
+    if ISAACLAB_AVAILABLE:
+        return depth_to_pointcloud_isaaclab(depth_map, fx, fy, cx, cy, rgb_image, mask, near, far)
+    else:
+        return depth_to_pointcloud_fallback(depth_map, fx, fy, cx, cy, rgb_image, mask, near, far)
+
+
+def depth_to_pointcloud_fallback(depth_map: np.ndarray, fx: float, fy: float, cx: float, cy: float, 
+                                  rgb_image: Optional[np.ndarray] = None, mask: Optional[np.ndarray] = None,
+                                  near: float = 0.2, far: float = 1.8) -> np.ndarray:
+    """
+    将深度图转换为点云（备用实现，不依赖 Isaac Lab）
+    
+    Args:
+        depth_map: 深度图 (H, W) uint16格式，使用near/far范围编码
+        fx, fy: 相机焦距
+        cx, cy: 相机光心
+        rgb_image: 可选的RGB图像 (H, W, 3) uint8
+        mask: 可选的mask (H, W) uint8，仅提取mask区域的点云
+        near, far: 深度范围
+        
+    Returns:
+        point_cloud: (N, 3) 或 (N, 6) 如果提供了RGB，格式为 [x, y, z] 或 [x, y, z, r, g, b]
+    """
+    H, W = depth_map.shape
+    
+    # 将uint16深度解码回真实深度值
+    depth_float = np.zeros_like(depth_map, dtype=np.float32)
+    valid_mask = depth_map > 0
+    if np.sum(valid_mask) > 0:
+        depth_norm = (depth_map[valid_mask].astype(np.float32) - 1.0) / 65534.0
+        depth_float[valid_mask] = depth_norm * (far - near) + near
+    
+    # 创建像素网格
+    u, v = np.meshgrid(np.arange(W), np.arange(H))
+    
+    # 应用mask过滤
+    if mask is not None:
+        object_mask = (mask > 0) & valid_mask & (depth_float > 0)
+    else:
+        object_mask = valid_mask & (depth_float > 0)
+    
+    if np.sum(object_mask) == 0:
+        # 返回空点云
+        return np.zeros((0, 6 if rgb_image is not None else 3), dtype=np.float32)
+    
+    # 提取有效点
+    u_valid = u[object_mask]
+    v_valid = v[object_mask]
+    z_valid = depth_float[object_mask]
+    
+    # 反投影到3D空间
+    x = (u_valid - cx) * z_valid / fx
+    y = (v_valid - cy) * z_valid / fy
+    z = z_valid
+    
+    # 组合xyz
+    points_3d = np.stack([x, y, z], axis=-1)  # (N, 3)
+    
+    # 如果提供了RGB，添加颜色信息；否则用零填充
+    # if rgb_image is not None:
+    #     rgb_valid = rgb_image[object_mask]  # (N, 3) uint8
+    #     rgb_normalized = rgb_valid.astype(np.float32) / 255.0  # 归一化到[0,1]
+    #     points_3d = np.concatenate([points_3d, rgb_normalized], axis=-1)  # (N, 6)
+    # else:
+        # 用零填充RGB通道，保持和 read_point_cloud.py 一致
+    zeros_rgb = np.zeros((points_3d.shape[0], 3), dtype=np.float32)  # (N, 3) [0, 0, 0]
+    points_3d = np.concatenate([points_3d, zeros_rgb], axis=-1)  # (N, 6) [x, y, z, 0, 0, 0]
+
+    return points_3d
+
+
+def furthest_point_sampling(points: np.ndarray, n_samples: int) -> np.ndarray:
+    """
+    最远点采样 (Furthest Point Sampling)
+    
+    Args:
+        points: 点云 (N, D) 其中D可以是3或6
+        n_samples: 采样点数
+        
+    Returns:
+        sampled_points: 采样后的点云 (n_samples, D)
+    """
+    N = points.shape[0]
+    
+    if N == 0:
+        return np.zeros((n_samples, points.shape[1]), dtype=np.float32)
+    
+    if N <= n_samples:
+        # 不足采样数，用零填充
+        padded = np.zeros((n_samples, points.shape[1]), dtype=np.float32)
+        padded[:N] = points
+        return padded
+    
+    # FPS算法（仅使用xyz坐标）
+    xyz = points[:, :3]
+    
+    centroids = np.zeros(n_samples, dtype=np.int32)
+    distance = np.ones(N) * 1e10
+    farthest = np.random.randint(0, N)
+    
+    for i in range(n_samples):
+        centroids[i] = farthest
+        centroid = xyz[farthest, :]
+        dist = np.sum((xyz - centroid) ** 2, axis=-1)
+        mask = dist < distance
+        distance[mask] = dist[mask]
+        farthest = np.argmax(distance)
+    
+    return points[centroids]
 
 def rechunk_recompress_array(group, name, 
         chunks=None, chunk_length=None,
@@ -617,37 +852,87 @@ class ReplayBuffer:
                     rechunk_recompress_array(self.data, key, compressor=compressor)
 
 
-def convert_state_based(h5_file, h5_temp) -> dict:
+def convert_state_based(h5_file, h5_temp, task_type: str = "auto") -> dict:
     """
     纯状态模式转换
     
-    包含数据：
-    - timestamps: 仿真时间
-    - action: 手臂位置目标(7) + 手指位置目标(6) = 13维
-    - state: 物体位姿(7) + 手臂位置(7) + 手指位置(6) = 20维
+    支持手动指定任务类型或自动检测：
+    - 单手任务（Grasp, Pick Place）:
+      - action: arm2_pos_target(7) + hand2_pos_target(6) = 13维
+      - state: bottle_pose(7) + arm2_pos(7) + hand2_pos(6) = 20维
+    
+    - 双手任务（Handover）:
+      - action: arm2_pos_target(7) + hand2_pos_target(6) + arm1_pos_target(7) + hand1_pos_target(6) = 26维
+      - state: bottle_pose(7) + arm2_pos(7) + hand2_pos(6) + arm1_pos(7) + hand1_pos(6) = 33维
+    
+    Args:
+        h5_file: HDF5文件对象
+        h5_temp: 临时HDF5文件对象
+        task_type: 任务类型 ("auto", "single_hand", "bimanual")
     """
     episode = dict()
     
     episode['timestamps'] = h5_file["sim_time"]
     
-    # Action: arm2_pos_target(7) + hand2_pos_target(6) = 13维
-    h5_temp.create_dataset(
-        "action",
-        shape=(h5_file["robots"]["robot"]["arm2_pos_target"].shape[0], 13),
-        dtype=h5_file["robots"]["robot"]["arm2_pos_target"].dtype
-    )
-    h5_temp["action"][:, :7] = h5_file["robots"]["robot"]["arm2_pos_target"]
-    h5_temp["action"][:, 7:] = h5_file["robots"]["robot"]["hand2_pos_target"][:, :6]
+    # 检测是否为双手任务
+    if task_type == "auto":
+        is_bimanual = ("arm1_pos_target" in h5_file["robots"]["robot"]) and \
+                      ("hand1_pos_target" in h5_file["robots"]["robot"])
+        print(f"  自动检测: {'双手任务' if is_bimanual else '单手任务'}")
+    elif task_type == "bimanual":
+        is_bimanual = True
+        print(f"  手动指定: 双手任务")
+    else:  # single_hand
+        is_bimanual = False
+        print(f"  手动指定: 单手任务")
     
-    # State: bottle_pose(7) + arm2_pos(7) + hand2_pos(6) = 20维
-    h5_temp.create_dataset(
-        "state",
-        shape=(h5_file["robots"]["robot"]["arm2_pos"].shape[0], 20),
-        dtype=h5_file["robots"]["robot"]["arm2_pos"].dtype
-    )
-    h5_temp["state"][:, :7] = h5_file["rigid_objects"]["bottle"]
-    h5_temp["state"][:, 7:14] = h5_file["robots"]["robot"]["arm2_pos"]
-    h5_temp["state"][:, 14:] = h5_file["robots"]["robot"]["hand2_pos"][:, :6]
+    if is_bimanual:
+        # ========== 双手任务（Handover） ==========
+        
+        # Action: arm2(7) + hand2(6) + arm1(7) + hand1(6) = 26维
+        h5_temp.create_dataset(
+            "action",
+            shape=(h5_file["robots"]["robot"]["arm2_pos_target"].shape[0], 26),
+            dtype=h5_file["robots"]["robot"]["arm2_pos_target"].dtype
+        )
+        h5_temp["action"][:, :7] = h5_file["robots"]["robot"]["arm2_pos_target"]
+        h5_temp["action"][:, 7:13] = h5_file["robots"]["robot"]["hand2_pos_target"][:, :6]
+        h5_temp["action"][:, 13:20] = h5_file["robots"]["robot"]["arm1_pos_target"]
+        h5_temp["action"][:, 20:26] = h5_file["robots"]["robot"]["hand1_pos_target"][:, :6]
+        
+        # State: bottle_pose(7) + arm2_pos(7) + hand2_pos(6) + arm1_pos(7) + hand1_pos(6) = 33维
+        h5_temp.create_dataset(
+            "state",
+            shape=(h5_file["robots"]["robot"]["arm2_pos"].shape[0], 33),
+            dtype=h5_file["robots"]["robot"]["arm2_pos"].dtype
+        )
+        h5_temp["state"][:, :7] = h5_file["rigid_objects"]["bottle"]
+        h5_temp["state"][:, 7:14] = h5_file["robots"]["robot"]["arm2_pos"]
+        h5_temp["state"][:, 14:20] = h5_file["robots"]["robot"]["hand2_pos"][:, :6]
+        h5_temp["state"][:, 20:27] = h5_file["robots"]["robot"]["arm1_pos"]
+        h5_temp["state"][:, 27:33] = h5_file["robots"]["robot"]["hand1_pos"][:, :6]
+        
+    else:
+        # ========== 单手任务（Grasp, Pick Place） ==========
+        
+        # Action: arm2_pos_target(7) + hand2_pos_target(6) = 13维
+        h5_temp.create_dataset(
+            "action",
+            shape=(h5_file["robots"]["robot"]["arm2_pos_target"].shape[0], 13),
+            dtype=h5_file["robots"]["robot"]["arm2_pos_target"].dtype
+        )
+        h5_temp["action"][:, :7] = h5_file["robots"]["robot"]["arm2_pos_target"]
+        h5_temp["action"][:, 7:] = h5_file["robots"]["robot"]["hand2_pos_target"][:, :6]
+        
+        # State: bottle_pose(7) + arm2_pos(7) + hand2_pos(6) = 20维
+        h5_temp.create_dataset(
+            "state",
+            shape=(h5_file["robots"]["robot"]["arm2_pos"].shape[0], 20),
+            dtype=h5_file["robots"]["robot"]["arm2_pos"].dtype
+        )
+        h5_temp["state"][:, :7] = h5_file["rigid_objects"]["bottle"]
+        h5_temp["state"][:, 7:14] = h5_file["robots"]["robot"]["arm2_pos"]
+        h5_temp["state"][:, 14:] = h5_file["robots"]["robot"]["hand2_pos"][:, :6]
     
     episode['action'] = h5_temp["action"]
     episode['state'] = h5_temp["state"]
@@ -657,62 +942,161 @@ def convert_state_based(h5_file, h5_temp) -> dict:
 
 def convert_rgb_based(h5_file, h5_temp, image_size: int = 224, with_mask: bool = False, 
                        with_depth: bool = False, with_normals: bool = False,
-                       save_rgb_separate: bool = False, save_mask_separate: bool = False) -> dict:
+                       save_rgb_separate: bool = False, save_mask_separate: bool = False,
+                       with_pointcloud: bool = False, num_points: int = 1024,
+                       task_type: str = "auto") -> dict:
     """
     RGB图像 + 状态模式转换
     
-    包含数据：
+    自动检测任务类型（单手 or 双手）：
+    
+    单手任务（Grasp, Pick Place）包含数据：
     - timestamps: 仿真时间
-    - action: 手臂位置目标(7) + 手指位置目标(6) = 13维
-    - arm2_pos: 手臂关节位置(7)
-    - arm2_vel: 手臂关节速度(7)
-    - hand2_pos: 手指关节位置(6)
-    - hand2_vel: 手指关节速度(6)
-    - arm2_eef_pos: 末端执行器位置(3)
-    - arm2_eef_quat: 末端执行器四元数(4)
-    - target_pose: 目标物体位姿(7)
-    - head_camera_rgb: 头部相机RGB图像 (N, 224, 224, 3)
-    - chest_camera_rgb: 胸部相机RGB图像 (N, 224, 224, 3)
-    - third_camera_rgb: 第三相机RGB图像 (N, 224, 224, 3)
-    - (可选) head_camera_mask, chest_camera_mask, third_camera_mask (N, 224, 224) uint8
-    - (可选) head_camera_depth, chest_camera_depth, third_camera_depth (N, 224, 224, 1) uint16
-    - (可选) head_camera_normals, chest_camera_normals, third_camera_normals (N, 224, 224, 3) uint8
+    - action: arm2_pos_target(7) + hand2_pos_target(6) = 13维
+    - arm2_pos, arm2_vel, hand2_pos, hand2_vel
+    - arm2_eef_pos(3), arm2_eef_quat(4)
+    - target_pose(7)
+    - head_camera_rgb, chest_camera_rgb, third_camera_rgb (N, 224, 224, 3)
+    
+    双手任务（Handover）额外包含：
+    - action: arm2(7) + hand2(6) + arm1(7) + hand1(6) = 26维
+    - arm1_pos, arm1_vel, hand1_pos, hand1_vel
+    - arm1_eef_pos(3), arm1_eef_quat(4)
+    
+    可选数据（根据参数）：
+    - (可选) *_camera_mask (N, 224, 224) uint8
+    - (可选) *_camera_depth (N, 224, 224, 1) uint16
+    - (可选) *_camera_normals (N, 224, 224, 3) uint8
+    - (可选) *_camera_pointcloud (N, num_points, 6) float32 [x,y,z,r,g,b]
+      注意：如果HDF5中已有点云数据，直接使用；否则从深度图生成
     
     Args:
         h5_file: HDF5文件对象
         h5_temp: 临时HDF5文件对象
         image_size: 输出图像尺寸
-        with_mask: 是否将mask通道拼接到RGB图像后（变成4通道RGBM）
+        with_mask: 是否存储mask通道
         with_depth: 是否存储深度图
         with_normals: 是否存储法线图
         save_rgb_separate: 是否单独存储RGB图像（用于检测）
         save_mask_separate: 是否单独存储mask图像（用于检测）
+        with_pointcloud: 是否存储点云（如HDF5中有则直接读取，否则从深度图生成）
+        num_points: 点云采样点数
+        task_type: 任务类型 ("auto", "grasp", "pick_place", "handover")
+                   - "auto": 自动检测（通过检查 arm1_pos_target 是否存在）
+                   - "grasp" 或 "pick_place": 强制单手任务（只保存右手数据）
+                   - "handover": 强制双手任务（保存双手数据）
     """
     episode = dict()
     
     episode['timestamps'] = h5_file["sim_time"]
     
-    # Action: arm2_pos_target(7) + hand2_pos_target(6) = 13维
-    h5_temp.create_dataset(
-        "action",
-        shape=(h5_file["robots"]["robot"]["arm2_pos_target"].shape[0], 13),
-        dtype=h5_file["robots"]["robot"]["arm2_pos_target"].dtype
-    )
-    h5_temp["action"][:, :7] = h5_file["robots"]["robot"]["arm2_pos_target"]
-    h5_temp["action"][:, 7:] = h5_file["robots"]["robot"]["hand2_pos_target"][:, :6]
+    # 检测是否为双手任务
+    if task_type == "auto":
+        is_bimanual = ("arm1_pos_target" in h5_file["robots"]["robot"]) and \
+                      ("hand1_pos_target" in h5_file["robots"]["robot"])
+        print(f"  自动检测: {'双手任务' if is_bimanual else '单手任务'}")
+    elif task_type == "bimanual":
+        is_bimanual = True
+        print(f"  手动指定: 双手任务")
+    else:  # single_hand
+        is_bimanual = False
+        print(f"  手动指定: 单手任务")
     
-    episode['action'] = h5_temp["action"]
-    episode['arm2_pos'] = h5_file["robots"]["robot"]["arm2_pos"]
-    episode['arm2_vel'] = h5_file["robots"]["robot"]["arm2_vel"]
-    episode['hand2_pos'] = h5_file["robots"]["robot"]["hand2_pos"][:, :6]
-    episode['hand2_vel'] = h5_file["robots"]["robot"]["hand2_vel"][:, :6]
-    episode['arm2_eef_pos'] = h5_file["robots"]["robot"]["arm2_eef_pose"][:, :3]
-    episode['arm2_eef_quat'] = h5_file["robots"]["robot"]["arm2_eef_pose"][:, 3:]
+    if is_bimanual:
+        # ========== 双手任务（Handover） ==========
+        
+        # Action: arm2(7) + hand2(6) + arm1(7) + hand1(6) = 26维
+        h5_temp.create_dataset(
+            "action",
+            shape=(h5_file["robots"]["robot"]["arm2_pos_target"].shape[0], 26),
+            dtype=h5_file["robots"]["robot"]["arm2_pos_target"].dtype
+        )
+        h5_temp["action"][:, :7] = h5_file["robots"]["robot"]["arm2_pos_target"]
+        h5_temp["action"][:, 7:13] = h5_file["robots"]["robot"]["hand2_pos_target"][:, :6]
+        h5_temp["action"][:, 13:20] = h5_file["robots"]["robot"]["arm1_pos_target"]
+        h5_temp["action"][:, 20:26] = h5_file["robots"]["robot"]["hand1_pos_target"][:, :6]
+        
+        episode['action'] = h5_temp["action"]
+        
+        # 右手状态
+        episode['arm2_pos'] = h5_file["robots"]["robot"]["arm2_pos"]
+        episode['arm2_vel'] = h5_file["robots"]["robot"]["arm2_vel"]
+        episode['hand2_pos'] = h5_file["robots"]["robot"]["hand2_pos"][:, :6]
+        episode['hand2_vel'] = h5_file["robots"]["robot"]["hand2_vel"][:, :6]
+        episode['arm2_eef_pos'] = h5_file["robots"]["robot"]["arm2_eef_pose"][:, :3]
+        episode['arm2_eef_quat'] = h5_file["robots"]["robot"]["arm2_eef_pose"][:, 3:]
+        
+        # 左手状态
+        episode['arm1_pos'] = h5_file["robots"]["robot"]["arm1_pos"]
+        episode['arm1_vel'] = h5_file["robots"]["robot"]["arm1_vel"]
+        episode['hand1_pos'] = h5_file["robots"]["robot"]["hand1_pos"][:, :6]
+        episode['hand1_vel'] = h5_file["robots"]["robot"]["hand1_vel"][:, :6]
+        episode['arm1_eef_pos'] = h5_file["robots"]["robot"]["arm1_eef_pose"][:, :3]
+        episode['arm1_eef_quat'] = h5_file["robots"]["robot"]["arm1_eef_pose"][:, 3:]
+        
+    else:
+        # ========== 单手任务（Grasp, Pick Place） ==========
+        
+        # Action: arm2_pos_target(7) + hand2_pos_target(6) = 13维
+        h5_temp.create_dataset(
+            "action",
+            shape=(h5_file["robots"]["robot"]["arm2_pos_target"].shape[0], 13),
+            dtype=h5_file["robots"]["robot"]["arm2_pos_target"].dtype
+        )
+        h5_temp["action"][:, :7] = h5_file["robots"]["robot"]["arm2_pos_target"]
+        h5_temp["action"][:, 7:] = h5_file["robots"]["robot"]["hand2_pos_target"][:, :6]
+        
+        episode['action'] = h5_temp["action"]
+        
+        # 右手状态
+        episode['arm2_pos'] = h5_file["robots"]["robot"]["arm2_pos"]
+        episode['arm2_vel'] = h5_file["robots"]["robot"]["arm2_vel"]
+        episode['hand2_pos'] = h5_file["robots"]["robot"]["hand2_pos"][:, :6]
+        episode['hand2_vel'] = h5_file["robots"]["robot"]["hand2_vel"][:, :6]
+        episode['arm2_eef_pos'] = h5_file["robots"]["robot"]["arm2_eef_pose"][:, :3]
+        episode['arm2_eef_quat'] = h5_file["robots"]["robot"]["arm2_eef_pose"][:, 3:]
+    
+    # 物体位姿（所有任务都有）
     episode['target_pose'] = h5_file["rigid_objects"]["bottle"][:, :7]
+    
+    # ========== 处理 Ground Truth 点云 ==========
+    if with_pointcloud:
+        # 从顶层读取真值点云（新数据格式）
+        if "ground_truth_pointcloud" in h5_file:
+            print(f"  ✅ 读取 Ground Truth 点云...")
+            gt_pc_data = np.array(h5_file["ground_truth_pointcloud"])
+            print(f"    原始形状: {gt_pc_data.shape}")
+            
+            # 采样到固定数量（如果需要）
+            if gt_pc_data.shape[1] != num_points:
+                print(f"    采样到 {num_points} 点...")
+                gt_pointcloud = np.zeros((gt_pc_data.shape[0], num_points, 3), dtype=np.float32)
+                for i in range(gt_pc_data.shape[0]):
+                    pc = gt_pc_data[i]  # (N, 3) [x, y, z]
+                    
+                    # 最远点采样
+                    if pc.shape[0] > 0:
+                        # 对于3D点云，需要先添加dummy维度用于FPS
+                        pc_6d = np.hstack([pc, np.zeros((pc.shape[0], 3), dtype=np.float32)])
+                        pc_sampled = furthest_point_sampling(pc_6d, num_points)
+                        gt_pointcloud[i] = pc_sampled[:, :3]  # 只保留xyz
+            else:
+                # 已经是正确的数量，直接使用
+                gt_pointcloud = gt_pc_data.astype(np.float32)
+            
+            # 保存到episode
+            h5_temp.create_dataset("ground_truth_pointcloud", data=gt_pointcloud)
+            episode["ground_truth_pointcloud"] = h5_temp["ground_truth_pointcloud"]
+            print(f"    Ground Truth 点云已保存: {gt_pointcloud.shape}")
+        else:
+            print(f"  ⚠️  HDF5中未找到 ground_truth_pointcloud（可能是旧数据）")
     
     # 处理相机图像（包括第三个相机）
     camera_names = ["head_camera.rgb", "chest_camera.rgb", "third_camera.rgb"]
     mask_names = ["head_camera.instance_segmentation_fast", "chest_camera.instance_segmentation_fast", "third_camera.instance_segmentation_fast"]
+    
+    # 用于收集所有相机的点云，稍后组合
+    all_camera_pointclouds = {}
     
     for cam_name, mask_name in zip(camera_names, mask_names):
         if cam_name in h5_file["robots"]["robot"]:
@@ -726,8 +1110,41 @@ def convert_rgb_based(h5_file, h5_temp, image_size: int = 224, with_mask: bool =
             mask_resized = None
             depth_resized = None # uint16
             normals_resized = None # uint8
+            pointcloud_data = None # float32 (N, num_points, 6)
             # depth_raw_resized = None # float32 - 移除
             # normals_raw_resized = None # float32 - 移除
+            
+            # 相机内参 (640x480分辨率)
+            # 根据实际相机配置设置不同的内参
+            original_width, original_height = 640, 480
+            
+            # 为不同相机设置正确的内参（基于真实测量值）
+            if "head_camera" in base_name:
+                fx_original = 615.8730
+                fy_original = 615.8730
+            elif "chest_camera" in base_name:
+                fx_original = 316.1445
+                fy_original = 421.5259
+            elif "third_camera" in base_name:
+                fx_original = 615.8730
+                fy_original = 615.8730
+            else:
+                # 默认值（如果有其他相机）
+                fov_horizontal = 69.0  # 度
+                fx_original = original_width / (2.0 * np.tan(np.radians(fov_horizontal) / 2.0))
+                fy_original = fx_original
+                print(f"Warning: Using default intrinsics for camera: {base_name}")
+            
+            cx_original = 320.0
+            cy_original = 240.0
+            
+            # 缩放内参到resize后的尺寸
+            scale_x = image_size / original_width
+            scale_y = image_size / original_height
+            fx = fx_original * scale_x
+            fy = fy_original * scale_y
+            cx = cx_original * scale_x
+            cy = cy_original * scale_y
             
             # Resize RGB
             for i in range(rgb_data.shape[0]):
@@ -802,6 +1219,63 @@ def convert_rgb_based(h5_file, h5_temp, image_size: int = 224, with_mask: bool =
                 else:
                     print(f"Warning: Normals requested but {normals_key} not found.")
 
+            # --- 5. 处理/生成点云 ---
+            if with_pointcloud:
+                # 优先使用HDF5中已有的点云数据（通过 camera.get_pointcloud() 采集的）
+                pointcloud_key = cam_name.replace(".rgb", ".pointcloud")
+                
+                if pointcloud_key in h5_file["robots"]["robot"]:
+                    # 方案1: 直接从HDF5读取已保存的点云 ⭐
+                    print(f"  ✅ 使用HDF5中的点云: {pointcloud_key}")
+                    pc_data = np.array(h5_file["robots"]["robot"][pointcloud_key])
+                    print(f"    原始点云形状: {pc_data.shape}")
+                    
+                    # 采样到固定数量
+                    pointcloud_data = np.zeros((rgb_data.shape[0], num_points, 6), dtype=np.float32)
+                    for i in range(pc_data.shape[0]):
+                        pc = pc_data[i]  # (N, 6) [x,y,z,r,g,b] 或 (N, 3) [x,y,z]
+                        
+                        # 如果只有xyz没有rgb，用零填充颜色
+                        if pc.shape[1] == 3:
+                            print(f"    ⚠️  点云无颜色，添加零颜色")
+                            pc = np.hstack([pc, np.zeros((pc.shape[0], 3), dtype=np.float32)])
+                        
+                        # 最远点采样
+                        if pc.shape[0] > 0:
+                            pc_sampled = furthest_point_sampling(pc, num_points)
+                            pointcloud_data[i] = pc_sampled
+                    
+                    print(f"    采样后形状: {pointcloud_data.shape}")
+                    
+                elif depth_resized is not None:
+                    # 方案2: 从深度图生成点云（备用）
+                    print(f"  ⚠️  HDF5无点云，从深度图生成: {base_name}_pointcloud...")
+                    pointcloud_data = np.zeros((rgb_data.shape[0], num_points, 6), dtype=np.float32)
+                    
+                    for i in range(depth_resized.shape[0]):
+                        depth_map = depth_resized[i]
+                        rgb_img = rgb_resized[i]
+                        mask_img = mask_resized[i] if mask_resized is not None else None
+                        
+                        # 生成点云 (带RGB颜色)
+                        pc = depth_to_pointcloud(
+                            depth_map=depth_map,
+                            fx=fx, fy=fy, cx=cx, cy=cy,
+                            rgb_image=rgb_img,
+                            mask=mask_img,
+                            near=0.2, far=1.8
+                        )  # (N, 6) [x, y, z, r, g, b]
+                        
+                        # 最远点采样到固定数量
+                        if pc.shape[0] > 0:
+                            pc_sampled = furthest_point_sampling(pc, num_points)
+                            pointcloud_data[i] = pc_sampled
+                    
+                    print(f"  点云生成完成: shape={pointcloud_data.shape}")
+                else:
+                    print(f"  ⚠️ 无法生成点云：既无HDF5点云数据，也无深度图")
+                    pointcloud_data = None
+
             # ================= 存储 Dataset =================
             
             # 1. RGB (主要输出)
@@ -827,7 +1301,19 @@ def convert_rgb_based(h5_file, h5_temp, image_size: int = 224, with_mask: bool =
                 key = f"{base_name}_normals"
                 h5_temp.create_dataset(key, data=normals_resized)
                 episode[key] = h5_temp[key]
-    
+            
+            # 5. Point Cloud (float32)
+            if with_pointcloud and pointcloud_data is not None:
+                key = f"{base_name}_pointcloud"
+                h5_temp.create_dataset(key, data=pointcloud_data)
+                episode[key] = h5_temp[key]
+                print(f"  存储点云: {key}, shape={pointcloud_data.shape}")
+                
+                # 收集点云用于后续组合
+                # all_camera_pointclouds[base_name] = pointcloud_data
+ 
+
+
     return episode
 
 
@@ -874,6 +1360,10 @@ if __name__ == "__main__":
     with_normals = args.with_normals
     save_rgb_separate = args.save_rgb_separate
     save_mask_separate = args.save_mask_separate
+    with_pointcloud = args.with_pointcloud
+    num_points = args.num_points
+    task_type = args.task_type
+    max_episodes = args.max_episodes
 
     # 提取输入路径的结构
     path_structure = extract_path_structure(h5_dir)
@@ -893,10 +1383,13 @@ if __name__ == "__main__":
     print(f"HDF5 to Zarr 转换器")
     print(f"=" * 60)
     print(f"模式: {mode}")
+    print(f"任务类型: {task_type}")
+    print(f"最大转换数量: {max_episodes} 条")
     if mode == "rgb":
         print(f"包含Mask: {'是 (4通道 RGBM)' if with_mask else '否 (3通道 RGB)'}")
         print(f"包含Depth: {'是' if with_depth else '否'}")
         print(f"包含Normals: {'是' if with_normals else '否'}")
+        print(f"包含PointCloud: {'是 (每相机 ' + str(num_points) + ' 点)' if with_pointcloud else '否'}")
         print(f"单独存储RGB: {'是' if save_rgb_separate else '否'}")
         print(f"单独存储Mask: {'是' if save_mask_separate else '否'}")
     print(f"输入目录: {h5_dir}")
@@ -915,7 +1408,11 @@ if __name__ == "__main__":
         if file.split(".")[-1] == "hdf5":
             h5_file_names.append(file)
     
-    print(f"找到 {len(h5_file_names)} 个 HDF5 文件")
+    # 限制处理数量
+    total_files = len(h5_file_names)
+    h5_file_names = h5_file_names[:max_episodes]
+    
+    print(f"找到 {total_files} 个 HDF5 文件，将转换 {len(h5_file_names)} 个文件")
     
     h5_temp = h5py.File(os.path.join(h5_dir, "temp"), 'w')
     episode_lengths = []
@@ -923,21 +1420,38 @@ if __name__ == "__main__":
     for idx, h5_file_name in enumerate(h5_file_names):
         h5_temp.clear()
         print(f"[{idx + 1}/{len(h5_file_names)}] 处理: {h5_file_name}")
-        h5_file = h5py.File(os.path.join(h5_dir, h5_file_name), 'r')
-
-        # 根据模式选择转换函数
-        if mode == "state":
-            episode = convert_state_based(h5_file, h5_temp)
-        else:  # mode == "rgb"
-            episode = convert_rgb_based(h5_file, h5_temp, with_mask=with_mask,
-                                        with_depth=with_depth, with_normals=with_normals,
-                                        save_rgb_separate=save_rgb_separate,
-                                        save_mask_separate=save_mask_separate)
         
-        # 记录长度
-        episode_lengths.append(episode['timestamps'].shape[0])
-        replay_buffer.add_episode(episode, compressors="disk")
-        h5_file.close()
+        try:
+            h5_file = h5py.File(os.path.join(h5_dir, h5_file_name), 'r')
+        except (OSError, IOError) as e:
+            print(f"  ❌ 跳过损坏的文件 {h5_file_name}: {e}")
+            print(f"  建议：删除或修复此文件")
+            continue
+
+        try:
+            # 根据模式选择转换函数
+            if mode == "state":
+                episode = convert_state_based(h5_file, h5_temp, task_type=task_type)
+            else:  # mode == "rgb"
+                episode = convert_rgb_based(h5_file, h5_temp, with_mask=with_mask,
+                                            with_depth=with_depth, with_normals=with_normals,
+                                            save_rgb_separate=save_rgb_separate,
+                                            save_mask_separate=save_mask_separate,
+                                            with_pointcloud=with_pointcloud,
+                                            num_points=num_points,
+                                            task_type=task_type)
+            
+            # 记录长度
+            episode_lengths.append(episode['timestamps'].shape[0])
+            replay_buffer.add_episode(episode, compressors="disk")
+            print(f"  ✅ 成功处理，episode 长度: {episode['timestamps'].shape[0]}")
+        except Exception as e:
+            print(f"  ❌ 处理文件时出错 {h5_file_name}: {e}")
+            import traceback
+            traceback.print_exc()
+            print(f"  继续处理下一个文件...")
+        finally:
+            h5_file.close()
 
     h5_temp.close()
     os.remove(os.path.join(h5_dir, "temp"))

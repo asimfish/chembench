@@ -1,0 +1,238 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "步骤1：仅转换数据（Zarr→HDF5）",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/convert_zarr_to_hdf5.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--zarr_path", "/share_data/liyufeng/code/chembench/act/data/zarr/data/grasp/part1/100ml玻璃烧杯.zarr",
+                "--output_dir", "/share_data/liyufeng/code/chembench/act/data/act_data/grasp/100ml_beaker",
+                "--camera_names", "head_camera", "chest_camera", "third_camera"
+            ],
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "justMyCode": false
+        },
+        {
+            "name": "步骤2：仅训练模型（需先转换数据）",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/train_from_zarr.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--zarr_path", "/share_data/liyufeng/code/chembench/data/final_real/data/grasp/part1/100ml玻璃烧杯.zarr",
+                "--dataset_dir", "/share_data/liyufeng/code/chembench/act/data/act_data/grasp/100ml_beaker",
+                "--ckpt_dir", "/share_data/liyufeng/code/chembench/act/ckpts/grasp/100ml_beaker",
+                "--camera_names", "head_camera", "chest_camera", "third_camera",
+                "--batch_size", "8",
+                "--num_epochs", "2000",
+                "--lr", "1e-5",
+                "--seed", "0",
+                "--kl_weight", "10",
+                "--chunk_size", "100",
+                "--hidden_dim", "512",
+                "--dim_feedforward", "3200",
+                "--skip_conversion"
+            ],
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "justMyCode": false
+        },
+        {
+            "name": "完整流程：转换+训练（一键完成）",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/train_from_zarr.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--zarr_path", "/share_data/liyufeng/code/chembench/data/final_real/data/grasp/part1/100ml玻璃烧杯.zarr",
+                "--dataset_dir", "/share_data/liyufeng/code/chembench/act/dataset/grasp/100ml_beaker",
+                "--ckpt_dir", "/share_data/liyufeng/code/chembench/act/ckpts/grasp/100ml_beaker",
+                "--camera_names", "head_camera", "chest_camera", "third_camera",
+                "--batch_size", "8",
+                "--num_epochs", "2000",
+                "--lr", "1e-5",
+                "--seed", "0",
+                "--kl_weight", "10",
+                "--chunk_size", "100",
+                "--hidden_dim", "512",
+                "--dim_feedforward", "3200"
+            ],
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "justMyCode": false
+        },
+        {
+            "name": "快速测试（10轮，验证流程）",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/train_from_zarr.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--zarr_path", "/share_data/liyufeng/code/chembench/data/final_real/data/grasp/part1/100ml玻璃烧杯.zarr",
+                "--dataset_dir", "${workspaceFolder}/data/grasp_100ml_beaker",
+                "--ckpt_dir", "${workspaceFolder}/ckpts/grasp_100ml_beaker_test",
+                "--camera_names", "head_camera", "chest_camera",
+                "--batch_size", "4",
+                "--num_epochs", "10",
+                "--lr", "1e-5",
+                "--seed", "0",
+                "--kl_weight", "10",
+                "--chunk_size", "100",
+                "--hidden_dim", "512",
+                "--dim_feedforward", "3200",
+                "--skip_conversion"
+            ],
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "justMyCode": false
+        },
+        {
+            "name": "使用三个相机训练",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/train_from_zarr.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--zarr_path", "/share_data/liyufeng/code/chembench/data/final_real/data/grasp/part1/100ml玻璃烧杯.zarr",
+                "--dataset_dir", "${workspaceFolder}/data/grasp_100ml_beaker_3cam",
+                "--ckpt_dir", "${workspaceFolder}/ckpts/grasp_100ml_beaker_3cam",
+                "--camera_names", "head_camera", "chest_camera", "third_camera",
+                "--batch_size", "4",
+                "--num_epochs", "2000",
+                "--lr", "1e-5",
+                "--seed", "0",
+                "--kl_weight", "10",
+                "--chunk_size", "100",
+                "--hidden_dim", "512",
+                "--dim_feedforward", "3200"
+            ],
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "justMyCode": false
+        },
+        {
+            "name": "长期训练（5000轮）",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/train_from_zarr.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--zarr_path", "/share_data/liyufeng/code/chembench/data/final_real/data/grasp/part1/100ml玻璃烧杯.zarr",
+                "--dataset_dir", "${workspaceFolder}/data/grasp_100ml_beaker",
+                "--ckpt_dir", "${workspaceFolder}/ckpts/grasp_100ml_beaker_long",
+                "--camera_names", "head_camera", "chest_camera",
+                "--batch_size", "8",
+                "--num_epochs", "5000",
+                "--lr", "1e-5",
+                "--seed", "0",
+                "--kl_weight", "10",
+                "--chunk_size", "100",
+                "--hidden_dim", "512",
+                "--dim_feedforward", "3200",
+                "--skip_conversion"
+            ],
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "justMyCode": false
+        },
+        {
+            "name": "修补模型维度",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/patch_detr_for_custom_dims.py",
+            "console": "integratedTerminal",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "justMyCode": false
+        },
+        {
+            "name": "恢复原始模型",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/patch_detr_for_custom_dims.py",
+            "console": "integratedTerminal",
+            "args": ["restore"],
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "justMyCode": false
+        },
+        {
+            "name": "模拟环境：生成数据（transfer_cube）",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/record_sim_episodes.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--task_name", "sim_transfer_cube_scripted",
+                "--dataset_dir", "${workspaceFolder}/dataset/sim_transfer_cube_scripted",
+                "--num_episodes", "50"
+            ],
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "justMyCode": false
+        },
+        {
+            "name": "模拟环境：生成数据（insertion）",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/record_sim_episodes.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--task_name", "sim_insertion_scripted",
+                "--dataset_dir", "${workspaceFolder}/dataset/sim_insertion_scripted",
+                "--num_episodes", "50"
+            ],
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "justMyCode": false
+        },
+        {
+            "name": "模拟环境：生成数据（可视化）",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/record_sim_episodes.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--task_name", "sim_transfer_cube_scripted",
+                "--dataset_dir", "${workspaceFolder}/dataset/sim_transfer_cube_scripted",
+                "--num_episodes", "10",
+                "--onscreen_render"
+            ],
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "justMyCode": false
+        },
+        {
+            "name": "训练：grasp_100ml_beaker（对应train_grasp_100ml_beaker.sh）",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/imitate_episodes.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--task_name", "sim_grasp_100ml_beaker",
+                "--ckpt_dir", "${workspaceFolder}/checkpoints/grasp_100ml_beaker",
+                "--policy_class", "ACT",
+                "--kl_weight", "10",
+                "--chunk_size", "100",
+                "--hidden_dim", "512",
+                "--batch_size", "8",
+                "--dim_feedforward", "3200",
+                "--num_epochs", "2000",
+                "--lr", "1e-5",
+                "--seed", "0",
+                "--use_wandb",
+                "--wandb_project", "chembench-act",
+                "--wandb_run_name", "grasp_100ml_beaker_exp1"
+            ],
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "justMyCode": false
+        }
+    ]
+}
+

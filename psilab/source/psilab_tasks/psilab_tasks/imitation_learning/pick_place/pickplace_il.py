@@ -53,7 +53,7 @@ def load_diffusion_policy_from_checkpoint(checkpoint_path: str, device: str = 'c
     return policy
 
 @configclass
-class GraspBottleEnvCfg(ILEnvCfg):
+class PickPlaceEnvCfg(ILEnvCfg):
     """Configuration for Rl environment."""
 
     # fake params - These parameters are placeholders for episode length, action and observation spaces
@@ -63,16 +63,19 @@ class GraspBottleEnvCfg(ILEnvCfg):
     state_space = 130
 
     # 
-    episode_length_s = 2
+    episode_length_s = 3
     decimation = 4
     sample_step = 1
 
     # viewer config
+    # viewer = ViewerCfg(
+    #     eye=(1.2,0.0,1.2),
+    #     lookat=(-15.0,0.0,0.3)
+    # )
     viewer = ViewerCfg(
-        eye=(1.2,0.0,1.2),
-        lookat=(-15.0,0.0,0.3)
+        eye=(0.65,-0.2,1.1),
+        lookat=(-15.0,0.1,0.3)
     )
-
     # simulation  config
     sim: SimulationCfg = SimulationCfg(
         dt = 1 / 120, 
@@ -92,6 +95,11 @@ class GraspBottleEnvCfg(ILEnvCfg):
 
     )
 
+
+
+    sim.render.rendering_mode = "quality"
+    sim.render.antialiasing_mode = "TAA"
+
     # scene config
     scene :SceneCfg = MISSING # type: ignore
 
@@ -99,15 +107,23 @@ class GraspBottleEnvCfg(ILEnvCfg):
     output_folder = OUTPUT_DIR + "/il"
 
     # lift desired height
-    lift_height_desired = 0.25
+    lift_height_desired = 0.15
     
     # 成功判断：朝向偏差阈值（sin²(θ/2)，0=完全一致，1=上下颠倒）
     # 0.1 约等于 37° 的偏差，0.05 约等于 26° 的偏差
     orientation_threshold: float = 0.1
     
+    # Pick and Place 成功判断阈值
+    place_position_threshold: float = 0.025  # 放置位置误差阈值（米）
+    
+    # 物体目标位置偏移（相对于初始位置）：[x_offset, y_offset]（单位：米）
+    target_xy_offset: list = [0.08, 0.08]  # type: ignore  # x方向8cm，y方向8cm
+    
     # 观测模式配置
-    # 可选: "rgb", "rgbm", "nd", "rgbnd", "state"
-    obs_mode: Literal["rgb", "rgbm", "nd", "rgbnd", "state"] = "nd"
+    # 可选: "rgb", "rgbm", "nd", "rgbnd", "state", "rgb_masked", "rgb_masked_rgb"
+    # 注意: rgb_masked 生成的数据与 rgb 兼容（都是3通道），可以用 rgb 模型测试
+    # rgb_masked_rgb 是6通道（原始RGB + 背景置黑RGB），需要专门的6通道模型
+    obs_mode: Literal["rgb", "rgbm", "nd", "rgbnd", "state", "rgb_masked", "rgb_masked_rgb"] = "rgb_masked_rgb"
     
     # Mask 解耦实验配置
     # "real": 使用真实的 mask（默认）
@@ -115,11 +131,11 @@ class GraspBottleEnvCfg(ILEnvCfg):
     # "all_1": mask 通道填充全1（测试模型是否依赖 mask）
     mask_mode: str = "real"
 
-class GraspBottleEnv(ILEnv):
+class PickPlaceEnv(ILEnv):
 
-    cfg: GraspBottleEnvCfg
+    cfg: PickPlaceEnvCfg
 
-    def __init__(self, cfg: GraspBottleEnvCfg, render_mode: str | None = None, **kwargs):
+    def __init__(self, cfg: PickPlaceEnvCfg, render_mode: str | None = None, **kwargs):
         #
         cfg.scene.robots_cfg["robot"].diff_ik_controllers = None # type: ignore
 
@@ -158,6 +174,10 @@ class GraspBottleEnv(ILEnv):
         self._target_pos_init = torch.zeros((self.num_envs,3),device=self.device)
         self._target_quat_init = torch.zeros((self.num_envs,4),device=self.device)  # 初始朝向（wxyz）
         
+        # Pick and Place 关键参数
+        # 将配置中的 target_xy_offset 转换为 tensor
+        self._target_xy_offset = torch.tensor(self.cfg.target_xy_offset, dtype=torch.float32, device=self.device)
+        
         # 记录成功时的步数列表
         self._success_steps_list: list[int] = []
         self.sim.set_camera_view([-0.7, -5.2, 1.3], [-1.2, -5.2, 1.1])
@@ -178,27 +198,34 @@ class GraspBottleEnv(ILEnv):
         # 获取基础 RGB 图像
         chest_rgb = self._robot.tiled_cameras["chest_camera"].data.output["rgb"][:, :, :, :]
         head_rgb = self._robot.tiled_cameras["head_camera"].data.output["rgb"][:, :, :, :]
+        third_rgb = self._robot.tiled_cameras["third_camera"].data.output["rgb"][:, :, :, :]  # 新增：第三人称相机
         
         # 初始化可选通道
-        chest_mask, head_mask = None, None
-        chest_depth, head_depth = None, None
-        chest_normal, head_normal = None, None
+        chest_mask, head_mask, third_mask = None, None, None
+        chest_depth, head_depth, third_depth = None, None, None
+        chest_normal, head_normal, third_normal = None, None, None
 
         # 根据 obs_mode 获取所需的额外通道
         # 1. Mask
-        if self.cfg.obs_mode == "rgbm":
+        if self.cfg.obs_mode in ["rgbm", "rgb_masked", "rgb_masked_rgb"]:
             if self.cfg.mask_mode == "real":
                 if "instance_segmentation_fast" in self._robot.tiled_cameras["chest_camera"].data.output:
                     chest_mask = self._robot.tiled_cameras["chest_camera"].data.output["instance_segmentation_fast"][:, :, :, 0]
+                
                 if "instance_segmentation_fast" in self._robot.tiled_cameras["head_camera"].data.output:
                     head_mask = self._robot.tiled_cameras["head_camera"].data.output["instance_segmentation_fast"][:, :, :, 0]
+                
+                if "instance_segmentation_fast" in self._robot.tiled_cameras["third_camera"].data.output:
+                    third_mask = self._robot.tiled_cameras["third_camera"].data.output["instance_segmentation_fast"][:, :, :, 0]
             elif self.cfg.mask_mode == "all_0":
                 chest_mask = torch.zeros_like(chest_rgb[:, :, :, 0])
                 head_mask = torch.zeros_like(head_rgb[:, :, :, 0])
+                third_mask = torch.zeros_like(third_rgb[:, :, :, 0])
             elif self.cfg.mask_mode == "all_1":
                 # 解耦实验：mask 通道填充全 1（会被归一化为 1.0）
                 chest_mask = torch.ones_like(chest_rgb[:, :, :, 0])
                 head_mask = torch.ones_like(head_rgb[:, :, :, 0])
+                third_mask = torch.ones_like(third_rgb[:, :, :, 0])
         
         # 2. Depth
         if self.cfg.obs_mode in ["nd", "rgbnd"]:
@@ -206,6 +233,8 @@ class GraspBottleEnv(ILEnv):
                 chest_depth = self._robot.tiled_cameras["chest_camera"].data.output["depth"][:, :, :, 0]
             if "depth" in self._robot.tiled_cameras["head_camera"].data.output:
                 head_depth = self._robot.tiled_cameras["head_camera"].data.output["depth"][:, :, :, 0]
+            if "depth" in self._robot.tiled_cameras["third_camera"].data.output:
+                third_depth = self._robot.tiled_cameras["third_camera"].data.output["depth"][:, :, :, 0]
 
         # 3. Normal
         if self.cfg.obs_mode in ["nd", "rgbnd"]:
@@ -213,10 +242,13 @@ class GraspBottleEnv(ILEnv):
                 chest_normal = self._robot.tiled_cameras["chest_camera"].data.output["normals"][:, :, :, :3] # 取前3通道
             if "normals" in self._robot.tiled_cameras["head_camera"].data.output:
                 head_normal = self._robot.tiled_cameras["head_camera"].data.output["normals"][:, :, :, :3]
+            if "normals" in self._robot.tiled_cameras["third_camera"].data.output:
+                third_normal = self._robot.tiled_cameras["third_camera"].data.output["normals"][:, :, :, :3]
 
         # 统一处理图像
         chest_camera_img = None
         head_camera_img = None
+        third_camera_img = None
 
         if self.cfg.obs_mode != 'state':
             # 胸部相机
@@ -234,6 +266,15 @@ class GraspBottleEnv(ILEnv):
                 mask=head_mask, 
                 depth=head_depth, 
                 normal=head_normal, 
+                obs_mode=self.cfg.obs_mode
+            )
+            
+            # 第三人称相机
+            third_camera_img = process_batch_image_multimodal(
+                rgb=third_rgb, 
+                mask=third_mask, 
+                depth=third_depth, 
+                normal=third_normal, 
                 obs_mode=self.cfg.obs_mode
             )
 
@@ -303,6 +344,7 @@ class GraspBottleEnv(ILEnv):
             current_obs = {
                 'chest_camera_rgb': chest_camera_img.unsqueeze(1),
                 'head_camera_rgb': head_camera_img.unsqueeze(1),
+                'third_camera_rgb': third_camera_img.unsqueeze(1),  # 新增：第三人称相机
                 # 'third_person_camera_rgb': third_person_camera_rgb.unsqueeze(1),
                 'arm2_pos': self._robot.data.joint_pos[:,self._robot.actuators["arm2"].joint_indices].unsqueeze(1),
                 # 'arm2_vel': self._robot.data.joint_vel[:,self._robot.actuators["arm2"].joint_indices].unsqueeze(1),
@@ -489,6 +531,65 @@ class GraspBottleEnv(ILEnv):
         
         return bsuccessed
 
+    def _eval_success_pick_place(self) -> torch.Tensor:
+        """
+        评估 Pick and Place 是否成功（参考 pick_place_mp.py）
+        
+        成功条件：
+        1. 物体被放置在目标位置附近（xy平面误差小于阈值）
+        2. 物体高度与初始高度差距不大于1cm（确保在桌面上）
+        3. 物体朝向偏离不超过阈值
+        4. 手指已松开（所有手指接触力为0）
+        5. 末端执行器已抬高到物体初始高度 + 0.08米
+        
+        目标位置（物体中心）= 初始位置 + target_xy_offset
+        """
+        # 1. 计算目标放置位置（物体中心应该在的位置）
+        initial_xy = self._target_pos_init[:, :2]
+        target_xy_offset = self._target_xy_offset.unsqueeze(0).repeat(self.num_envs, 1)
+        target_xy = initial_xy + target_xy_offset  # 物体中心的目标xy位置
+        
+        # 2. 检查物体当前位置（xy平面）
+        current_xy = self._target.data.root_pos_w[:, :2]
+        pos_error = torch.norm(current_xy - target_xy, dim=1)
+        position_check = pos_error < self.cfg.place_position_threshold
+        
+        # 3. 检查物体高度（确保在桌面上，不是悬空或掉落）
+        current_z = self._target.data.root_pos_w[:, 2]
+        initial_z = self._target_pos_init[:, 2]
+        height_diff = torch.abs(current_z - initial_z)
+        height_check = height_diff < 0.01  # 高度差小于1cm
+        
+        # 4. 检查朝向
+        current_quat = self._target.data.root_quat_w
+        orientation_loss = self._quat_orientation_loss(self._target_quat_init, current_quat)
+        orientation_check = orientation_loss < self.cfg.orientation_threshold
+        
+        # 5. 检查手指是否已松开（所有接触力为0）
+        contact_force_num = torch.zeros(self.num_envs, dtype=torch.int8, device=self.device)
+        for sensor_name, contact_sensor in self._contact_sensors.items():
+            forces = torch.sum(contact_sensor.data.net_forces_w, dim=[1, 2])  # type: ignore
+            force_magnitude = torch.abs(forces)  # 使用力的绝对值（大小）
+            contact_force_num = torch.where(
+                force_magnitude > 0.1,
+                contact_force_num + 1,
+                contact_force_num
+            )
+        
+        # 手指已松开 = 接触力数量为0
+        released = contact_force_num < 0.1  # type: ignore
+        
+        # 6. 检查末端执行器是否已抬高到安全高度
+        eef_link_index = self._robot.find_bodies("arm2_link7")[0][0]
+        eef_z = self._robot.data.body_link_pos_w[:, eef_link_index, 2]
+        required_eef_height = self._target_pos_init[:, 2] + 0.08  # 物体初始高度 + 0.08米
+        eef_height_check = eef_z >= required_eef_height
+        
+        # 综合判断（所有条件都要满足）
+        bsuccessed = position_check & height_check & orientation_check & released & eef_height_check
+        
+        return bsuccessed
+
     def _get_dones(self) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         # 
         time_out = self.episode_length_buf >= self.max_episode_length - 1
@@ -499,8 +600,8 @@ class GraspBottleEnv(ILEnv):
         bfailed_moved = self._eval_fail_moved_without_contact()
         bfailed = bfailed_moved
         
-        # success eval（使用带朝向检查的函数）
-        bsuccessed = self._eval_success_with_orientation()
+        # success eval（使用 Pick and Place 的成功判断）
+        bsuccessed = self._eval_success_pick_place()
         
         # 记录成功环境的步数
         success_indices = torch.nonzero(bsuccessed == True).squeeze(1).tolist()

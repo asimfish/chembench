@@ -29,6 +29,13 @@ parser.add_argument("--checkpoint", type=str, default=None, help="The checkpoint
 parser.add_argument("--max_step", type=int, default=None, help="The max step to reset") 
 parser.add_argument("--max_episode", type=int, default=None, help="The max episode to to run") 
 
+# ACT Policy specific arguments
+parser.add_argument("--obs_mode", type=str, default=None, help="Observation mode (rgb, rgbm, state, etc.)")
+parser.add_argument("--camera_names", type=str, nargs='+', default=None, help="List of camera names")
+parser.add_argument("--num_queries", type=int, default=None, help="ACT action chunk size")
+parser.add_argument("--temporal_agg", type=str, default=None, help="Enable temporal aggregation (true/false)")
+parser.add_argument("--mask_mode", type=str, default=None, help="Mask mode for RGBM (real, all_0, all_1)") 
+
 """ Must First Start APP, or import omni.isaac.lab.sim as sim_utils will be error."""
 from isaaclab.app import AppLauncher
 
@@ -83,7 +90,13 @@ env_cfg = parse_il_env_cfg(
     args_cli.max_step,
     args_cli.max_episode,
     args_cli.task,
-    args_cli.scene
+    args_cli.scene,
+    # ACT specific arguments
+    args_cli.obs_mode,
+    args_cli.camera_names,
+    args_cli.num_queries,
+    args_cli.temporal_agg,
+    args_cli.mask_mode
 )
 
 # parse argumanets for psi lab scene config
@@ -140,6 +153,11 @@ if env_cfg.enable_output:
     print(f"采集效率: {record_rate} 条/分钟")
 
 print("#" * 17, " Statistics", "#" * 17)
+
+# 确保统计信息被输出（在 close() 之前 flush）
+import sys
+sys.stdout.flush()
+sys.stderr.flush()
 
 # close app
 app_launcher.app.close()

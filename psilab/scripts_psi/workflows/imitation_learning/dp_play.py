@@ -194,6 +194,11 @@ if env_cfg.enable_output and record_time > 0:
 
 print("#" * 17 + " Statistics " + "#" * 17 + "\n")
 
+# 确保统计信息被输出（在 close() 之前 flush）
+import sys
+sys.stdout.flush()
+sys.stderr.flush()
+
 # close app
 app_launcher.app.close()
 

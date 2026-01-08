@@ -31,7 +31,7 @@ from psilab.utils.data_collect_utils import parse_data,save_data
 from ..config_loader import load_handover_config
 
 # ========== 任务配置（修改这里即可切换不同任务）==========
-TARGET_OBJECT_NAME = "clear_volumetric_flask_500ml"  # 目标物体名称
+TARGET_OBJECT_NAME = "clear_volumetric_flask_250ml"  # 目标物体名称
 TASK_TYPE = "handover"       # 任务类型：handover
 
 # 数据根目录：统一存储到 chembench/data 下
@@ -92,7 +92,7 @@ class HandoverEnvCfg(MPEnvCfg):
     left_grasp_euler_deg: list = None  # type: ignore  # 左手抓取角度
     
     # ========== 右手复位配置 ==========
-    right_retreat_distance: float = 0.05  # 右手撤回距离（沿y轴负方向，单位：米）
+    right_retreat_distance: float = 0.1  # 右手撤回距离（沿y轴负方向，单位：米）
     
     # ========== 右手预抓取位置参数（侧上方接近） ==========
 
@@ -116,7 +116,7 @@ class HandoverEnvCfg(MPEnvCfg):
 
 
    # ========== 左手预抓取位置参数 ==========    
-    left_pre_grasp_height: float = 0.03
+    left_pre_grasp_height: float = 0.0
     left_pre_grasp_y_offset: float = 0.08
     left_pre_grasp_x_offset: float = -0.025
     
@@ -557,7 +557,7 @@ class HandoverEnv(MPEnv):
         #     print(f"{'='*80}\n")
         
         # 3. 右手撤回位置（沿y轴负方向移动10cm）
-        retreat_offset = torch.tensor([-0.06, - 0.1, 0], device=self.device).unsqueeze(0).repeat(env_len, 1)
+        retreat_offset = torch.tensor([-0.06, - 0.12, 0], device=self.device).unsqueeze(0).repeat(env_len, 1)
         r_pos_retreat = r_pos_handover + retreat_offset
         
         
@@ -1224,17 +1224,18 @@ class HandoverEnv(MPEnv):
         
         # 3. 检查右手是否已撤回（y轴负方向）
         eef2_pos_w = self._robot.data.body_link_pos_w[:, self._eef2_link_index, :]
-        object_pos_w = self._target.data.root_pos_w
-        # 检查右手相对物体在y轴方向上是否已经向负方向移动了指定距离
-        y_distance = eef2_pos_w[:, 1] - object_pos_w[:, 1]
-        right_retreated = y_distance < -self._right_retreat_distance  # 向y负方向移动超过指定距离
+        handover_pos = self._handover_position.unsqueeze(0).repeat(self.num_envs, 1)  # [num_envs, 3]
+        handover_pos += self._robot.data.root_link_pos_w[:, :]
+        # 检查右手相对交接位置在y轴方向上是否已经向负方向移动了指定距离（5cm）
+        y_distance = eef2_pos_w[:, 1] - handover_pos[:, 1]
+        right_retreated = y_distance < -self._right_retreat_distance  # 向y负方向移动超过指定距离（0.05m）
         
         # 4. 检查物体朝向
         current_quat = self._target.data.root_quat_w
         orientation_loss = self._quat_orientation_loss(self._target_quat_init, current_quat)
         orientation_check = orientation_loss < self.cfg.orientation_threshold
         
-        # 5. 检查物体是否在交接位置附近（8cm内）
+        # 5. 检查物体是否在交接位置附近（6cm内）
         current_pos = self._target.data.root_pos_w  # [num_envs, 3]
         handover_pos = self._handover_position.unsqueeze(0).repeat(self.num_envs, 1)  # [num_envs, 3]
         handover_pos += self._robot.data.root_link_pos_w[:, :]

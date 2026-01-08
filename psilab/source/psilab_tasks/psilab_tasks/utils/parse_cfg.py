@@ -108,6 +108,12 @@ def parse_il_env_cfg(
         max_episode: int = 1, 
         task_id: str | None = None,
         scene_id: str | None = None,
+        # ACT Policy specific arguments
+        obs_mode: str | None = None,
+        camera_names: list[str] | None = None,
+        num_queries: int | None = None,
+        temporal_agg: str | None = None,
+        mask_mode: str | None = None,
         )->ILEnvCfg:
     # 
     env_cfg.seed = seed # type: ignore
@@ -128,6 +134,19 @@ def parse_il_env_cfg(
         env_cfg.scene_id = scene_id  # type: ignore
     if output_folder is not None:
         env_cfg.output_folder = output_folder  # type: ignore
+    
+    # ACT specific configurations
+    if obs_mode is not None:
+        env_cfg.obs_mode = obs_mode  # type: ignore
+    if camera_names is not None:
+        env_cfg.camera_names = camera_names  # type: ignore
+    if num_queries is not None:
+        env_cfg.num_queries = num_queries  # type: ignore
+    if temporal_agg is not None:
+        # Convert string to boolean
+        env_cfg.temporal_agg = (temporal_agg.lower() == 'true')  # type: ignore
+    if mask_mode is not None:
+        env_cfg.mask_mode = mask_mode  # type: ignore
 
     #
     return env_cfg

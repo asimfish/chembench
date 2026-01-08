@@ -1,8 +1,17 @@
+# defaults:
+#   - _self_
+#   - task: grasp_rgbm  # 多模态任务配置
+
+# defaults:
+#   - _self_
+#   - task: pick_place_rgbm  # 多模态任务配置
+
 defaults:
   - _self_
-  - task: grasp_rgbm  # RGBM 专用任务配置
+  - task: handover_rgbm  # 多模态任务配置
 
-name: train_diffusion_transformer_rgbm
+
+name: train_diffusion_transformer_multimodal
 _target_: psi_dp.workspace.train_diffusion_transformer_timm_workspace.TrainDiffusionTransformerTimmWorkspace
 
 task_name: ${task.name}
@@ -13,7 +22,7 @@ exp_name: "default"
 object_name: ${task.object_name}
 num_demos: ${task.num_demos}
 
-n_action_steps: 4
+n_action_steps: 8
 n_obs_steps: 1
 n_emb: 768
 n_latency_steps: 0
@@ -21,6 +30,16 @@ dataset_obs_steps: ${n_obs_steps}
 past_action_visible: False
 keypoint_visible_rate: 1.0
 obs_as_cond: True
+
+# ==================== 观测模式配置（从task继承）====================
+obs_mode: ${task.obs_config.obs_mode}
+use_velocity: ${task.obs_config.use_velocity}
+use_third_camera: ${task.obs_config.use_third_camera}
+use_left_hand: ${task.obs_config.use_left_hand}
+
+# 图像输入通道数 (从 task.image_channels 继承)
+# rgb: 3, rgbm: 4, nd: 4, rgbnd: 7
+image_in_channels: ${task.image_channels}
 
 policy:
   _target_: psi_dp.policy.diffusion_transformer_timm_policy.DiffusionTransformerTimmPolicy
@@ -46,7 +65,11 @@ policy:
     pretrained: True
     frozen: False
     feature_aggregation: null
-    use_mask_input: True  # 启用 RGBM 4通道输入支持
+    # 根据 obs_mode 动态设置输入通道数
+    # use_mask_input 在 rgbm 模式下为 True (4通道)
+    # 对于其他模式，使用 in_channels 参数
+    use_mask_input: ${eval:'${image_in_channels} == 4'}
+    in_channels: ${image_in_channels}  # 输入通道数
     downsample_ratio: 32
     transforms:
       - type: RandomCrop
@@ -98,7 +121,7 @@ training:
   lastest_ckpt_path: null
   lr_scheduler: cosine
   lr_warmup_steps: 2000
-  num_epochs: 20000
+  num_epochs: 6000
   gradient_accumulate_every: 1
   use_ema: True
   freeze_encoder: False
@@ -112,21 +135,24 @@ training:
 
 # ==================== WandB日志配置 ====================
 logging:
-  project: DP_并行实验1222_${task.name}
+  project: DP_final_1231_${task.name}
   resume: False
   mode: online
-  name: ${object_name}_n${num_demos}_${now:%Y%m%d_%H%M%S}
+  name: ${object_name}_n${num_demos}_${obs_mode}_${now:%Y%m%d_%H%M%S}
   tags: [
     # 基本信息
     "${task_name}",
     "${object_name}",
     "n${num_demos}",
+    # 观测模式
+    "obs_mode:${obs_mode}",
+    "in_ch:${image_in_channels}",
+    "velocity:${use_velocity}",
+    "third_camera:${use_third_camera}",
+    "left_hand:${use_left_hand}",
     # 数据类型
-    "obs:${task.data_info.obs_type}",
     "action_dim:${task.data_info.action_dim}",
     "img:${task.data_info.image_size}",
-    # RGBM 特有标记
-    "mask_input:True",
     # 随机化配置
     "pos_rand:${task.randomization.position.enabled}",
     "rot_rand:${task.randomization.rotation.enabled}",
@@ -143,28 +169,27 @@ logging:
   ]
   id: null
   group: ${object_name}
-  notes: "物体:${object_name} | 数据:${num_demos}条 | 观测:${task.data_info.obs_type}(RGBM) | 图像:${task.data_info.image_size} | 位置随机:${task.randomization.position.enabled} | 旋转随机:${task.randomization.rotation.enabled} | 编码器:${policy.obs_encoder.model_name}"
+  notes: "物体:${object_name} | 数据:${num_demos}条 | 观测模式:${obs_mode}(${image_in_channels}通道) | 速度:${use_velocity} | 第三人称相机:${use_third_camera} | 左手观测:${use_left_hand} | 图像:${task.data_info.image_size} | 位置随机:${task.randomization.position.enabled} | 旋转随机:${task.randomization.rotation.enabled} | 编码器:${policy.obs_encoder.model_name}"
 
 checkpoint:
   topk:
     monitor_key: train_loss
     mode: min
-    k: 10
+    k: 5
     format_str: 'epoch={epoch:04d}-train_loss={train_loss:.3f}.ckpt'
   save_last_ckpt: True
   save_last_snapshot: False
 
 multi_run:
-  run_dir: data/outputs/${task_name}/${object_name}/${now:%Y%m%d_%H%M%S}_n${num_demos}
-  wandb_name_base: ${object_name}_n${num_demos}_${now:%Y%m%d_%H%M%S}
+  run_dir: data/outputs/rgb_based/${task_name}/${object_name}/${now:%Y%m%d_%H%M%S}_n${num_demos}_${obs_mode}
+  wandb_name_base: ${object_name}_n${num_demos}_${obs_mode}_${now:%Y%m%d_%H%M%S}
 
 # ==================== 输出目录结构 ====================
 hydra:
   job:
     override_dirname: ${name}
   run:
-    dir: data/outputs/${task_name}/${object_name}/${now:%Y%m%d_%H%M%S}_n${num_demos}
+    dir: data/outputs/rgb_based/${task_name}/${object_name}/${now:%Y%m%d_%H%M%S}_n${num_demos}_${obs_mode}
   sweep:
-    dir: data/outputs/${task_name}/${object_name}/${now:%Y%m%d_%H%M%S}_n${num_demos}
+    dir: data/outputs/rgb_based/${task_name}/${object_name}/${now:%Y%m%d_%H%M%S}_n${num_demos}_${obs_mode}
     subdir: ${hydra.job.num}
-

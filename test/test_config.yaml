@@ -3,42 +3,269 @@
 
 # 测试通用参数
 test_settings:
-  num_envs: 1
+  num_envs: 5
   seed: 17
   max_step: 500
-  max_episode: 100
-  headless: false          # 是否使用无头模式
+  max_episode: 10
+  headless: true          # 是否使用无头模式
 
+# 泛化测试配置
+# 定义不同的位置随机化范围来测试模型泛化能力
+generalization_tests:
+  - name: "no_random"              # 无随机化（基线）
+    offset_range: [0.0, 0.0, 0.0]
+    chinese_name: "无随机化"
+  
+  # - name: "small_random"           # 小范围随机化
+  #   offset_range: [0.02, 0.02, 0.0]
+  #   chinese_name: "小随机±2cm"
+  
+  # - name: "medium_random"          # 中等随机化
+  #   offset_range: [0.03, 0.03, 0.0]
+  #   chinese_name: "中随机±3cm"
+  
+  # - name: "large_random"           # 大范围随机化
+  #   offset_range: [0.05, 0.05, 0.0]
+  #   chinese_name: "大随机±5cm"
+
+  # - name: "large_max_random"           # 大范围随机化
+  #   offset_range: [0.08, 0.08, 0.0]
+  #   chinese_name: "大随机±8cm"
+
+  
 # 测试任务列表
 # 每个任务包含：
 #   - name: 任务名称（用于标识）
 #   - checkpoint: 模型检查点路径
-#   - usd_path: USD 物体文件路径
-#   - obs_mode: 观测模式 (rgb, rgbm, nd, rgbnd, state, rgb_masked, rgb_masked_rgb)
+#   - usd_path: USD 物体文件路径（用于环境中的物体）
+#   - ground_truth_usd_path: (可选) GT点云USD文件路径，如果不指定则使用 usd_path
+#   - obs_mode: 观测模式 (rgb, rgbm, nd, rgbnd, state, rgb_masked, rgb_masked_rgb, point_cloud)
 #   - task_type: 任务类型 (grasp, pick_place, handover)
 #   - chinese_name: (可选) 中文名称，用于记录
 test_tasks:
-  # 示例配置 1: 100ml玻璃烧杯 + nd模式
-  - name: "100ml_beaker_nd"
-    checkpoint: "/home/psibot/chembench/data/download/final_real/model/grasp/part1/第一批_100ml玻璃烧杯_nd/20251229_211853_n50_nd/checkpoints/epoch=5950-train_loss=0.002.ckpt"
+  # ==================== Part 1: 第一批模型 ====================
+  
+  # 100ml玻璃烧杯 - nd模式
+  - name: "part1_100ml_beaker_nd"
+    checkpoint: "/home/psibot/chembench/data/download/final_real/model/grasp_rgbm/part1/第一批_100ml玻璃烧杯_带第三人称相机_nd_4通道/20251231_174602_n50_nd/checkpoints/epoch=5980-train_loss=0.002.ckpt"
     usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_100ml/Beaker003.usd"
+    ground_truth_usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/task_object/grasp/glass_beaker_100ml/Beaker003.usd"
     obs_mode: "nd"
     task_type: "grasp"
-    chinese_name: "100ml玻璃烧杯_nd模式"
+    chinese_name: "100ml玻璃烧杯"
 
-  # 示例配置 2: 50ml玻璃烧杯 + rgb模式
-  # - name: "50ml_beaker_rgb"
-  #   checkpoint: "/home/psibot/chembench/data/outputs/your_model_path.ckpt"
+  # 250ml棕色容量瓶 - nd模式
+  - name: "part1_250ml_brown_flask_nd"
+    checkpoint: "/home/psibot/chembench/data/download/final_real/model/grasp_rgbm_latest/part1/第一批_250ml棕色容量瓶_带第三人称相机_nd_4通道/20251231_171525_n50_nd/latest.ckpt"
+    usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/brown_volumetric_flask_250ml/VolumetricFlask001.usd"
+    ground_truth_usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/task_object/grasp/brown_volumetric_flask_250ml/VolumetricFlask001.usd"
+    obs_mode: "nd"
+    task_type: "grasp"
+    chinese_name: "250ml棕色容量瓶"
+
+  # # 250ml玻璃烧杯 - nd模式
+  # - name: "part1_250ml_beaker_nd"
+  #   checkpoint: "/home/psibot/chembench/data/download/final_real/model/grasp_rgbm_latest/part1/第一批_250ml玻璃烧杯_带第三人称相机_nd_4通道/20251231_171335_n50_nd/epoch=5740-train_loss=0.002.ckpt"
+  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_250ml/Beaker004.usd"
+  #   ground_truth_usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/task_object/grasp/glass_beaker_250ml/Beaker004.usd"
+  #   obs_mode: "nd"
+  #   task_type: "grasp"
+  #   chinese_name: "250ml玻璃烧杯"
+
+  # # 500ml玻璃烧杯 - nd模式
+  # - name: "part1_500ml_beaker_nd"
+  #   checkpoint: "/home/psibot/chembench/data/download/final_real/model/grasp_rgbm_latest/part1/第一批_500ml玻璃烧杯_带第三人称相机_nd_4通道/20251231_171721_n50_nd/latest.ckpt"
+  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_500ml/Beaker005.usd"
+  #   ground_truth_usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/task_object/grasp/glass_beaker_500ml/Beaker005.usd"
+  #   obs_mode: "nd"
+  #   task_type: "grasp"
+  #   chinese_name: "500ml玻璃烧杯"
+
+  # # 坩埚 - nd模式
+  # - name: "part1_crucible_nd"
+  #   checkpoint: "/home/psibot/chembench/data/download/final_real/model/grasp_rgbm_latest/part1/第一批_坩埚_带第三人称相机_nd_4通道/20251231_172516_n50_nd/latest.ckpt"
+  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/mortar/Mortar001.usd"
+  #   ground_truth_usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/task_object/grasp/mortar/Mortar001.usd"
+  #   obs_mode: "nd"
+  #   task_type: "grasp"
+  #   chinese_name: "坩埚"
+
+  # # 棕色试剂瓶大 - nd模式
+  # - name: "part1_brown_bottle_large_nd"
+  #   checkpoint: "/home/psibot/chembench/data/download/final_real/model/grasp_rgbm_latest/part1/第一批_棕色试剂瓶大_带第三人称相机_nd_4通道/20251231_172608_n50_nd/latest.ckpt"
+  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/brown_reagent_bottle_large/ReagentBottle001.usd"
+  #   ground_truth_usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/task_object/grasp/brown_reagent_bottle_large/ReagentBottle001.usd"
+  #   obs_mode: "nd"
+  #   task_type: "grasp"
+  #   chinese_name: "棕色试剂瓶大"
+
+  # # ==================== Part 2: 第二批模型 ====================
+
+  # # 100ml塑料量筒 - nd模式
+  # - name: "part2_100ml_plastic_cylinder_nd"
+  #   checkpoint: "/home/psibot/chembench/data/download/final_real/model/grasp_rgbm_latest/part2/第二批_100ml塑料量筒_带第三人称相机_nd_4通道/20260101_001916_n50_nd/latest.ckpt"
+  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/plastic_cylinder_100ml/GraduatedCylinder001.usd"
+  #   ground_truth_usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/task_object/grasp/plastic_cylinder_100ml/GraduatedCylinder001.usd"
+  #   obs_mode: "nd"
+  #   task_type: "grasp"
+  #   chinese_name: "100ml塑料量筒"
+
+  # # 100ml玻璃量筒 - nd模式
+  # - name: "part2_100ml_glass_cylinder_nd"
+  #   checkpoint: "/home/psibot/chembench/data/download/final_real/model/grasp_rgbm_latest/part2/第二批_100ml玻璃量筒_带第三人称相机_nd_4通道/20260101_001805_n50_nd/latest.ckpt"
+  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_cylinder_100ml/GraduatedCylinder004.usd"
+  #   ground_truth_usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/task_object/grasp/glass_cylinder_100ml/GraduatedCylinder004.usd"
+  #   obs_mode: "nd"
+  #   task_type: "grasp"
+  #   chinese_name: "100ml玻璃量筒"
+
+  # # 250ml透明容量瓶 - nd模式
+  # - name: "part2_250ml_clear_flask_nd"
+  #   checkpoint: "/home/psibot/chembench/data/download/final_real/model/grasp_rgbm_latest/part2/第二批_250ml透明容量瓶_带第三人称相机_nd_4通道/20260101_002409_n50_nd/latest.ckpt"
+  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/clear_volumetric_flask_250ml/VolumetricFlask002.usd"
+  #   ground_truth_usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/task_object/grasp/clear_volumetric_flask_250ml/VolumetricFlask002.usd"
+  #   obs_mode: "nd"
+  #   task_type: "grasp"
+  #   chinese_name: "250ml透明容量瓶"
+
+  # # 500ml塑料量筒 - nd模式
+  # - name: "part2_500ml_plastic_cylinder_nd"
+  #   checkpoint: "/home/psibot/chembench/data/download/final_real/model/grasp_rgbm_latest/part2/第二批_500ml塑料量筒_带第三人称相机_nd_4通道/20260101_002731_n50_nd/latest.ckpt"
+  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets_new/Plastic_Graduated_Cylinder_500ml/GraduatedCylinder002.usd"
+  #   ground_truth_usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/task_object/grasp/Plastic_Graduated_Cylinder_500ml/GraduatedCylinder002.usd"
+  #   obs_mode: "nd"
+  #   task_type: "grasp"
+  #   chinese_name: "500ml塑料量筒"
+
+  # # 500ml玻璃量筒 - nd模式
+  # - name: "part2_500ml_glass_cylinder_nd"
+  #   checkpoint: "/home/psibot/chembench/data/download/final_real/model/grasp_rgbm_latest/part2/第二批_500ml玻璃量筒_带第三人称相机_nd_4通道/20260101_002627_n50_nd/latest.ckpt"
+  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets_new/Glass_Graduated_Cylinder_500ml/GraduatedCylinder003.usd"
+  #   ground_truth_usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/task_object/grasp/Glass_Graduated_Cylinder_500ml/GraduatedCylinder003.usd"
+  #   obs_mode: "nd"
+  #   task_type: "grasp"
+  #   chinese_name: "500ml玻璃量筒"
+
+  # # 50ml玻璃烧杯 - nd模式
+  # - name: "part2_50ml_beaker_nd"
+  #   checkpoint: "/home/psibot/chembench/data/download/final_real/model/grasp_rgbm_latest/part2/第二批_50ml玻璃烧杯_带第三人称相机_nd_4通道/20260101_001612_n50_nd/latest.ckpt"
   #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_50ml/Beaker002.usd"
+  #   ground_truth_usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/task_object/grasp/glass_beaker_50ml/Beaker002.usd"
+  #   obs_mode: "nd"
+  #   task_type: "grasp"
+  #   chinese_name: "50ml玻璃烧杯"
+
+  # # ==================== Part 3: 第三批模型 ====================
+
+  # # 1000ml透明容量瓶 - nd模式
+  # - name: "part3_1000ml_clear_flask_nd"
+  #   checkpoint: "/home/psibot/chembench/data/download/final_real/model/grasp_rgbm_latest/part3/第三批_1000ml透明容量瓶_带第三人称相机_nd_4通道/20260101_003123_n50_nd/latest.ckpt"
+  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/clear_volumetric_flask_1000ml/VolumetricFlask004.usd"
+  #   ground_truth_usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/task_object/grasp/clear_volumetric_flask_1000ml/VolumetricFlask004.usd"
+  #   obs_mode: "nd"
+  #   task_type: "grasp"
+  #   chinese_name: "1000ml透明容量瓶"
+
+  # # 500ml透明容量瓶 - nd模式
+  # - name: "part3_500ml_clear_flask_nd"
+  #   checkpoint: "/home/psibot/chembench/data/download/final_real/model/grasp_rgbm_latest/part3/第三批_500ml透明容量瓶_带第三人称相机_nd_4通道/20260101_003213_n50_nd/latest.ckpt"
+  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/clear_volumetric_flask_500ml/VolumetricFlask003.usd"
+  #   ground_truth_usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/task_object/grasp/clear_volumetric_flask_500ml/VolumetricFlask003.usd"
+  #   obs_mode: "nd"
+  #   task_type: "grasp"
+  #   chinese_name: "500ml透明容量瓶"
+
+  # # 具塞锥形瓶 - nd模式
+  # - name: "part3_flask_with_stopper_nd"
+  #   checkpoint: "/home/psibot/chembench/data/download/final_real/model/grasp_rgbm_latest/part3/第三批_具塞锥形瓶_带第三人称相机_nd_4通道/20260101_003933_n50_nd/latest.ckpt"
+  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets_new/Erlenmeyer_Flask_With_Stopper/ErlenmeyerFlask002.usd"
+  #   ground_truth_usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/task_object/grasp/Erlenmeyer_Flask_With_Stopper/ErlenmeyerFlask002.usd"
+  #   obs_mode: "nd"
+  #   task_type: "grasp"
+  #   chinese_name: "具塞锥形瓶"
+
+  # # 漏斗 - nd模式
+  # - name: "part3_funnel_nd"
+  #   checkpoint: "/home/psibot/chembench/data/download/final_real/model/grasp_rgbm_latest/part3/第三批_漏斗_带第三人称相机_nd_4通道/20260101_004002_n50_nd/latest.ckpt"
+  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets_new/Funnel/Funnel001.usd"
+  #   ground_truth_usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/task_object/grasp/Funnel/Funnel001.usd"
+  #   obs_mode: "nd"
+  #   task_type: "grasp"
+  #   chinese_name: "漏斗"
+
+  # # 透明试剂瓶大 - nd模式
+  # - name: "part3_clear_bottle_large_nd"
+  #   checkpoint: "/home/psibot/chembench/data/download/final_real/model/grasp_rgbm_latest/part3/第三批_透明试剂瓶大_带第三人称相机_nd_4通道/20260101_004030_n50_nd/latest.ckpt"
+  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/clear_reagent_bottle_large/ReagentBottle002.usd"
+  #   ground_truth_usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/task_object/grasp/clear_reagent_bottle_large/ReagentBottle002.usd"
+  #   obs_mode: "nd"
+  #   task_type: "grasp"
+  #   chinese_name: "透明试剂瓶大"
+
+  # # 酒精灯 - nd模式
+  # - name: "part3_alcohol_lamp_nd"
+  #   checkpoint: "/home/psibot/chembench/data/download/final_real/model/grasp_rgbm_latest/part3/第三批_酒精灯_带第三人称相机_nd_4通道/20260101_003832_n50_nd/latest.ckpt"
+  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets_new/Alcohol_Lamp/AlcoholLamp001.usd"
+  #   ground_truth_usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/task_object/grasp/Alcohol_Lamp/AlcoholLamp001.usd"
+  #   obs_mode: "nd"
+  #   task_type: "grasp"
+  #   chinese_name: "酒精灯"
+
+  # # ==================== Part 4: 第四批模型 ====================
+
+  # # 棕色试剂瓶小 - nd模式
+  # - name: "part4_brown_bottle_small_nd"
+  #   checkpoint: "/home/psibot/chembench/data/download/final_real/model/grasp_rgbm_latest/part4/第四批_棕色试剂瓶小_带第三人称相机_nd_4通道/20260101_004424_n50_nd/latest.ckpt"
+  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/brown_reagent_bottle_small/ReagentBottle004.usd"
+  #   ground_truth_usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/task_object/grasp/brown_reagent_bottle_small/ReagentBottle004.usd"
+  #   obs_mode: "nd"
+  #   task_type: "grasp"
+  #   chinese_name: "棕色试剂瓶小"
+
+  # # 透明试剂瓶小 - nd模式
+  # - name: "part4_clear_bottle_small_nd"
+  #   checkpoint: "/home/psibot/chembench/data/download/final_real/model/grasp_rgbm_latest/part4/第四批_透明试剂瓶小_带第三人称相机_nd_4通道/20260101_004307_n50_nd/latest.ckpt"
+  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/clear_reagent_bottle_small/ReagentBottle003.usd"
+  #   ground_truth_usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/task_object/grasp/clear_reagent_bottle_small/ReagentBottle003.usd"
+  #   obs_mode: "nd"
+  #   task_type: "grasp"
+  #   chinese_name: "透明试剂瓶小"
+
+  # # 锥形瓶 - nd模式
+  # - name: "part4_erlenmeyer_flask_nd"
+  #   checkpoint: "/home/psibot/chembench/data/download/final_real/model/grasp_rgbm_latest/part4/第四批_锥形瓶_带第三人称相机_nd_4通道/20260101_004349_n50_nd/latest.ckpt"
+  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/erlenmeyer_flask/ErlenmeyerFlask001.usd"
+  #   ground_truth_usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/task_object/grasp/erlenmeyer_flask/ErlenmeyerFlask001.usd"
+  #   obs_mode: "nd"
+  #   task_type: "grasp"
+  #   chinese_name: "锥形瓶"
+
+  # # ==================== 探索性实验 ====================
+
+  # # 250ml玻璃烧杯 - rgb_masked_rgb模式 (6通道)
+  # - name: "exploration_250ml_beaker_rgb6"
+  #   checkpoint: "/home/psibot/chembench/data/download/final_real/model/grasp_rgbm_latest/RGB6_第一批_250ml玻璃烧杯_带第三人称相机/20260101_004540_n50_rgb_masked_rgb/epoch=5610-train_loss=0.002.ckpt"
+  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_250ml/Beaker004.usd"
+  #   ground_truth_usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/task_object/grasp/glass_beaker_250ml/Beaker004.usd"
+  #   obs_mode: "rgb_masked_rgb"
+  #   task_type: "grasp"
+  #   chinese_name: "250ml玻璃烧杯_RGB6通道"
+
+  # # 100ml玻璃烧杯 - rgb_masked_rgb模式 (6通道)
+  # - name: "exploration_100ml_beaker_rgb_masked_rgb"
+  #   checkpoint: "/home/psibot/chembench/data/download/final_real/model/grasp_rgbm_latest/探索性_100ml玻璃烧杯_三人称相机_rgb_masked_6通道/20251231_173835_n50_rgb_masked_rgb/epoch=5980-train_loss=0.002.ckpt"
+  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_100ml/Beaker003.usd"
+  #   ground_truth_usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/task_object/grasp/glass_beaker_100ml/Beaker003.usd"
+  #   obs_mode: "rgb_masked_rgb"
+  #   task_type: "grasp"
+  #   chinese_name: "100ml玻璃烧杯_RGB_masked_6通道"
+
+  # # 100ml玻璃烧杯 - rgb模式 (3通道)
+  # - name: "exploration_100ml_beaker_rgb"
+  #   checkpoint: "/home/psibot/chembench/data/download/final_real/model/grasp_rgbm_latest/探索性_100ml玻璃烧杯_带第三人称相机_纯rgb_3通道/20251231_172836_n50_rgb/epoch=5950-train_loss=0.002.ckpt"
+  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_100ml/Beaker003.usd"
+  #   ground_truth_usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/task_object/grasp/glass_beaker_100ml/Beaker003.usd"
   #   obs_mode: "rgb"
   #   task_type: "grasp"
-  #   chinese_name: "50ml玻璃烧杯_rgb模式"
-
-  # 示例配置 3: 酒精灯 + rgbnd模式
-  # - name: "alcohol_lamp_rgbnd"
-  #   checkpoint: "/home/psibot/chembench/data/outputs/your_model_path.ckpt"
-  #   usd_path: "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets_new/Alcohol_Lamp/AlcoholLamp001.usd"
-  #   obs_mode: "rgbnd"
-  #   task_type: "grasp"
-  #   chinese_name: "酒精灯_rgbnd模式"
+  #   chinese_name: "100ml玻璃烧杯_纯RGB3通道"
 

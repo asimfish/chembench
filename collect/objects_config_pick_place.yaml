@@ -11,6 +11,8 @@ data_collection:
 # 数据转换参数（如需要）
 zarr_conversion:
   mode: "rgb"
+  task_type: "single_hand"   # 任务类型: "auto" (自动检测), "single_hand" (单手), "bimanual" (双手)
+  max_episodes: 50           # 每个任务最大转换数量（默认：50）
   with_mask: true
   with_depth: true
   with_normals: true

@@ -31,10 +31,10 @@ gym.register(
 # Imitation Learning (IL) - Pick and Place
 gym.register(
     id="Psi-IL-PickPlace-v1",
-    entry_point=f"{__name__}.pickplace_il:GraspBottleEnv",
+    entry_point=f"{__name__}.pickplace_il:PickPlaceEnv",
     disable_env_checker=True,
     kwargs={
-        "env_cfg_entry_point": f"{__name__}.pickplace_il:GraspBottleEnvCfg",
+        "env_cfg_entry_point": f"{__name__}.pickplace_il:PickPlaceEnvCfg",
         "scene_cfg_entry_point": f"{scenes.__name__}.room_cfg:PSI_DC_PickPlace_CFG",
     },
 )

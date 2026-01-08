@@ -102,6 +102,16 @@ gym.register(
     },
 )
 
+gym.register(
+    id="Psi-IL-Grasp-ACT-v1",
+    entry_point=f"{__name__}.grasp_il_act:GraspBottleEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.grasp_il_act:GraspBottleEnvCfg",
+        "scene_cfg_entry_point":f"{scenes.__name__}.room_cfg:PSI_DC_Grasp_CFG",
+    },
+)
+
 # gym.register(
 #     id="Psi-MP-Grasp-Beaker-003-Art-v1",
 #     entry_point=f"{__name__}.grasp_beaker_003_art_mp:GraspBottleEnv",

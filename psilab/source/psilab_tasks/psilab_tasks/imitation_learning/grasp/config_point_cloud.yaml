@@ -1,0 +1,41 @@
+# Grasp IL Evaluation Config for Point Cloud Mode
+# 用于评估基于点云的 DP3 模型
+
+# 基础配置
+checkpoint: "/path/to/your/dp3/model.ckpt"  # 需要替换为实际的 checkpoint 路径
+enable_eval: true
+enable_output: false
+enable_log: true
+max_episode: 100
+
+# 观测模式：点云
+obs_mode: "point_cloud"
+
+# 点云配置
+num_points: 2048  # 与训练时一致
+# 注意：训练数据固定使用 [x,y,z,0,0,0] 格式（RGB通道用零填充）
+# use_point_color 参数保留用于接口兼容，但实际颜色总是0
+use_point_color: true  # 固定为 true，但 RGB 通道实际是 [0,0,0]
+point_cloud_camera: "third_camera"  # 使用第三人称相机（与训练数据一致）
+
+# 点云采样方式
+# "random": 随机采样（快速，但点分布可能不均匀）
+# "fps": 最远点采样（与训练数据一致，点分布均匀，但速度慢2-5倍）
+point_cloud_sampling: "fps"  # 推荐使用 "fps" 以获得最佳性能
+
+# 成功判断阈值
+lift_height_desired: 0.2  # 抬起高度 (m)
+orientation_threshold: 0.05  # 朝向偏差阈值（约 26°）
+
+# 环境配置
+num_envs: 1  # 点云处理可能比较慢，建议先用单环境测试
+episode_length_s: 2
+decimation: 4
+sample_step: 1
+
+# Mask 模式（点云模式下不使用，但需要保留参数）
+mask_mode: "real"
+
+# 场景配置（需要根据实际场景配置）
+# scene: ...
+

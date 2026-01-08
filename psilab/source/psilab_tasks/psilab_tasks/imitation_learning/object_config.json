@@ -1637,10 +1637,10 @@
         ]
       },
       "grasp": {
-    "grasp_offset": [
+        "grasp_offset": [
           -0.1082,
           -0.0283,
-          0.001
+          0.0407
         ],
         "grasp_euler_deg": [
           -90.0,
@@ -3991,8 +3991,8 @@
             "lift"
           ],
           "approach_ratio": 0.3,
-          "grasp_ratio": 0.3,
-          "lift_ratio": 0.4
+          "grasp_ratio": 0.2,
+          "lift_ratio": 0.5
         }
       },
       "handover": {
@@ -8027,8 +8027,8 @@
       "open": null,
       "close": null
     },
-    "plastic_graduated_cylinder_100ml": {
-      "name": "plastic_graduated_cylinder_100ml",
+    "plastic_cylinder_100ml": {
+      "name": "plastic_cylinder_100ml",
       "name_cn": "100ml塑料量筒",
       "description": "100ml规格的塑料量筒，不易破碎。支持操作：抓取(grasp)、抓放(pick_place)。",
       "supported_operations": [

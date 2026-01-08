@@ -648,7 +648,10 @@ PSI_DC_Handover_CFG = PSI_DC_02_CFG.replace(
         "bottle" : RigidObjectCfg(
                 prim_path="/World/envs/env_[0-9]+/Bottle",
                 spawn=sim_utils.UsdFileCfg(
-                    usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/clear_volumetric_flask_500ml/VolumetricFlask003.usd",
+                    usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/clear_volumetric_flask_250ml/VolumetricFlask002.usd",
+                    # usd_path = "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets_new/glass_graduated_cylinder_500ml/GraduatedCylinder003.usd",
+                    # usd_path = "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_500ml/Beaker005.usd",
+                    # usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/clear_volumetric_flask_500ml/VolumetricFlask003.usd",
                     # usd_path = "/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/glass_beaker_100ml/Beaker003.usd",
                     # usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/funnel_stand/FunnelStand001.usd",
                     # usd_path="/home/psibot/chembench/psilab/assets/usd/asset_collection/sim_ready/solid_assets/brown_reagent_bottle_large/ReagentBottle001.usd",

@@ -36,13 +36,13 @@ def create_data_buffer(scene:Scene) -> dict :
 
     return data_buffer
 
-def parse_data(sim_time:float, data: dict, scene:Scene):
+def parse_data(sim_time:float, data: dict, scene:Scene, env_obj=None, pointcloud_transform_fn=None):
 
     if scene.num_envs == 1:
-        _parse_data(sim_time,data,scene,device=scene.device)
+        _parse_data(sim_time,data,scene,device=scene.device,env_id=0,env_obj=env_obj,pointcloud_transform_fn=pointcloud_transform_fn)
     else:
         for i in range(0,scene.num_envs):
-            _parse_data(sim_time,data[f"env_{i}"],scene,i)
+            _parse_data(sim_time,data[f"env_{i}"],scene,i,env_obj=env_obj,pointcloud_transform_fn=pointcloud_transform_fn)
 
 def save_data(data: dict, cfg:RLEnvCfg, scene:Scene, env_indexs:Sequence[int]|None=None, reset_env_indexs:Sequence[int]|None=None):
     """
@@ -251,7 +251,7 @@ def _create_data_buffer(scene:Scene) -> dict :
     # 
     return data
 
-def _parse_data(sim_time:float, data: dict, scene:Scene, env_id:int = 0, device:str = "cpu"):
+def _parse_data(sim_time:float, data: dict, scene:Scene, env_id:int = 0, device:str = "cpu", env_obj=None, pointcloud_transform_fn=None):
 
     # time stamps
     data["sim_time"].append(sim_time)
@@ -349,6 +349,22 @@ def _parse_data(sim_time:float, data: dict, scene:Scene, env_id:int = 0, device:
         # add actuators
         for actuator_name,actuator in object.actuators.items():
             data["articulated_objects"][object_name][actuator_name+"_pos"].append(object.data.joint_pos[env_id,actuator.joint_indices].to(device))
+
+    # ========== 添加真值点云（从USD采样并变换）==========
+    if pointcloud_transform_fn is not None:
+        # 如果数据字典中还没有 ground_truth_pointcloud key，创建它
+        if "ground_truth_pointcloud" not in data:
+            data["ground_truth_pointcloud"] = []
+        
+        # 调用变换函数获取当前帧的真值点云
+        try:
+            transformed_pc = pointcloud_transform_fn(env_id)  # (N, 3) torch.Tensor
+            if transformed_pc is not None:
+                # 转换为numpy并保存
+                pc_numpy = transformed_pc.cpu().numpy()
+                data["ground_truth_pointcloud"].append(pc_numpy)
+        except Exception as e:
+            print(f"⚠️ 真值点云变换失败 (env_id={env_id}): {e}")
 
     # add deformable object
     # for object_name in self.scene.deformable_objects.items():
